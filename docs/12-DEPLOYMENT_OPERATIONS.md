@@ -1,0 +1,51 @@
+# Deployment, Infrastructure and Operations
+
+> **Product:** Skyra LogHub  |  **Status:** Proposed baseline — review before implementation  |  **Version:** 0.1-draft  |  **Date:** 2026-10-21
+> **Repository:** `skyra-loghub` (renamed by project owner). Assumptions and undecided items are marked **TBD**. These documents are design specifications, not assertions that code already exists.
+
+## 1. Supported environments
+- Local development: Docker Compose with synthetic data, no public exposure.
+- Single VM pilot: Docker Compose, persistent encrypted volumes, reverse proxy + TLS, off-host encrypted backups. Non-HA and must not host high-criticality data without approval.
+- AWS/Azure/on-prem: containerized app/worker/collector, managed or self-hosted PostgreSQL, self-managed Elasticsearch Basic when selected; private networking/volume provisioning and IaC per provider.
+
+## 2. Logical service inventory
+`dashboard` Angular static web served by Nginx/Caddy; `api` NestJS; `ingest-gateway` NestJS/OTLP ingress; `mcp-server` private or OAuth-protected; `worker`; `collector`; `elasticsearch`; `postgres`; `valkey/redis`; `reverse-proxy`; optional identity provider externally managed.
+
+## 3. Network boundaries
+- Externally reachable only HTTPS reverse proxy endpoints needed for dashboard/login, approved machine ingress and authorized MCP.
+- Elasticsearch/PostgreSQL/Valkey/collector admin ports private, never bound publicly; firewall egress scoped, operator access via bastion/VPN where practical.
+- CORS same-origin, secure cookies, separate service credentials, mTLS internal where feasible.
+
+## 4. Configuration/secrets
+Environment-driven immutable config with typed startup validation. Secret vault for DB, OIDC, ES, API token HMAC and collector service credentials. `.env.example` has dummy values only. Keep TLS certificates automatically renewed and keys rotated; deployment automation never prints secret values.
+
+## 5. Storage/retention planning
+Estimate: GB/day = events/sec × average event bytes × 86400 / 10^9, then add index overhead, replicas, headroom and snapshots. Select size/retention only after volume sampling. Separate application logs, security audits, indexes, database volumes, collector checkpoints and temporary exports. Define hot retention and snapshots based on compliance, not blindly mirror local files.
+
+## 6. Backups and recoverability
+- PostgreSQL consistent backup + point-in-time strategy where feasible.
+- Elasticsearch snapshot repository on off-host object storage; snapshot validation and restore drills; snapshots not substitutes for application security logs.
+- RPO/RTO **TBD** with owner; encrypt backups, restrict IAM and test credential revocation after restore.
+- Valkey queue recovery semantics and idempotent job handling; do not assume transient caches are durable source of truth.
+
+## 7. Observability of LogHub itself
+Monitor ingest success/rejection, collector lag/checkpoint age, event drops, ES disk usage/heap/search queues, API p95, query timeout, Postgres connections, token failures, rate-limit rejections, queue depth, MCP invocations, expired certificates, backup age and restore health.
+
+## 8. Runbooks to write during implementation
+Start/stop, user/credential recovery, file full/rotation failure, Elasticsearch unavailable, duplicate events, failed migration, authentication provider outage, cross-project exposure incident, MCP disable switch, index restore, storage forecast/cost alert, rollout/rollback.
+
+## 9. Security baseline
+Use current supported image versions pinned by digest, non-root users and read-only containers where possible; scanner results tracked. Patch cadence, access audit, HTTPS, secret rotation, RBAC, data residency and restricted exports. Never put raw customer/application logs in CI artifacts.
+
+## 10. Hosting choice comparison framework
+| Criterion | Own server | AWS | Azure |
+|---|---|---|---|
+| Software licenses (free tiers) | Possible | Possible | Possible |
+| Compute/storage/bandwidth | Hardware + operations | Metered services | Metered services |
+| Identity integration | Configure OIDC | External/AWS-compatible | Strong Entra option |
+| Backup/HA | Your responsibility | Provider building blocks | Provider building blocks |
+| Portability | Docker images | Docker/VM | Docker/VM |
+No fabricated monthly price. Estimate using daily log volume, retention, replicas, peak concurrency, region and availability target. Assess vendor licensing separately.
+
+## 11. Rollout
+Local synthetic → isolated staging with 2 demo services → private pilot with production-shaped traffic → security/load/restore gate → initial internal production → migrate other Skyra apps one-by-one with rollback. Each step needs documented signoff.
