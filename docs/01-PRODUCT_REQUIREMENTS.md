@@ -4,7 +4,7 @@
 > **Repository:** `skyra-loghub` (renamed by project owner). Assumptions and undecided items are marked **TBD**. These documents are design specifications, not assertions that code already exists.
 
 ## 1. Product overview
-Skyra LogHub is Skyra Tech's internal, custom-built centralized logs, performance diagnostics and security-audit exploration platform. It ingests logs produced by reusable SDKs and hosted-file collectors, indexes them in Elasticsearch, and exposes a **custom Angular dashboard** and secure NestJS API. **Kibana is not part of the product.** One `skyra-loghub` monorepo holds applications, language SDKs, collector configuration, tests and operations documentation.
+Skyra LogHub is Skyra Tech's internal, custom-built centralized logs, performance diagnostics and security-audit exploration platform. It ingests logs produced by reusable SDKs and hosted-file collectors, archives them as centralized JSONL and generates derived Parquet data for DuckDB reports, and exposes a **custom Angular dashboard** and secure NestJS API. **Kibana is not part of the product.** One `skyra-loghub` monorepo holds applications, language SDKs, collector configuration, tests and operations documentation.
 
 ## 2. Problem statement
 Skyra applications currently use inconsistent text logs, `console.*`, NestJS default output and Python Loguru; there is no unified event schema, project boundary, safe redaction, correlation, performance visibility, consistent file rotation or cross-application explorer. Existing business audit storage must not be silently replaced by ephemeral diagnostic logs.
@@ -31,9 +31,9 @@ Skyra applications currently use inconsistent text logs, `console.*`, NestJS def
 ### MVP / P0
 - Project registry and service/environment identifiers; agent and SDK integration examples.
 - Log Explorer: project/environment/service selection, time window, sortable result columns, discoverable available fields, saved query definitions, bounded search, histogram, details drawer, permitted copy/export.
-- Basic structured search and advanced **safe subset** query mode. Full arbitrary ES|QL is **not** an MVP promise; see `10-API_CONTRACTS.md`.
+- Basic structured search and advanced **safe subset** query mode. Full arbitrary Skyra Query Language is **not** an MVP promise; see `10-API_CONTRACTS.md`.
 - Node/TypeScript + Python SDKs with JSONL, redaction, size/day rotation, error handling, structured context and graceful failure.
-- Collector → Elasticsearch; schema validation; project isolation; retention configuration.
+- Collector → central JSONL archive → Parquet / DuckDB; schema validation; project isolation; retention configuration.
 - Authentication through OIDC/MFA; RBAC; scoped, expiring, revocable tokens; audit log; distributed rate limits.
 - API and SQL client-observed latency events; errors, jobs and request correlation.
 - Unit, integration, security, and UI E2E tests with representative sample services.
@@ -41,12 +41,12 @@ Skyra applications currently use inconsistent text logs, `console.*`, NestJS def
 ### P1
 - NestJS/Next.js/framework adapters; frontend sanitized error reporting; alert rules and notifications; richer API metrics and SQL fingerprint investigation; dashboards; MCP read-only OAuth integration; export jobs.
 ### P2 / deferred
-- Full trace waterfall with dedicated trace ingest/storage, advanced SLOs, AI summaries, customer multi-tenancy, ingestion replay UI, long-term archival and complex ES|QL authoring.
+- Full trace waterfall with dedicated trace ingest/storage, advanced SLOs, AI summaries, customer multi-tenancy, ingestion replay UI, long-term archival and complex Skyra Query Language authoring.
 
 ## 6. User journeys
 1. Admin enrolls project and service, assigns an identity, configures approved ingest method and retention.
 2. Developer installs language SDK; production service writes safe project-separated JSONL or stdout logs.
-3. Collector follows new files or secure exporter sends batches; pipeline validates, enriches, indexes; failures surface in operational health.
+3. Collector follows new files or secure exporter sends batches; pipeline validates, enriches, derived analytical files; failures surface in operational health.
 4. Developer signs in with MFA, selects a project and time window, queries available fields and opens correlated events.
 5. Admin creates a scope-limited integration credential, chooses expiry, inspects use, rotates/revokes it.
 6. Authorized MCP client searches only assigned project logs, with audit and query limits.
@@ -68,17 +68,17 @@ Skyra applications currently use inconsistent text logs, `console.*`, NestJS def
 | FR-12 | Alerts on error-rate and latency thresholds | P1 |
 
 ## 8. Nonfunctional requirements and preliminary targets
-- **Security:** TLS, least privilege, admin MFA, no browser Elasticsearch credentials, rate limits, audit actions, safely escaped log rendering.
+- **Security:** TLS, least privilege, admin MFA, no browser access to archive/query service credentials, rate limits, audit actions, safely escaped log rendering.
 - **Reliability:** logging failures never crash/slow app materially; bounded async buffers; observable dropped-event counters; recover after collector interruption.
-- **Performance:** initial target p95 interactive search under 3s for 24h windows on pilot volume; validate in representative load tests, not guaranteed.
-- **Scale:** prioritize correctness for ~5–20 services; actual capacity based on daily ingest, peak EPS, retention and source cardinality (**TBD**).
+- **Performance:** provisional target p95 interactive search under 3s, with report latency as primary priority for 24h windows on pilot volume; validate in representative load tests, not guaranteed.
+- **Scale:** prioritize correctness for ~5–20 services (initial assumption; revise as project count grows); actual capacity based on daily ingest, peak EPS, retention and source cardinality (**TBD**).
 - **Portability:** Linux container images, externalized config, portable storage/backup strategy across AWS/Azure/on-prem.
 - **Availability:** single-node pilot is explicitly non-HA; production SLO/HA topology **TBD**.
 - **Accessibility:** keyboard-friendly workflows and WCAG 2.2 AA target for UI screens.
 
 ## 9. Out of scope and boundaries
 - Do not duplicate Kibana UI or require Kibana.
-- Do not expose Elasticsearch or query DSL to browsers/MCP clients.
+- Do not expose raw DuckDB SQL or storage paths to browsers/MCP clients.
 - Do not log raw request/response bodies, credentials, personal data, raw SQL bind values or AI prompts by default.
 - No automatic rewriting of current Skyra projects until SDK acceptance and pilot approval.
 - No promise of guaranteed delivery in process crashes before persistence; explicitly report loss behavior.
@@ -89,3 +89,13 @@ Skyra applications currently use inconsistent text logs, `console.*`, NestJS def
 
 ## 11. Open decisions
 Identity provider; expected daily GB/EPS, retention by classification, geography/data residency, hosting choice, license review, team capacity, initial pilot repositories and naming scheme for immutable project IDs.
+
+
+## Approved product priorities and audience clarification (2026-10-21)
+- **Users:** Skyra LogHub itself starts with **one owner/operator** and is designed for **5–10 authorized LogHub users** in the foreseeable future. This number DOES NOT constrain users or request traffic of the other Skyra Tech products being observed; those products may serve much larger audiences. LogHub sizing is governed by telemetry ingestion volume, retention, report complexity and query concurrency, not by dashboard seat count alone.
+- **Priority P0:** extremely fast saved report loading, flexible report creation with both **visual field/filter/metric selection** and **restricted textual query**. Reports remain separate per project, with explicit authorized cross-project reporting only when approved. Jarvis must be able to create/update/run reports through authorized APIs/MCP.
+- **Priority P1:** fast ad-hoc log search, field discovery, document table and log details. P1 remains important but shall not force a costly search cluster before benchmarking.
+- **Source of truth:** immutable/rotation-safe centrally archived per-project daily JSONL segments. Rebuildable Parquet partitions accelerate reports; **no application log event rows in PostgreSQL**. PostgreSQL retains only administration, report definitions, identities, tokens, permissions, manifests/metadata where appropriate, and operational audit metadata (not raw diagnostic events).
+- **Report features:** saved report configuration, preview, charts/tables, aggregation (count/sum/avg/min/max/p50/p95/p99), group-by, filter builder, sort, date range, selective fields, report ownership, refresh/cache status, permission controls and query execution feedback.
+- **Scale:** do not assume one dashboard user means low ingestion; log sources may have many end users and high request throughput.
+- **Acceptance:** reports meet agreed p95 latency budgets on representative pilot data; never claim sub-second load before benchmark.

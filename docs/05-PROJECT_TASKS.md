@@ -15,23 +15,24 @@
 | LH-003 | Audit Skyra Platform package public APIs/distribution | LH-000 | Integration matrix and upstream issues |
 
 ## Phase 1 — Contracts and package foundations
-| ID | Task | Dependencies | Evidence / acceptance |
-|---|---|---|---|
-| LH-101 | Define canonical logging JSON Schema and fixture corpus | LH-002 | Type-valid samples, duplicate-key negative cases, compatibility suite |
-| LH-102 | TS logger-core metadata/redaction | LH-101 | Unit tests: nested secrets, collisions, invalid IDs |
-| LH-103 | Node/Pino daily JSONL transport | LH-102 | UTC rotation, size rollover, multi-instance isolation, permission and disk-error tests |
-| LH-104 | Python SDK parity | LH-101 | pytest fixture parity, concurrency and rotation tests |
-| LH-105 | NestJS/Next.js adapters and sample apps | LH-103 | Request context, trace propagation, install smoke tests |
-| LH-106 | Package registry/release automation | LH-103, LH-104 | Versioned packages independently install in clean consumers |
+| ID | Task | Status | Dependencies | Evidence / acceptance |
+|---|---|---|---|---|
+| LH-101 (LOGHUB-PKG-001 & PKG-001B) | Define canonical logging JSON Schema, storage contract, and fixture corpus | DONE | LH-002 | `contracts/schemas/v1/log-event.schema.json` (Draft 2020-12), `storage-contract.md` (mandatory instance isolation), fixtures corpus |
+| LH-101C (LOGHUB-PKG-001C) | Final Schema Consistency, UUIDv4/Timestamp Verification & Distribution Verification | DONE | LH-101, LH-102, LH-104 | Pinned ECS 8.11.0, strict RFC 4122 UUIDv4, real calendar leap year/bounds validation, schema synchronization tooling (`sync:schemas`), and isolated consumer package tests passing |
+| LH-102 (LOGHUB-PKG-001B/C) | TS logger-core metadata/redaction & build distribution | DONE | LH-101 | `@skyra/logger-core` compiled to `dist/`, cached Ajv 2020 validator, circular-safe compound key redaction, tarball verified in clean Node and TS consumers, 13 contract test suites passing |
+| LH-103 (LOGHUB-PKG-002) | Node/Pino daily JSONL transport | READY | LH-101C, LH-102 | UTC rotation, size rollover, multi-instance isolation, permission and disk-error tests |
+| LH-104 (LOGHUB-PKG-001B/C) | Python SDK parity & wheel distribution | DONE | LH-101 | `skyra-logger` Draft 2020-12 validator, calendar timestamp checking, wheel installed and verified in clean consumer, 14 test suites passing |
+| LH-105 | NestJS/Next.js adapters and sample apps | NOT_STARTED | LH-103 | Request context, trace propagation, install smoke tests |
+| LH-106 | Package registry/release automation | NOT_STARTED | LH-103, LH-104 | Versioned packages independently install in clean consumers |
 
 ## Phase 2 — Ingestion and data persistence
 | ID | Task | Dependencies | Evidence / acceptance |
 |---|---|---|---|
-| LH-201 | Local Compose stack (Elasticsearch, PG, cache, collector) | LH-002 | Health checks, TLS/security defaults, deterministic startup |
+| LH-201 | Local Compose stack (archive volumes, Parquet/DuckDB worker, PG, cache, collector) | LH-002 | Health checks, TLS/security defaults, deterministic startup |
 | LH-202 | Agent filelog pipelines and checkpoints | LH-103, LH-201 | Rotation/restart/replay/no-loss-under-test assertions |
 | LH-203 | Secure gateway with identity, quotas and normalization | LH-101, LH-201 | Wrong project, malformed JSON, oversized payload denied |
-| LH-204 | Elasticsearch mappings/data lifecycle | LH-101, LH-201 | Mapping/retention/scope query integration tests |
-| LH-205 | Ingestion observability and failure queues | LH-202, LH-203 | Index errors and dropped events measurable |
+| LH-204 | Archive layout, Parquet compaction and retention lifecycle | LH-101, LH-201 | Archive/Parquet retention and authorized query integration tests |
+| LH-205 | Ingestion observability and failure queues | LH-202, LH-203 | Archive/compaction failures and dropped events measurable |
 
 ## Phase 3 — Identity and search foundation
 | ID | Task | Dependencies | Evidence / acceptance |
@@ -39,7 +40,7 @@
 | LH-301 | OIDC login/MFA/session enforcement | LH-201, LH-002 | Negative auth tests, logout/session revoke |
 | LH-302 | Role/project memberships | LH-301 | Explicit cross-project deny tests |
 | LH-303 | Token issue/list/revoke/rotate/expiry | LH-302 | Hashed verifier only, once-visible secret, immediate revoke tests |
-| LH-304 | Query service AST, cost controls and field discovery | LH-204, LH-302 | Unauthorized ES access impossible; timeouts and bounded results |
+| LH-304 | Query service AST, cost controls and field discovery | LH-204, LH-302 | Unauthorized raw file or query-engine access impossible; timeouts and bounded results |
 | LH-305 | Distributed throttles and audit trails | LH-303, LH-304 | Per identity/IP/token limits and auditable sensitive actions |
 
 ## Phase 4 — Angular Log Explorer
@@ -81,3 +82,16 @@
 
 ## Next task
 `LH-000` inspect current renamed repository; docs baseline can be copied in after existing files are checked. Owner approval required for modifications and commits.
+
+
+## Revised gating and priorities — applies before existing phase tasks
+**LH-ARCH-001 (P0, NOT_STARTED):** Review and approve file-first central archive with JSONL→Parquet and DuckDB; capture benchmark acceptance, no application logs in PostgreSQL. No storage implementation before approval.
+**LH-ARCH-002 (P0, NOT_STARTED):** Set synthetic benchmark profile using daily bytes, retention, query cardinality, report concurrency (1–10 LogHub users), and potentially high traffic in source projects.
+**LH-DATA-001 (P0, NOT_STARTED):** Define centralized safe archive layout, atomic segments, ingestion checkpoint/ack semantics, retention/backups, manifest and recovery tests.
+**LH-DATA-002 (P0, NOT_STARTED):** JSONL→Parquet converter/compactor; schema evolution, pruning, source integrity, idempotent retry and golden-fixture tests.
+**LH-QUERY-001 (P0, NOT_STARTED):** DuckDB query worker with bounded parallelism, query AST compiler, authorization-scoped manifest resolution, cancellation/timeouts and SQL-injection tests.
+**LH-REPORT-001 (P0, NOT_STARTED):** Canonical report definition + visual query builder + textual query editor; saved per-project reports, grouping/percentiles/charts, Jarvis-compatible API, performance tests.
+**LH-REPORT-002 (P0, NOT_STARTED):** Cached/derived report results with freshness, invalidation on new archive segments and permission-safe cache keys; repeat-load benchmark.
+**LH-SEARCH-001 (P1, NOT_STARTED):** Field discovery and log explorer using DuckDB; benchmark representative text searches before proposing a Tantivy index.
+**LH-SEARCH-002 (P2, CONDITIONAL):** Tantivy proof-of-concept only if file/Parquet search benchmarks miss agreed targets.
+**Migration note:** Existing storage-related LH-201–205 and LH-304 rows are interpreted using the revised file-first design and new LH-DATA/LH-QUERY tasks; resolve duplication during owner-approved task-plan cleanup. Reporting MVP must precede search polish while preserving security and SDK prerequisites.

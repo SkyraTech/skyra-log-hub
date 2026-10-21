@@ -1,0 +1,63 @@
+{
+  "@timestamp": "2026-10-21T14:32:00.123Z",
+  "ecs.version": "8.11.0",
+  "event": {
+    "id": "a5c68e32-8438-4e4b-9725-b827568c0762",
+    "dataset": "skyra.application",
+    "category": ["web", "network"],
+    "type": ["access"],
+    "action": "http_request",
+    "outcome": "success",
+    "duration": 42000000
+  },
+  "log": {
+    "level": "info",
+    "logger": "skyra.http"
+  },
+  "message": "HTTP GET /api/v1/users/usr_98765 completed with status 200 in 42ms",
+  "service": {
+    "name": "api-gateway",
+    "version": "1.4.2",
+    "environment": "production"
+  },
+  "host": {
+    "hostname": "prod-gateway-01"
+  },
+  "trace": {
+    "id": "4bf92f3577b34da6a3ce929d0e0e4736"
+  },
+  "span": {
+    "id": "00f067aa0ba902b7"
+  },
+  "http": {
+    "request": {
+      "method": "GET",
+      "id": "req-998822"
+    },
+    "response": {
+      "status_code": 200,
+      "bytes": 1024
+    },
+    "route": "/api/v1/users/:id"
+  },
+  "url": {
+    "path": "/api/v1/users/usr_98765"
+  },
+  "client": {
+    "ip": "203.0.113.195"
+  },
+  "user_agent": {
+    "original": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+  },
+  "user": {
+    "id": "usr_98765",
+    "name": "johndoe",
+    "roles": ["customer"]
+  },
+  "skyra": {
+    "schema_version": "1.0.0",
+    "project_id": "skyra-business-suite",
+    "component": "http-interceptor",
+    "duration_ms": 42.0
+  }
+}

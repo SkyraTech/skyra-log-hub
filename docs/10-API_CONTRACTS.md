@@ -22,7 +22,7 @@ NestJS `/api/v1` REST interface; HTTPS only outside localhost; OpenAPI as author
 | Method/path | Scope | Purpose |
 |---|---|---|
 | `POST /api/v1/logs/search` | `logs:read` | Safe structured query with page/cursor |
-| `GET /api/v1/logs/fields` | `logs:read` | Allowed indexed field names/types |
+| `GET /api/v1/logs/fields` | `logs:read` | Allowed approved field names/types |
 | `POST /api/v1/logs/histogram` | `logs:read` | Time buckets grouped by UTC |
 | `GET /api/v1/logs/:eventId` | `logs:read` | One sanitized event, supplied project |
 | `POST /api/v1/logs/export` | `logs:export` | Bounded async export request |
@@ -62,7 +62,7 @@ Project ID is a **requested scope**, not authorization. API must derive effectiv
 Cursor must be opaque, time-bound, signed, and bound to caller/project/query hash. Histogram responses include `interval`, `buckets: [{key, count}]` and partial/timeout indicators. Fields endpoint returns `[{name,type,searchable,aggregatable}]` for authorized mappings only.
 
 ## 6. Query language policy
-MVP: validated structured filter AST and safe visual builder; advanced text mode may use an **explicitly defined limited grammar** compiled into AST. Future ES|QL support requires parser validation and fully enforced scoping, cost/row limits, routing safeguards and thorough adversarial tests. Never construct unrestricted `FROM <index>` from user input or forward full ES|QL/DSL text to Elasticsearch unreviewed.
+MVP: validated structured filter AST and safe visual builder; advanced text mode may use an **explicitly defined limited grammar** compiled into AST. Future restricted Skyra Query Language support requires parser validation and fully enforced scoping, cost/row limits, routing safeguards and thorough adversarial tests. Never construct unrestricted `FROM <index>` from user input or forward full restricted Skyra Query Language text to central JSONL/Parquet storage and DuckDB query service unreviewed.
 
 ## 7. Ingestion API
 `POST /ingest/v1/logs` accepts **bounded batched JSON** from authenticated service agents only. Validate service identity ↔ project; maximum uncompressed payload, batch count, schema version, event IDs, timestamps, field lengths. Return accepted/rejected counts and stable error categories, never echo sensitive records; retries use deterministic IDs. Browsers use a distinct safe frontend error endpoint, never trusted service tokens.
@@ -75,3 +75,18 @@ HTTP 400 invalid input; 401 unauthenticated; 403 forbidden; 404 not visible; 409
 
 ## 9. Tests and versioning
 OpenAPI schema snapshot tests, generated client compilation, query fuzz tests, authz cross-project negative tests, allowed field/type tests, expired cursor tests, ingest retry/dedupe, timeouts, response sanitization and backward compatibility. Breaking APIs require version bump and migration notes.
+
+
+## Report-first API additions (proposed)
+| Method/path | Scope | Notes |
+|---|---|---|
+| `GET /api/v1/reports` | `reports:read` | Only authorized project reports |
+| `POST /api/v1/reports` | `reports:write` | Validate canonical definition; actor/project binding |
+| `GET /api/v1/reports/:id` | `reports:read` | Definition plus version/freshness |
+| `PATCH /api/v1/reports/:id` | `reports:write` | Optimistic concurrency/version/audit |
+| `POST /api/v1/reports/preview` | `reports:read` | Bounded AST; preview measures/grouping and fields |
+| `POST /api/v1/reports/:id/run` | `reports:read` | DuckDB execution/cached rollup; elapsed/freshness/partial flags |
+| `GET /api/v1/reports/:id/results` | `reports:read` | Permission-bound cached or async result |
+| `GET /api/v1/logs/fields` | `logs:read` | Project-scoped schema/catalog field discovery |
+
+Report definition must encode scope, time range, dimensions, measures, aggregations, filters, sort and visualization; text and visual builders both compile to the **same validated AST**. Queries are generated inside the NestJS/DuckDB query boundary against server-resolved manifests; never accept arbitrary SQL, file paths, remote URLs or extension load requests. Response includes archive freshness and cache-hit information. PostgreSQL stores report/identity metadata only.

@@ -4,7 +4,7 @@
 > **Repository:** `skyra-loghub` (renamed by project owner). Assumptions and undecided items are marked **TBD**. These documents are design specifications, not assertions that code already exists.
 
 ## 1. Security objectives and threat model
-Protect production diagnostics, developer identities, project boundaries, MCP access and ingestion credentials. Threats include credential theft, malicious log injection/XSS, Elasticsearch query abuse, prompt injection through logs, cross-project leakage, insecure remote log submission, log tampering, exfiltration via export and resource exhaustion.
+Protect production diagnostics, developer identities, project boundaries, MCP access and ingestion credentials. Threats include credential theft, malicious log injection/XSS, unbounded DuckDB query and file-path abuse, prompt injection through logs, cross-project leakage, insecure remote log submission, log tampering, exfiltration via export and resource exhaustion.
 
 ## 2. Human authentication
 - OIDC provider **TBD** (Microsoft Entra ID or another validated provider); require MFA enforced at provider.
@@ -52,7 +52,7 @@ Distributed counters in Redis/Valkey; use gateway/WAF controls for high-volume a
 - Dependency scanning, SBOM, signed/pinned container images, least-privilege runtime, read-only filesystem where feasible and no root containers.
 
 ## 9. Data protection and storage
-TLS internal/external; encrypted volumes/backups; secrets via vault/provider; PostgreSQL and Elasticsearch private endpoints. Segregate operational logs vs tamper-evident security audit record. Audit login, token issue/revoke, access denial, role changes, queries and exports; audit records must never reveal raw secrets or confidential query results.
+TLS internal/external; encrypted volumes/backups; secrets via vault/provider; PostgreSQL and central JSONL/Parquet storage and DuckDB query service private endpoints. Segregate operational logs vs tamper-evident security audit record. Audit login, token issue/revoke, access denial, role changes, queries and exports; audit records must never reveal raw secrets or confidential query results.
 
 ## 10. Logging privacy rules
 SDK sanitizes first; ingestion sanitizes again. Prohibit authentication headers, cookies, body dumps, SQL bind parameters, AI prompts and sensitive IDs by default. Apply field allowlist, nested object sanitization and bounded size; review retention and data residency with stakeholders before production use.
@@ -64,7 +64,7 @@ SDK sanitizes first; ingestion sanitizes again. Prohibit authentication headers,
 | Expired/revoked token | 401/403 without grace leakage |
 | Stolen token attempts scope elevation | Denied server side |
 | Malicious log string `<script>` | Rendered as plain text |
-| Arbitrary ES DSL/ES|QL commands | Reject unsupported/unscoped statements |
+| Arbitrary ES DSL/Skyra Query Language commands | Reject unsupported/unscoped statements |
 | Flood oversized JSON/batches | Reject/throttle without service crash |
 | MCP attempts log-driven prompt injection | Tool remains read-only and scoped |
 | Session CSRF and logout | State mutation protected, old session invalid |
@@ -72,3 +72,10 @@ SDK sanitizes first; ingestion sanitizes again. Prohibit authentication headers,
 
 ## 12. Incident response
 Revoke compromised credential and sessions, check audits, rotate related secrets, quarantine suspicious source, preserve signed relevant evidence under restricted access, restore/backfill as appropriate and document impact. Define incident owner/rotation and notification channel **TBD**.
+
+
+## File/query-engine threat model extension
+- Only ingestion/archive worker credentials may write central JSONL. Apply restrictive directory/object ACLs, safe fixed prefixes, no traversal/symlinks, encryption in transit/at rest, integrity hashing and audit of archive access. Project IDs are resolved against registered service identities, not trusted from submitted paths.
+- Query workers must run sandboxed/unprivileged with read-only, project-scoped manifest/file access. Disallow arbitrary DuckDB external extensions, local file paths, attach/install/copy statements, unrestricted SQL and side-effecting functions; compile a restricted query AST to bounded SQL.
+- Reports and Jarvis-generated definitions must pass the same project authorization, field allowlist, result caps, timeouts, cache isolation and redaction rules. Report publication/change/create is auditable; Jarvis high-risk administrative actions require separate approval.
+- PostgreSQL contains accounts/project membership/tokens/report definitions only (no raw app log-event rows); maintain independent security audit trail.

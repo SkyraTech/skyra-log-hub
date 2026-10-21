@@ -1,0 +1,36 @@
+{
+  "@timestamp": "2026-10-21T14:32:05.000Z",
+  "ecs.version": "8.11.0",
+  "event": {
+    "id": "e98e217d-2b99-4d69-8a47-ef92cf856b34",
+    "dataset": "skyra.application",
+    "category": ["process"],
+    "type": ["info"],
+    "action": "batch_job",
+    "outcome": "success",
+    "duration": 1250000000
+  },
+  "log": {
+    "level": "info",
+    "logger": "skyra.queue"
+  },
+  "message": "Background job 'generate-daily-reports' completed in 1250ms",
+  "service": {
+    "name": "reporting-worker",
+    "version": "1.0.0",
+    "environment": "staging"
+  },
+  "job": {
+    "name": "generate-daily-reports",
+    "id": "job_20261021_0991",
+    "queue": "reports-high-priority",
+    "attempt": 1,
+    "max_attempts": 3
+  },
+  "skyra": {
+    "schema_version": "1.0.0",
+    "project_id": "skyra-business-suite",
+    "component": "bullmq-worker",
+    "duration_ms": 1250.0
+  }
+}

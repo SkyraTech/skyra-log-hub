@@ -4,10 +4,10 @@
 > **Repository:** `skyra-loghub` (renamed by project owner). Assumptions and undecided items are marked **TBD**. These documents are design specifications, not assertions that code already exists.
 
 ## 1. Objective
-Provide authorized read-only Skyra LogHub log investigations to compatible tools such as Claude Code, Antigravity and Skyra Jarvis. Do not expose Elasticsearch directly. Place `apps/mcp-server` behind LogHub API/domain authorization.
+Provide authorized read-only Skyra LogHub log investigations to compatible tools such as Claude Code, Antigravity and Skyra Jarvis. Do not expose central JSONL/Parquet storage and DuckDB query service directly. Place `apps/mcp-server` behind LogHub API/domain authorization.
 
 ## 2. Architecture
-`MCP Client → OAuth/token verification boundary → MCP tool policy enforcement → LogHub NestJS API → Elasticsearch/PostgreSQL`. Authn + project authz are repeated at the authoritative API; MCP is not the sole gate.
+`MCP Client → OAuth/token verification boundary → MCP tool policy enforcement → LogHub NestJS API → central JSONL/Parquet storage and DuckDB query service/PostgreSQL`. Authn + project authz are repeated at the authoritative API; MCP is not the sole gate.
 
 ## 3. Transport and authentication
 - Remote deployment: MCP SDK supported Streamable HTTP endpoint; standards-conformant OAuth protected-resource authorization; issuer/audience verification, bounded expiry and scopes. Deploy behind HTTPS reverse proxy and rate limits.
@@ -26,7 +26,7 @@ Provide authorized read-only Skyra LogHub log investigations to compatible tools
 | `get_recent_errors` | `logs:read` | project, max count | grouped errors |
 | `get_api_performance` | `logs:read` | project, service, route, time | aggregate latency stats |
 | `get_job_executions` | `logs:read` | project, job type, time | approved job status data |
-No tools for arbitrary Elasticsearch execution, token creation, role changes, deleting data, shell commands or deployment.
+No tools for arbitrary central JSONL/Parquet storage and DuckDB query service execution, token creation, role changes, deleting data, shell commands or deployment.
 
 ## 5. Response policy
 Truncate events and long messages, redact output a second time, cap page counts/time windows, never return binary files or raw secrets. Supply structured identifiers/timestamps and helpful warnings for partial data. Do not promote log content into assistant/system instructions.
@@ -45,3 +45,9 @@ Server starts locally and via HTTPS; discoverable tools; tested OAuth discovery 
 
 ## 10. Documentation to add during implementation
 Supported client versions, reproducible authenticated config snippets with placeholders, scope grants, local/remote security posture, troubleshooting and token rotation guide.
+
+
+## Jarvis report-authoring permissions (future gated capability)
+- Beyond read-only log search, introduce separately scoped tools such as `list_reports`, `get_report`, `preview_report`, `create_report` and `update_report` after safe report CRUD API validation is complete. Default to read-only; `reports:write` is a deliberate grant and always project-scoped.
+- All generated report definitions use the same validated canonical report schema as Angular visual/text builders. Do not accept arbitrary DuckDB SQL or storage paths from clients. Tools cap aggregation complexity, time windows and returned data; log text is untrusted input.
+- For initial one owner and future 5–10 LogHub users, enforce actor attribution, audit trail, revision history and rollback of report definitions; Jarvis may not delete raw archives or change security policy without an explicit separately authorized workflow.

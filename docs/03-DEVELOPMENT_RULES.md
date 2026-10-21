@@ -35,8 +35,11 @@ For every Antigravity task: read `06-PROJECT_MEMORY.md`, relevant PRD/ADR/contra
 - Never log raw exception locals automatically; scrub secrets before serialization.
 
 ## 7. Schemas and naming
-- Canonical schema version pinned in repository; all SDKs and ingest gateway run fixture-based compatibility tests.
-- ECS field names as canonical indexed shape; `skyra.*` extension; UTC ISO-8601; numeric nanosecond `event.duration`.
+- Canonical schema version pinned in repository at `contracts/schemas/v1/log-event.schema.json`; all SDKs and ingest gateway run fixture-based compatibility tests.
+- ECS field names as canonical event structure; `skyra.*` extension; strict UTC ISO-8601 (`@timestamp` ending in `Z`); numeric nanosecond `event.duration` and millisecond `skyra.duration_ms`.
+- Strict JSONL parser rule: duplicate property names are rejected at all depths by `parseStrictJson` / `parseJsonl`.
+- Sensitive data redaction rule: credentials, secrets, tokens, connection strings, JWTs, and compound keys (camelCase, snake_case, kebab-case) must pass through `@skyra/logger-core/redaction` or `skyra_logger.redaction` prior to serialization.
+- Normalization rules: legacy environment aliases (`dev` -> `development`, `qa` -> `test`) and underscore actions (`http_request` -> `http.request.completed`) must be normalized at SDK ingest boundaries.
 - Use stable IDs not display names as routing keys. Reject duplicate keys; default-deny arbitrary unknown top-level fields in high-risk intake paths.
 
 ## 8. Security, privacy and supply chain
@@ -67,3 +70,13 @@ Create reproducible bug + regression test in Skyra Platform, obtain permission t
 
 ## 13. Definition of done
 Requirements and threat considerations satisfied; code reviewed; tests and docs updated; safe migration/rollback plan if needed; reproducible commands and evidence; memory updated; outstanding risks declared.
+
+
+## File-first architecture and reusable report code rules
+- No application log-event table in PostgreSQL; forbid accidental Prisma models for raw application logs. Prefer JSONL archives and rebuildable Parquet derived data.
+- Design reusable modules for `StorageAdapter`, `ArchiveWriter`, `ManifestCatalog`, `ParquetCompactor`, `QueryPlanner`, `ReportDefinitionValidator`, `ReportExecutor`, `ReportCache`, and project authorization where concrete reuse is justified; avoid premature abstraction.
+- Require query AST → allowlisted schema types → bounded, parameterized DuckDB SQL. Never execute raw SQL authored by Jarvis/users or take paths/globs directly from callers.
+- Design all report creation paths (visual builder, text query editor, Jarvis/MCP) to produce the same validated canonical report definition with permission checks.
+- Every archive mutation/compaction needs integrity, idempotency, retry and recovery tests; preserve source files until verified safe deletion under approved retention.
+- UI generic components go into Skyra Platform via independently tested PR/releases; domain-specific report modules stay here.
+- Do not assume small LogHub team means low scale of monitored business apps.

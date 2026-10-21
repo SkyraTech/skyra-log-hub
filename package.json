@@ -1,0 +1,25 @@
+{
+  "name": "skyra-log-hub",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Skyra LogHub — Centralized Logging and Observability Platform",
+  "scripts": {
+    "build": "pnpm --filter @skyra/logger-core build",
+    "typecheck": "pnpm --filter @skyra/logger-core exec tsc --noEmit",
+    "sync:schemas": "node scripts/sync-schemas.mjs",
+    "check:schema-sync": "node scripts/sync-schemas.mjs --check",
+    "test": "node --experimental-strip-types --test tests/contracts/schema-validation.test.ts",
+    "test:contracts": "node --experimental-strip-types --test tests/contracts/schema-validation.test.ts",
+    "test:python": "python -m unittest discover -s packages/logger-python/tests"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@12.3.4",
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2"
+  }
+}

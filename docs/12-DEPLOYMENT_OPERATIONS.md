@@ -6,33 +6,33 @@
 ## 1. Supported environments
 - Local development: Docker Compose with synthetic data, no public exposure.
 - Single VM pilot: Docker Compose, persistent encrypted volumes, reverse proxy + TLS, off-host encrypted backups. Non-HA and must not host high-criticality data without approval.
-- AWS/Azure/on-prem: containerized app/worker/collector, managed or self-hosted PostgreSQL, self-managed Elasticsearch Basic when selected; private networking/volume provisioning and IaC per provider.
+- AWS/Azure/on-prem: containerized app/worker/collector, managed or self-hosted PostgreSQL, self-managed central JSONL archive + Parquet + DuckDB when selected; private networking/volume provisioning and IaC per provider.
 
 ## 2. Logical service inventory
-`dashboard` Angular static web served by Nginx/Caddy; `api` NestJS; `ingest-gateway` NestJS/OTLP ingress; `mcp-server` private or OAuth-protected; `worker`; `collector`; `elasticsearch`; `postgres`; `valkey/redis`; `reverse-proxy`; optional identity provider externally managed.
+`dashboard` Angular static web served by Nginx/Caddy; `api` NestJS; `ingest-gateway` NestJS/OTLP ingress; `mcp-server` private or OAuth-protected; `worker`; `collector`; `archive-and-query`; `postgres`; `valkey/redis`; `reverse-proxy`; optional identity provider externally managed.
 
 ## 3. Network boundaries
 - Externally reachable only HTTPS reverse proxy endpoints needed for dashboard/login, approved machine ingress and authorized MCP.
-- Elasticsearch/PostgreSQL/Valkey/collector admin ports private, never bound publicly; firewall egress scoped, operator access via bastion/VPN where practical.
+- central file storage/PostgreSQL/Valkey/collector admin ports private, never bound publicly; firewall egress scoped, operator access via bastion/VPN where practical.
 - CORS same-origin, secure cookies, separate service credentials, mTLS internal where feasible.
 
 ## 4. Configuration/secrets
 Environment-driven immutable config with typed startup validation. Secret vault for DB, OIDC, ES, API token HMAC and collector service credentials. `.env.example` has dummy values only. Keep TLS certificates automatically renewed and keys rotated; deployment automation never prints secret values.
 
 ## 5. Storage/retention planning
-Estimate: GB/day = events/sec × average event bytes × 86400 / 10^9, then add index overhead, replicas, headroom and snapshots. Select size/retention only after volume sampling. Separate application logs, security audits, indexes, database volumes, collector checkpoints and temporary exports. Define hot retention and snapshots based on compliance, not blindly mirror local files.
+Estimate: GB/day = events/sec × average event bytes × 86400 / 10^9, then add index overhead, replicas, headroom and snapshots. Select size/retention only after volume sampling. Separate application logs, security audits, derived analytical files, database volumes, collector checkpoints and temporary exports. Define hot retention and snapshots based on compliance, not blindly mirror local files.
 
 ## 6. Backups and recoverability
 - PostgreSQL consistent backup + point-in-time strategy where feasible.
-- Elasticsearch snapshot repository on off-host object storage; snapshot validation and restore drills; snapshots not substitutes for application security logs.
+- archive object-storage snapshot/backup destination on off-host object storage; snapshot validation and restore drills; snapshots not substitutes for application security logs.
 - RPO/RTO **TBD** with owner; encrypt backups, restrict IAM and test credential revocation after restore.
 - Valkey queue recovery semantics and idempotent job handling; do not assume transient caches are durable source of truth.
 
 ## 7. Observability of LogHub itself
-Monitor ingest success/rejection, collector lag/checkpoint age, event drops, ES disk usage/heap/search queues, API p95, query timeout, Postgres connections, token failures, rate-limit rejections, queue depth, MCP invocations, expired certificates, backup age and restore health.
+Monitor ingest success/rejection, collector lag/checkpoint age, event drops, archive disk usage, conversion lag and query worker saturation, API p95, query timeout, Postgres connections, token failures, rate-limit rejections, queue depth, MCP invocations, expired certificates, backup age and restore health.
 
 ## 8. Runbooks to write during implementation
-Start/stop, user/credential recovery, file full/rotation failure, Elasticsearch unavailable, duplicate events, failed migration, authentication provider outage, cross-project exposure incident, MCP disable switch, index restore, storage forecast/cost alert, rollout/rollback.
+Start/stop, user/credential recovery, file full/rotation failure, central storage/query service unavailable, duplicate events, failed migration, authentication provider outage, cross-project exposure incident, MCP disable switch, index restore, storage forecast/cost alert, rollout/rollback.
 
 ## 9. Security baseline
 Use current supported image versions pinned by digest, non-root users and read-only containers where possible; scanner results tracked. Patch cadence, access audit, HTTPS, secret rotation, RBAC, data residency and restricted exports. Never put raw customer/application logs in CI artifacts.
@@ -49,3 +49,11 @@ No fabricated monthly price. Estimate using daily log volume, retention, replica
 
 ## 11. Rollout
 Local synthetic → isolated staging with 2 demo services → private pilot with production-shaped traffic → security/load/restore gate → initial internal production → migrate other Skyra apps one-by-one with rollback. Each step needs documented signoff.
+
+
+## Updated central file-storage deployment model
+- Permanent centralized JSONL archive uses safe project/service/date prefixes on local durable volume, S3, Azure Blob or compatible object storage via adapter. Apps spool only temporarily; central ingestion finalizes immutable numbered segments (not concurrent writes into shared remote files).
+- Parquet conversion/compaction runs in bounded workers; DuckDB query service reads approved partitions/manifests; cache in Valkey. PostgreSQL holds management/report definitions only, not diagnostic log rows.
+- Development/pilot: local Docker Compose with mounted volumes and off-host backups. AWS: S3 + container/VM query worker + suitable persistent cache. Azure: Blob Storage + container/VM worker. Self-host: SSD/archive drive or compatible object store. Avoid storage-provider-specific APIs in SDKs.
+- Monitor bytes/day, retained days, local spool overflow, ingestion ACK latency, segment finalization, Parquet compaction freshness, file count, query p95 and CPU/RAM, cache hit rate, archive integrity, restore speed. Scale decisions based primarily on source-app event volume and report workload, not 5–10 internal dashboard users.
+- Never treat Parquet/cache as backup; backups cover JSONL archive, PostgreSQL metadata, security audit trail and configuration. Verify restore, replay and derived-data rebuild.

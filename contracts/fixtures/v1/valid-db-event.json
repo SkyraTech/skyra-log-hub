@@ -1,0 +1,43 @@
+{
+  "@timestamp": "2026-10-21T14:32:01.450Z",
+  "ecs.version": "8.11.0",
+  "event": {
+    "id": "c1f7b884-28a1-4389-9a67-d867c2937812",
+    "dataset": "skyra.application",
+    "category": ["database"],
+    "type": ["access"],
+    "action": "sql_query",
+    "outcome": "success",
+    "duration": 8500000
+  },
+  "log": {
+    "level": "debug",
+    "logger": "skyra.prisma"
+  },
+  "message": "Executed SELECT on table users in 8.5ms",
+  "service": {
+    "name": "user-service",
+    "version": "2.1.0",
+    "environment": "production"
+  },
+  "trace": {
+    "id": "4bf92f3577b34da6a3ce929d0e0e4736"
+  },
+  "span": {
+    "id": "5c3e03d3c87a2701"
+  },
+  "database": {
+    "system": "postgresql",
+    "name": "skyra_users_prod",
+    "operation": "SELECT",
+    "table": "users",
+    "statement_sanitized": "SELECT id, email, created_at FROM users WHERE id = $1 LIMIT 1",
+    "rows_affected": 1
+  },
+  "skyra": {
+    "schema_version": "1.0.0",
+    "project_id": "skyra-business-suite",
+    "component": "prisma-middleware",
+    "duration_ms": 8.5
+  }
+}

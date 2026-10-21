@@ -1,0 +1,19 @@
+{
+  "@timestamp": "2026/10/21 14:32:00",
+  "ecs.version": "8.11.0",
+  "event": {
+    "id": "a5c68e32-8438-4e4b-9725-b827568c0762"
+  },
+  "log": {
+    "level": "info"
+  },
+  "message": "Invalid non-RFC3339 timestamp",
+  "service": {
+    "name": "test-service",
+    "environment": "production"
+  },
+  "skyra": {
+    "schema_version": "1.0.0",
+    "project_id": "skyra-test"
+  }
+}

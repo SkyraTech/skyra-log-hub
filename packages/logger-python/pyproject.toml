@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skyra-logger"
+version = "1.0.0"
+description = "Canonical Skyra Logging SDK and ECS-aligned log event validator for Python"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Proprietary" }
+authors = [
+    {name = "Skyra Tech", email = "hello@skyra-tech.com"}
+]
+keywords = ["skyra", "logging", "ecs", "jsonl", "observability"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: System :: Logging",
+]
+dependencies = [
+    "jsonschema>=4.20.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["skyra_logger*"]

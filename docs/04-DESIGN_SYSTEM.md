@@ -61,3 +61,12 @@ Primary use desktop 1280px+, fully usable tablet; smaller screens collapse sideb
 
 ## 10. UX acceptance tests
 Keyboard-only query/search/filter; contrast check; accessible field labels; project switch resets potentially unsafe stale results; no cross-project data flashes; visual snapshots at light/dark and key screen sizes; verify Skyra package compatibility before new UI coding.
+
+
+## Report-first interaction patterns
+- The primary landing experience is **Reports** with saved project dashboards, clear freshness indicators, fast previews and chart/table layouts. Log Explorer is prominent but secondary.
+- Report Builder supports **Visual Mode** (field picker, type-aware filters, measure, aggregation, group-by, sort, time range, chart/table choice) and **Query Mode** (restricted Skyra Query Language). Both display validation, estimated scope and resulting SQL-free canonical definition.
+- Report page states include cached/fresh/loading/partial/expired/error and accessible empty states; never silently show stale data as current.
+- Log Explorer follows reference screenshots functionally: project selector, available fields, selected columns, bounded query editor, time histogram, results table, expandable sanitized JSON. Do not pixel-copy another product.
+- Reuse versioned Skyra Platform form/table/select/dialog/tokens packages. Add generic missing controls there only after shared-consumer API/test review.
+- Design layout for one owner and up to ten internal LogHub users while remaining responsive; watched products' audience size is unrelated.

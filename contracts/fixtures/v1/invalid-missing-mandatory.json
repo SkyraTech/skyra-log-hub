@@ -1,0 +1,8 @@
+{
+  "@timestamp": "2026-10-21T14:32:00.000Z",
+  "ecs.version": "8.11.0",
+  "log": {
+    "level": "info"
+  },
+  "message": "Missing event, service and skyra metadata"
+}

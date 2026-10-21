@@ -10,16 +10,16 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
 | Item | State |
 |---|---|
 | Product | Skyra LogHub |
-| Repository | User reports existing `skyra-observability` renamed; final local path/remote confirmation TBD |
-| Current phase | Phase 0 — documentation baseline and repository inspection |
-| Current task | LH-000 (not yet executed by this documentation) |
-| Implemented LogHub features | **Unverified**; current repository not inspected in this operation |
-| Documents | 14 baseline drafts generated externally, pending user copy/review/commit |
-| Tests | None executed as part of drafting these documents |
-| Hosting | AWS / Azure / own server undecided |
-| Identity provider | TBD |
-| Design branding | Skyra Platform tokens preferred; palette awaiting approval |
-| Canonical schema | ECS-compatible Skyra Logging Standard v1.0 proposed; not yet released |
+| Repository | `skyra-log-hub` |
+| Current phase | Phase 1 — Contracts and package foundations |
+| Current task | LOGHUB-PKG-001B (Completed) |
+| Implemented LogHub features | Canonical schema contracts (Draft 2020-12), storage contract, `@skyra/logger-core` (compiled `dist/`), `skyra-logger` (wheel verified), hardened redaction, test suites |
+| Documents | 14 baseline documents aligned with file-first architecture (ADR-011) |
+| Tests | 17 automated tests passing (8 Node.js contract suites + 9 Python unit tests) |
+| Hosting | AWS / Azure / own server portable (Docker / Linux filesystem) |
+| Identity provider | OIDC / OAuth2 + scoped machine tokens (spec approved) |
+| Design branding | Skyra Platform tokens |
+| Canonical schema | ECS-compatible Skyra Logging Standard v1.0.0 released (Draft 2020-12, `contracts/schemas/v1/log-event.schema.json`) |
 
 ## Confirmed user requirements
 - One monorepo for SDKs, Angular frontend, NestJS API, ingestion, MCP and infrastructure.
@@ -35,27 +35,49 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
 | Date | Topic | Proposed outcome | Reference |
 |---|---|---|---|
 | 2026-10-21 | UI/API | Angular + NestJS | `02-SYSTEM_ARCHITECTURE.md` |
-| 2026-10-21 | Storage | Elasticsearch Basic + PostgreSQL + Valkey/Redis | ADR pending |
+| 2026-10-21 | Storage | central JSONL archive + Parquet + DuckDB + PostgreSQL + Valkey/Redis | ADR pending |
 | 2026-10-21 | Contracts | ECS-compatible JSON with Skyra extension, canonical source `skyra-service-contracts` | `07-LOGGING_STANDARD.md` |
 | 2026-10-21 | Authorization | OIDC/MFA + project-scoped opaque credentials; OAuth for remote MCP | `08-SECURITY_AUTHENTICATION.md` |
 | 2026-10-21 | Rollout | Do not migrate existing projects until SDK pilot accepted | `05-PROJECT_TASKS.md` |
 
 ## Completed tasks
-- Requirements discussions and example screenshot reviews completed in chat.
-- Draft documentation generated for repository import; **not evidence of source-control changes**.
+- Task 00: Comprehensive repository and 14-document baseline inspection.
+- LOGHUB-PKG-001: Logging Package Foundation & Canonical Schema.
+- LOGHUB-PKG-001A: Independent Foundation Audit, Schema Verification & Security Review (identifying findings SEC-01 through SEC-08).
+- LOGHUB-PKG-001B: Canonical Schema Alignment, Redaction Hardening & Package Distribution:
+  - Aligned canonical JSON Schema Draft 2020-12 with ECS 8.11.0 (`ecs.version`, `database`, `user`, `client`, `url`, `user_agent`, `job`, `error`).
+  - Added action and environment normalization (`dev` -> `development`, `qa` -> `test`, `http_request` -> `http.request.completed`).
+  - Implemented Ajv 2020 cached schema validation in `@skyra/logger-core`.
+  - Implemented `jsonschema` Draft 2020-12 validation in `skyra-logger` Python package.
+  - Hardened redaction against compound keys (`clientSecret`, `dbPassword`, `stripeApiKey`), raw JWTs, URL credentials, and circular references.
+  - Resolved distribution blockers: compiled `@skyra/logger-core` with `dist/` JS and `.d.ts` declaration files; verified Python wheel build.
+  - Updated storage contract to enforce mandatory single-writer instance isolation and partial-line quarantine recovery.
+  - 17 automated tests passing (8 TypeScript suites + 9 Python tests) with zero regressions.
+
+### 2026-10-21 — LH-101C (LOGHUB-PKG-001C) — Final Schema Consistency & Package Verification
+- Status: DONE
+- Verified deliverables:
+  - Canonical JSON Schema v1: pinned `ecs.version` to `const: "8.11.0"`, isolated from `skyra.schema_version` (`^1\.[0-9]+...`).
+  - Strict RFC 4122 UUIDv4 regex pattern on `event.id` rejecting UUIDv1, UUIDv7, and malformed identifiers.
+  - Calendar date & UTC validation: bounded months (01-12), days (01-31), leap years (Feb 29 only in leap years), hour/min/sec limits, and trailing 'Z'. Implemented consistently in both TypeScript (`isValidCalendarTimestamp`) and Python (`is_valid_calendar_timestamp`).
+  - Schema synchronization check tooling (`scripts/sync-schemas.mjs`, `pnpm run check:schema-sync`, `pnpm run sync:schemas`) ensuring embedded copies never drift from canonical file.
+  - Normalization immutability: `normalizeLogEvent` and `normalize_log_event` deep clone objects/dicts and never mutate caller-owned inputs.
+  - Diagnostic privacy: validation error paths never leak secret payload values.
+  - Distribution verification: isolated Node.js consumer (`node-consumer`), TypeScript consumer (`ts-consumer`), and Python wheel consumer (`py-consumer`) all installed and passed smoke tests with exit code 0.
+- Test evidence:
+  - TypeScript contract tests: 13/13 passed (`node --experimental-strip-types --test tests/contracts/schema-validation.test.ts`).
+  - Python unit tests: 14/14 passed (`python -m unittest discover -s packages/logger-python/tests`).
+  - Total tests: 27 automated tests passing with zero failures.
 
 ## In-progress tasks
-- User review of draft documents and current repository audit.
+- None (LOGHUB-PKG-001C completed, certified ready for LOGHUB-PKG-002).
 
 ## Blockers and decisions needed
-1. Confirm existing repo files and whether any new docs would overwrite others.
-2. Choose identity provider, expected data volume/EPS, retention and backup objectives.
-3. Validate Skyra Platform registry availability and component public APIs.
-4. Confirm Elasticsearch distribution/license constraints and hosting sizing.
-5. Confirm brand colors and final release package names.
+1. Confirm identity provider (Keycloak / Auth0 / Azure Entra) for Phase 3.
+2. Confirm deployment target (Azure / AWS / Self-hosted VM).
 
 ## Next approved action
-Run read-only `LH-000`, compare repository to specification, then seek approval for documentation import (`LH-001`), followed by schema (`LH-101`).
+Awaiting user review of `LOGHUB-PKG-001C`. Next scheduled task is `LOGHUB-PKG-002` (Reusable Node.js Logging SDK & Daily JSONL File Writer).
 
 ## Update template (copy per completed task)
 ```md
@@ -72,3 +94,12 @@ Run read-only `LH-000`, compare repository to specification, then seek approval 
 
 ## Session handoff rule
 Always start by reading this file, `05-PROJECT_TASKS.md`, relevant ADR and task contract; end with an evidence-based entry. Never remove past decisions silently—mark superseded with rationale.
+
+
+## Most recent agreed direction — 2026-10-21
+- Repository renamed by owner to `skyra-loghub`; documents placed in `docs/`.
+- Product: custom Angular + NestJS dashboard, Skyra Platform Web Components, reusable JS/TS/Python SDKs, project/day JSONL organization, secure MCP/Jarvis integration and test-first phased implementation.
+- LogHub currently has one intended dashboard user; future internal LogHub users estimated **5–10**. This is **NOT** a limit or estimate for end users of the monitored Skyra projects. Log ingestion may grow independently.
+- **Storage direction (provisional pending benchmark):** central authoritative JSONL segments; Parquet derived analytical files; DuckDB engine for report-first queries; PostgreSQL admin metadata ONLY; Valkey caching/rate controls. No Elasticsearch/Kibana/OpenSearch in baseline and no raw diagnostic events in PostgreSQL.
+- **Priorities:** fast report loading is P0; search P1. Visual and restricted textual report definition both essential. Jarvis should be able to create/save/run project reports using token-scoped APIs/MCP; high-risk admin/file deletion actions gated.
+- No feature implementation, performance benchmark, deploy or authentication integration is verified by document revision. Next step is owner review/approval of architecture and performance budgets, **not automatic Antigravity execution**.

@@ -4,7 +4,7 @@
 > **Repository:** `skyra-loghub` (renamed by project owner). Assumptions and undecided items are marked **TBD**. These documents are design specifications, not assertions that code already exists.
 
 ## 1. Scope and philosophy
-One language-neutral **canonical indexed document** for events emitted from Node.js, NestJS, Next.js, Python and browser adapters. Inspired by user's previous Serilog JSONL practice, but improves security, naming and duplicate-key correctness. Indexed shape aligns with Elastic Common Schema (ECS) where applicable; Skyra extensions live under `skyra.*`. Source adapters can emit their own internal representations only if the ingestion normalizer produces canonical schema without losing trace/identity attributes.
+One language-neutral **canonical canonical JSONL event** for events emitted from Node.js, NestJS, Next.js, Python and browser adapters. Inspired by user's previous Serilog JSONL practice, but improves security, naming and duplicate-key correctness. Indexed shape aligns with Elastic Common Schema (ECS) where applicable; Skyra extensions live under `skyra.*`. Source adapters can emit their own internal representations only if the ingestion normalizer produces canonical schema without losing trace/identity attributes.
 
 ## 2. Envelope and core fields
 | Field | Type | Requirement | Semantics |
@@ -100,10 +100,25 @@ ${LOG_ROOT}/${PROJECT_ID}/${ENV}/${SERVICE}/${INSTANCE}/2026-10-21.001.jsonl
 Never accept `skyra.project_id` solely from the body for authorization. Verify registered service credential/collector identity ↔ allowed project/service; enrich trusted origin; reject mismatches. Use event ID for replay dedupe when warranted.
 
 ## 10. Sampling, cardinality and operations
-Count API requests/errors via unsampled counters; use configurable tracing/log sampling for routine high-volume details. Bound attribute lengths, tag counts, query identifiers and numeric precision. Track dropped records, buffer occupancy, collector lag, Elasticsearch rejection/error counts and queue backlog as separate operational telemetry.
+Count API requests/errors via unsampled counters; use configurable tracing/log sampling for routine high-volume details. Bound attribute lengths, tag counts, query identifiers and numeric precision. Track dropped records, buffer occupancy, collector lag, archive write/conversion/query failure counts and queue backlog as separate operational telemetry.
 
 ## 11. Compatibility/testing
 Schema and samples live under versioned canonical contracts. For each SDK run fixture parity, clock/timezone, duplicate-property rejection, unknown field, redaction, rotation, crash recovery, concurrency and cross-language compatibility tests. Breaking field/type changes require a schema major version and ADR.
 
-## 12. Next artifacts
-Actual JSON Schema files, an event-type registry, SDK conformance fixtures, controlled redaction policy and an ECS-version mapping table to be implemented in LH-101.
+## 12. Implemented artifacts (LOGHUB-PKG-001, PKG-001B & PKG-001C)
+The following canonical artifacts and foundation packages are implemented, verified, hardened, and certified:
+- Canonical JSON Schema v1.0.0 (Draft 2020-12): `contracts/schemas/v1/log-event.schema.json` (pinned ECS `8.11.0` via `const: "8.11.0"`, isolated from `skyra.schema_version` `1.0.0`; strict RFC 4122 UUIDv4 on `event.id`; bounded UTC RFC3339 timestamps with calendar leap year validation; strict unknown property rejection).
+- Storage Contract Specification: `contracts/storage-contract.md` (mandatory single-writer instance isolation, UTC daily segments, 100 MiB rollover, partial-line quarantine recovery).
+- Conformance & Error Fixtures: `contracts/fixtures/v1/` (6 valid fixtures and 5 invalid fixtures tested across TS Ajv 2020 and Python jsonschema 2020-12).
+- Schema Synchronization Tooling: `scripts/sync-schemas.mjs` (`pnpm run sync:schemas`, `pnpm run check:schema-sync`) ensuring zero drift between canonical schema and package embedded definitions.
+- TypeScript Core (`@skyra/logger-core`): compiled `dist/` artifacts (`.js` and `.d.ts`), JIT-cached Ajv 2020 validator, circular-safe compound-key redaction engine, immutable `normalizeLogEvent`, calendar timestamp validation, and duplicate-key parser. Tarball verified in clean Node and TS consumers.
+- Python Core (`skyra-logger`): PEP 621 package with `jsonschema` Draft 2020-12 validator, circular-safe compound-key redaction, immutable `normalize_log_event`, calendar timestamp validation, and duplicate-key parser. Wheel and sdist verified in clean consumer.
+- Automated Contract Tests: `tests/contracts/schema-validation.test.ts` (13 suites passing) and `packages/logger-python/tests/test_schema.py` (14 tests passing) — total 27 passing tests with zero regressions.
+
+
+## Storage-independent canonical log delivery
+- ECS-inspired property names and Skyra extension names are adopted as a **portable JSON event schema**; Elasticsearch itself is not a dependency or required destination. Publish a language-neutral JSON Schema with strict duplicate-key, timestamp, range and max-size test fixtures.
+- Application SDKs emit per-project/environment/service/instance **UTC daily JSONL** locally only if persistent host storage is suitable; local spool is temporary. Production source-of-truth archive is centrally finalized immutable JSONL segments; optional size rollover and archive checkpoints.
+- The compaction job writes partitioned Parquet **derived data** and can reprocess from source segments, without introducing a raw-log PostgreSQL table. Include `event.id`, safely normalized dimensions, typed durations and safe query fingerprints in converted columns for report speed.
+- Schema changes require compatibility validation of JSONL input and Parquet conversion, versioned normalizers and representative cross-language fixtures.
+- Archive and derived-data retention separate; define audit event preservation independently from routine diagnostics. Monitoring measures ingestion lag, segment close/finalize, compaction lag, query worker use, report cache freshness and disk/object storage health.

@@ -1,0 +1,37 @@
+{
+  "@timestamp": "2026-10-21T14:32:20.000Z",
+  "ecs.version": "8.11.0",
+  "event": {
+    "id": "fe09617d-2b47-49f4-8c8a-788e040a4309",
+    "dataset": "skyra.application",
+    "category": ["process"],
+    "type": ["info"],
+    "action": "ml_pipeline_step",
+    "outcome": "success",
+    "duration": 5400000000
+  },
+  "log": {
+    "level": "info",
+    "logger": "skyra.ml.forecaster"
+  },
+  "message": "Model inference pipeline executed successfully for tenant tnt_991",
+  "service": {
+    "name": "forecasting-service",
+    "version": "0.9.1",
+    "environment": "production"
+  },
+  "host": {
+    "hostname": "gpu-node-04"
+  },
+  "skyra": {
+    "schema_version": "1.0.0",
+    "project_id": "skyra-ml-suite",
+    "component": "inference-engine",
+    "duration_ms": 5400.0,
+    "business": {
+      "tenant_id": "tnt_991",
+      "model_name": "xgboost-demand-v2",
+      "records_processed": 15000
+    }
+  }
+}

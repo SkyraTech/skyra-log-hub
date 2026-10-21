@@ -1,0 +1,40 @@
+{
+  "@timestamp": "2026-10-21T14:32:15.000Z",
+  "ecs.version": "8.11.0",
+  "event": {
+    "id": "2b6b8981-dca9-4ec4-9dfc-53f09fbb35a8",
+    "dataset": "skyra.audit",
+    "category": ["authentication", "iam"],
+    "type": ["access", "change"],
+    "action": "user.role_assigned",
+    "outcome": "success"
+  },
+  "log": {
+    "level": "info",
+    "logger": "skyra.iam.audit"
+  },
+  "message": "Security administrator assigned 'billing-admin' role to user usr_12345",
+  "service": {
+    "name": "iam-service",
+    "version": "1.2.0",
+    "environment": "production"
+  },
+  "user": {
+    "id": "usr_admin_001",
+    "name": "superadmin",
+    "roles": ["superadmin", "security-officer"]
+  },
+  "client": {
+    "ip": "198.51.100.44"
+  },
+  "skyra": {
+    "schema_version": "1.0.0",
+    "project_id": "skyra-business-suite",
+    "component": "role-manager",
+    "security": {
+      "audit": true,
+      "event_type": "iam_role_elevation",
+      "subject_id": "usr_12345"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "@timestamp": "2026-10-21T14:32:10.876Z",
+  "ecs.version": "8.11.0",
+  "event": {
+    "id": "7a35da7b-586b-43d9-a0a1-d648b2848c1e",
+    "dataset": "skyra.application",
+    "category": ["web"],
+    "type": ["error"],
+    "action": "user_checkout",
+    "outcome": "failure"
+  },
+  "log": {
+    "level": "error",
+    "logger": "skyra.checkout"
+  },
+  "message": "Payment processing failed: Gateway timeout",
+  "service": {
+    "name": "payment-service",
+    "version": "3.0.1",
+    "environment": "production"
+  },
+  "error": {
+    "type": "PaymentGatewayTimeoutError",
+    "message": "Upstream bank gateway failed to acknowledge transaction within 5000ms",
+    "code": "PG_TIMEOUT_504",
+    "stack_trace": "PaymentGatewayTimeoutError: Upstream bank gateway failed\n    at PaymentClient.process (payment.client.ts:84:13)\n    at CheckoutService.execute (checkout.service.ts:142:25)"
+  },
+  "skyra": {
+    "schema_version": "1.0.0",
+    "project_id": "skyra-business-suite",
+    "component": "checkout-module"
+  }
+}
