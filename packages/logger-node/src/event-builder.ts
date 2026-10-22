@@ -216,7 +216,7 @@ export function buildCanonicalLogEvent(
     'component', 'traceId', 'trace_id', 'trace', 'spanId', 'span_id', 'span',
     'action', 'outcome', 'category', 'duration', 'durationMs', 'durationNs',
     'error', 'labels', 'tags', 'http', 'database', 'job', 'user', 'client', 'url',
-    'audit', 'security',
+    'audit', 'security', 'skyra',
   ]);
 
   const customFields: Record<string, unknown> = {};
@@ -232,6 +232,21 @@ export function buildCanonicalLogEvent(
   if (sanitized['security'] && typeof sanitized['security'] === 'object') {
     skyraSection.security = sanitized['security'] as any;
   }
+  if (sanitized['skyra'] && typeof sanitized['skyra'] === 'object') {
+    const rawSkyra = sanitized['skyra'] as Record<string, unknown>;
+    if (rawSkyra['http'] && typeof rawSkyra['http'] === 'object') {
+      skyraSection.http = rawSkyra['http'] as any;
+    }
+    if (rawSkyra['db'] && typeof rawSkyra['db'] === 'object') {
+      skyraSection.db = rawSkyra['db'] as any;
+    }
+    if (rawSkyra['job'] && typeof rawSkyra['job'] === 'object') {
+      skyraSection.job = rawSkyra['job'] as any;
+    }
+  }
+  if (canonicalEvent.http?.route && !skyraSection.http) {
+    skyraSection.http = { route_template: canonicalEvent.http.route };
+  }
   if (Object.keys(customFields).length > 0) {
     skyraSection.business = customFields;
   }
@@ -246,6 +261,12 @@ export function buildCanonicalLogEvent(
   redactedEvent['ecs.version'] = '8.11.0';
   redactedEvent.skyra.project_id = config.projectId;
   redactedEvent.skyra.schema_version = '1.0';
+  if (canonicalEvent.trace) {
+    redactedEvent.trace = canonicalEvent.trace;
+  }
+  if (canonicalEvent.span) {
+    redactedEvent.span = canonicalEvent.span;
+  }
 
   // If user configured additional sensitive keys, check and scrub them
   if (config.additionalSensitiveKeys.length > 0) {

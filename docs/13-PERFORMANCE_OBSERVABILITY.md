@@ -83,3 +83,21 @@ Hardened measurement standard enforces separate tracking of submitted, accepted,
   - Deep Sensitive Data Redaction: 27.13 µs/op
   - Ajv 2020 Schema Validation: 17.23 µs/op
 - **Hardened Invariants:** Bounded in-memory write queue strictly enforces memory bounds (default 64 MiB, 10k items). Queue saturation drops non-critical events while critical events (`error`, `fatal`) prioritize via queue eviction within the single-writer pipeline, completely avoiding out-of-band concurrent writes. Hard disk errors trigger `onError` without crashing the host process. Plaintext secrets are never stored in quarantine recovery files.
+
+## 12. NestJS Logging Adapter Benchmark Baseline (LOGHUB-PKG-003)
+Measured on Intel(R) Core(TM) i5-10210U @ 1.60GHz (8 cores), 8 GB RAM, Windows NT 10.0.26300, Node.js v24.21.0.
+Workload iterations: 10,000 requests per scenario.
+
+| Scenario | Ops/sec | p50 Latency | p95 Latency | p99 Latency | Submitted | Written | Dropped | Heap Diff (MB) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **1. Baseline (No Logging Overhead)** | 2,265,621 | 0.1 µs | 0.3 µs | 1.0 µs | 0 | 0 | 0 | -5.17 MB |
+| **2. Request Correlation (Middleware + Context)** | 384,608 | 1.5 µs | 3.6 µs | 13.5 µs | 0 | 0 | 0 | +3.96 MB |
+| **3. Basic HTTP Event Build & Nonblocking Enqueue** | 12,035 | 65.1 µs | 136.1 µs | 240.6 µs | 10,000 | 0 | 0 | +8.14 MB |
+| **4. Request + Exception Logging (Sanitization)** | 6,696 | 108.7 µs | 250.5 µs | 446.4 µs | 10,000 | 0 | 0 | +11.90 MB |
+| **5. End-to-End JSONL File Transport Under Load** | 14,789 | 51.6 µs | 97.1 µs | 156.2 µs | 10,000 | 10,000 | 0 | +28.48 MB |
+
+- **Key Observations:**
+  - Request correlation using Node.js `AsyncLocalStorage` adds only ~1.5 µs p50 overhead per request, operating at over 384k ops/sec.
+  - Asynchronous background JSONL file logging processes ~14.8k ops/sec with a p50 latency of 51.6 µs, ensuring minimal impact on client response times.
+  - Deep sensitive data and route sanitization during exceptions operates at ~6.7k ops/sec while preventing sensitive credentials, tokens, or internal stack traces from leaking to clients or storage.
+

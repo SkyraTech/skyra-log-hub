@@ -23,7 +23,7 @@
 | LH-103 (LOGHUB-PKG-002) | Node.js logging SDK & daily JSONL transport | DONE | LH-101C, LH-102 | `@skyra/logger-node` package, UTC midnight rotation, size rollover, partial-line quarantine recovery, bounded queue, emergency bypass, 35 automated tests passing, benchmarked at >15k ops/sec |
 | LH-103A (LOGHUB-PKG-002A) | Transport Reliability, Security & Acceptance Hardening | DONE | LH-103 | Single-writer queue priority eviction, atomic instance directory ownership (`.instance.owner` with `O_EXCL` and PID liveness), privacy-safe quarantine (SHA-256 hash without plaintext secrets), Unicode message bounding, `maxEventSizeBytes` enforcement, 46 tests passing, isolated consumer verified |
 | LH-104 (LOGHUB-PKG-001B/C) | Python SDK parity & wheel distribution | DONE | LH-101 | `skyra-logger` Draft 2020-12 validator, calendar timestamp checking, wheel installed and verified in clean consumer, 14 test suites passing |
-| LH-105 | NestJS/Next.js adapters and sample apps | NOT_STARTED | LH-103, LH-103A | Request context, trace propagation, install smoke tests |
+| LH-105 (LOGHUB-PKG-003) | NestJS Logging Adapter & Automatic API Observability | DONE | LH-103, LH-103A | `@skyra/logger-nestjs` package, `SkyraLoggerModule`, automatic HTTP request/response observability, W3C traceparent propagation via AsyncLocalStorage, route sanitization, `measureJob`/`measureDatabase` timers, 42 tests passing, packed tarball verified in isolated NestJS consumer |
 | LH-106 | Package registry/release automation | NOT_STARTED | LH-103, LH-104 | Versioned packages independently install in clean consumers |
 
 ## Phase 2 — Ingestion and data persistence

@@ -114,8 +114,32 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
   - Isolated package installation verified outside monorepo (`isolated-consumer-test` using packed `.tgz`).
   - Full repository regression tests passing: 13 TS contract tests + 14 Python contract tests (73 total automated tests across monorepo).
   - Schema synchronization check passing with zero drift.
+
+### 2026-10-22 — LH-105 (LOGHUB-PKG-003) — Production-Grade NestJS Logging Adapter & Automatic API Observability
+- Status: DONE
+- Commit: (pending user commit approval)
+- Implemented Deliverables:
+  1. Package `@skyra/logger-nestjs` under `packages/logger-nestjs/` built on `@skyra/logger-node` and `@skyra/logger-core`.
+  2. `SkyraLoggerModule` with `.forRoot()` and `.forRootAsync()` (supports `useFactory`, `useClass`, `useExisting`).
+  3. `SkyraLoggerService` implementing NestJS `LoggerService`, lifecycle hooks (`OnApplicationShutdown`, `BeforeApplicationShutdown`), child logging, and instrumentation helpers.
+  4. Automatic HTTP Observability: `SkyraHttpLoggingInterceptor` emits `http.request.completed` with high-resolution monotonic duration (`process.hrtime.bigint()`), HTTP status code, sanitized route template, and outcome.
+  5. Correlation Middleware: `SkyraCorrelationMiddleware` parses W3C `traceparent` headers (`trace.id` 32-hex, `span.id` 16-hex), validates version and non-zero IDs, generates/reuses `x-request-id`, and binds execution scope using Node.js `AsyncLocalStorage` via `RequestContextService`.
+  6. Route & Secret Sanitization: `sanitizeRouteTemplate` strips query strings, auth tokens, and raw IDs (`:id`) from path templates without leaking PII.
+  7. Exception Handling: `SkyraHttpExceptionFilter` captures `HttpException` and uncaught exceptions with sanitized stack traces while preserving standard NestJS HTTP response semantics (stack traces are never exposed to API clients).
+  8. Dedicated Instrumentation Timers: `measureJob()` for background jobs and `measureDatabase()` for database queries (strictly zero raw bind parameters).
+  9. Carry-Forward Hardening: Added `'span'`, `'spanid'`, `'spans'` to `BENIGN_KEYS` in `@skyra/logger-core` to prevent false positive PAN redaction of W3C span sections; preserved canonical envelope sections (`trace`, `span`, `skyra.http`) across serialization.
+- Test Evidence:
+  - 42 automated tests in `packages/logger-nestjs/dist-test/` passing across unit, integration, and security suites.
+  - Isolated consumer verified: npm tarball installation in external consumer app confirmed clean ESM imports, real HTTP execution, schema-compliant JSONL generation, and graceful shutdown.
+  - Full workspace regression: 101 tests passing with 0 failures across TS contracts (13), Node SDK (46), and NestJS adapter (42).
+  - 14 Python contract tests passing.
+  - Schema synchronization check passing with zero drift.
+- Benchmarks:
+  - Request correlation (Middleware + ALS): 384,608 ops/sec (p50: 1.5 µs, p99: 13.5 µs).
+  - Basic HTTP Event Build & Nonblocking Enqueue: 12,035 ops/sec (p50: 65.1 µs, p99: 240.6 µs).
+  - Full End-to-End JSONL File Transport: 14,789 ops/sec (p50: 51.6 µs, p99: 156.2 µs).
 - Next approved action:
-  Await user review of `LOGHUB-PKG-002A`. Next scheduled task is `LH-105` (NestJS/Next.js framework-specific logging adapters).
+  Await user review of `LOGHUB-PKG-003`. Next scheduled task is Next.js logging adapter or Package registry/release automation (`LH-106`).
 
 ## Update template (copy per completed task)
 ```md

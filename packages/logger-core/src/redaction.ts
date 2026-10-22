@@ -37,6 +37,9 @@ const BENIGN_KEYS = new Set([
   'keypath',
   'keyboard',
   'keyevent',
+  'span',
+  'spanid',
+  'spans',
 ]);
 
 /**

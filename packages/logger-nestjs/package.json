@@ -1,0 +1,58 @@
+{
+  "name": "@skyra/logger-nestjs",
+  "version": "1.0.0",
+  "description": "Production-Grade NestJS Logging Adapter & Automatic API Observability for Skyra LogHub",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "node -e \"fs.rmSync('dist', { recursive: true, force: true }); fs.rmSync('dist-test', { recursive: true, force: true })\"",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/**/*.test.js",
+    "bench": "node --experimental-strip-types benchmarks/nestjs-overhead.bench.ts"
+  },
+  "keywords": [
+    "skyra",
+    "nestjs",
+    "logging",
+    "jsonl",
+    "ecs",
+    "observability",
+    "tracing",
+    "middleware",
+    "interceptor"
+  ],
+  "author": "Skyra Tech <hello@skyra-tech.com>",
+  "license": "UNLICENSED",
+  "peerDependencies": {
+    "@nestjs/common": "^10.0.0 || ^11.0.0",
+    "@nestjs/core": "^10.0.0 || ^11.0.0",
+    "reflect-metadata": "^0.1.13 || ^0.2.0",
+    "rxjs": "^7.0.0"
+  },
+  "dependencies": {
+    "@skyra/logger-core": "workspace:*",
+    "@skyra/logger-node": "workspace:*"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-express": "^10.4.15",
+    "@nestjs/testing": "^10.4.22",
+    "@types/express": "^5.0.0",
+    "@types/node": "^26.6.5",
+    "express": "^4.21.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  }
+}

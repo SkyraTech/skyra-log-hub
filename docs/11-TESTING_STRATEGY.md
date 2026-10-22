@@ -59,6 +59,13 @@ Include valid HTTP request, slow DB query, job success/failure, auth denial, exc
   4. *Schema-Bound String Truncation*: Truncation reserves suffix space guaranteeing messages strictly `<= 8192` chars and preserving UTF-16 surrogate pairs; empty messages default to `"[empty]"` (`minLength: 1`).
   5. *Max Event Size*: Strict enforcement of `maxEventSizeBytes` (1 MiB default) with observable drop counters and minimal critical fallback.
   6. *Multi-Instance & Isolated Distribution*: Zero monorepo source leakage; clean installation in external isolated consumer.
+- **NestJS Logging Adapter Quality Gates (LOGHUB-PKG-003):**
+  1. *Automatic HTTP Observability*: Generates `http.request.completed` on real NestJS requests with monotonic durations (`skyra.duration_ms` and `event.duration`), HTTP status codes, and outcome.
+  2. *W3C Distributed Tracing*: Parses and validates W3C `traceparent` headers; propagates context via Node.js `AsyncLocalStorage` without cross-request context leakage.
+  3. *Route & Body Sanitization*: Parameterizes routes (e.g. `/users/:userId/orders`) and strips query strings/tokens; strictly prohibits logging raw request or response bodies.
+  4. *Preserved HTTP Error Semantics*: `SkyraHttpExceptionFilter` captures `HttpException` and uncaught exceptions with sanitized stack traces without altering default client error responses.
+  5. *Instrumentation Telemetry*: `measureJob()` and `measureDatabase()` record monotonic execution times without logging raw SQL parameter values or credentials.
+  6. *External Consumer Distribution*: Tarball verified in isolated external NestJS application with real HTTP requests and canonical schema validation.
 - Performance targets are **provisional**, not promises: p95 basic search <3s for pilot representative data; ingestion throughput and resource budgets to be established with agreed log volume.
 - Release blocked on critical vulnerability without approved, documented exception.
 

@@ -128,3 +128,10 @@ The following canonical artifacts and foundation packages are implemented, verif
 - The compaction job writes partitioned Parquet **derived data** and can reprocess from source segments, without introducing a raw-log PostgreSQL table. Include `event.id`, safely normalized dimensions, typed durations and safe query fingerprints in converted columns for report speed.
 - Schema changes require compatibility validation of JSONL input and Parquet conversion, versioned normalizers and representative cross-language fixtures.
 - Archive and derived-data retention separate; define audit event preservation independently from routine diagnostics. Monitoring measures ingestion lag, segment close/finalize, compaction lag, query worker use, report cache freshness and disk/object storage health.
+
+## 13. NestJS Framework Integration (@skyra/logger-nestjs)
+- **Automatic HTTP Observability**: Integrates with NestJS via `SkyraHttpLoggingInterceptor` emitting `http.request.completed` events with monotonic execution duration (`process.hrtime.bigint()`), HTTP status code, sanitized route template, and outcome.
+- **W3C Distributed Tracing Propagation**: `SkyraCorrelationMiddleware` extracts and validates incoming W3C `traceparent` headers (`trace.id` 32-hex, `span.id` 16-hex), validates version and non-zero IDs, and binds context across asynchronous request execution via Node.js `AsyncLocalStorage`.
+- **Route Template Sanitization**: Strips query strings, tokens, and raw dynamic IDs (`:id`) from path templates (e.g. `/users/:userId/orders`), preventing sensitive data leakage into metrics and log indices.
+- **Preserved Framework Error Semantics**: `SkyraHttpExceptionFilter` captures `HttpException` and uncaught exceptions with sanitized stack traces while strictly preserving standard NestJS HTTP response semantics (stack traces are never exposed to API clients).
+- **Instrumentation Helpers**: Standardized helpers for measuring background jobs (`measureJob`) and database queries (`measureDatabase`) with bounded duration and zero raw parameter values.
