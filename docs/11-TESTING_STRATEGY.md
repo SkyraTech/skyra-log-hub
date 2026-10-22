@@ -73,6 +73,14 @@ Include valid HTTP request, slow DB query, job success/failure, auth denial, exc
   4. *Server Actions Safety*: Measures execution duration and logs `action.completed` / `action.failed` while strictly forbidding raw function argument and form data serialization.
   5. *Next.js Instrumentation Hooks*: Tested with Next.js `register()` and `onRequestError()` lifecycle hooks with error deduplication.
   6. *Production Build Integration & Isolated Consumer*: Real integration tests against production Next.js build; tarball verified in external isolated consumer application with zero secret leakage.
+- **Python Logging SDK Quality Gates (LOGHUB-PKG-005):**
+  1. *Native Python Logging Compatibility*: Transparent integration via `SkyraLoggingHandler` mapping standard Python logging levels to canonical levels, handling `exc_info` chains, and preventing recursive handler logging or propagation duplication.
+  2. *Single-Writer Process Ownership & Stale Lock Cleanup*: Exclusive `.instance.owner` acquisition with atomic `O_EXCL`, cross-platform PID liveness checks (`kill(pid, 0)`), in-process active registry, and automatic stale lock recovery.
+  3. *Daily UTC Midnight Rotation & Size Rollover*: Strict UTC calendar date rotation at midnight without relying on local machine time, 100 MiB monotonic part indexing (`YYYY-MM-DD.part-XXXX.jsonl`), and binary mode (`'wb'`) UTF-8 byte counting preventing Windows CRLF corruptions.
+  4. *Bounded Background Queue & Priority Eviction*: FIFO event queue with strict limits on event count and serialized bytes; high-severity `error` and `fatal` events evict lower-severity records under pressure; observable drop counters.
+  5. *Privacy-Safe Crash Recovery*: Trailing partial lines detected on restart, quarantined with metadata and SHA-256 hash to `${date}.corrupt.log` (fsynced before truncation), without persisting raw plaintext tokens or credentials.
+  6. *Context & Telemetry Instrumentation*: `contextvars` context propagation with strict W3C trace validation; `measure_database` and `measure_job` helpers recording monotonic nanosecond durations without logging raw SQL parameter values or credentials.
+  7. *Cross-Language Compatibility & Isolated Verification*: 100% bidirectional JSONL parser compatibility between Node.js and Python; wheel distribution verified in isolated external virtualenv with zero repository-local imports.
 - Performance targets are **provisional**, not promises: p95 basic search <3s for pilot representative data; ingestion throughput and resource budgets to be established with agreed log volume.
 - Release blocked on critical vulnerability without approved, documented exception.
 

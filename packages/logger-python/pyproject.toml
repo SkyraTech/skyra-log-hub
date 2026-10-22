@@ -25,3 +25,7 @@ dependencies = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["skyra_logger*"]
+
+[tool.setuptools.package-data]
+skyra_logger = ["py.typed"]
+

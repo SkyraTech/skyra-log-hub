@@ -56,7 +56,10 @@ SENSITIVE_VALUE_REGEXES = [
     (re.compile(r"([?&](?:password|passwd|pwd|token|secret|api[_-]?key|access[_-]?token|refresh[_-]?token)=)[^&\s\"']+", re.IGNORECASE), r"\1" + REDACTED_MASK),
     # 6. Credit card numbers
     (re.compile(r"\b(?:\d{4}[ -]?){3}\d{4}\b"), REDACTED_MASK),
+    # 7. Embedded key-value secrets in exception messages and strings
+    (re.compile(r"\b((?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|refresh[_-]?token)\s*[:=]\s*)[^\s\"';,]+", re.IGNORECASE), r"\1" + REDACTED_MASK),
 ]
+
 
 
 def is_sensitive_key(key: str) -> bool:

@@ -119,4 +119,24 @@ Tested with 10,000 iterations per scenario on Node.js v24.21.0, Intel Core i5-10
   - Non-blocking stdout transport (serverless profile) achieves 2,656 ops/sec with a p50 latency of 294 µs.
   - Zero buffering or body consumption: streaming response bodies pass directly through to client.
 
+### Python Logging SDK Benchmarks (skyra-logger / LOGHUB-PKG-005)
+Tested on Python 3.12.7 (Windows 11 AMD64, Intel Core i5-10210U @ 1.60GHz, 8 logical processors, 16 GB RAM, NVMe SSD):
+
+| Scenario | Workload | Ops/sec | Mean Latency | p50 Latency | p95 Latency | p99 Latency | Submitted | Written | Dropped |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **1. Small Info Event (Stdout)** | 10,000 events | 636.5 | 1.57 ms | 1.43 ms | 2.49 ms | 2.99 ms | 10,000 | 10,000 | 0 |
+| **2. Typical Structured Event (File)** | 10,000 events | 426.3 | 2.35 ms | 2.09 ms | 3.67 ms | 4.44 ms | 10,000 | 10,000 | 0 |
+| **3. Errors with Fsync** | 1,000 events | 345.5 | 2.89 ms | 1.91 ms | 3.38 ms | 3.80 ms | 1,000 | 1,000 | 0 |
+| **4. Deep Redaction Engine** | 10,000 items | 10,796.7 | 92.6 µs | 78.0 µs | 147.0 µs | 171.0 µs | 10,000 | 10,000 | 0 |
+| **5. Draft 2020-12 Validation** | 10,000 items | 1,284.9 | 778.2 µs | 675.5 µs | 1.28 ms | 1.65 ms | 10,000 | 10,000 | 0 |
+| **6. Multithreaded Burst (8 Threads)** | 10,000 events | 513.1 | 15.22 ms | 14.61 ms | 25.10 ms | 30.84 ms | 10,000 | 10,000 | 0 |
+| **7. Queue Saturation & Eviction** | 10,000 events | 1,776.4 | 563.0 µs | 518.0 µs | 948.1 µs | 1.20 ms | 10,000 | 3,227 | 6,773 |
+
+- **Key Observations (skyra-logger):**
+  - High-performance redaction engine operates at >10,700 ops/sec with p50 of 78 µs, sanitizing nested dictionaries, lists, and exception chains without mutating input arguments.
+  - Queue memory is bounded at <=64 KiB under burst saturation; non-critical events are cleanly evicted to preserve admission for critical `error` and `fatal` events.
+  - Zero line interleaving or segment corruption across concurrent writer threads; file ownership guarantees single-process access.
+  - Flush latency is deterministic with explicit OS fsync support for durable error persistence.
+
+
 

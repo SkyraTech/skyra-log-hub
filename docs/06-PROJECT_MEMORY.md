@@ -180,7 +180,37 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
   - High-Concurrency Burst (50 burst): 6,899 ops/sec (mean: 6,296.5 µs, 100% written, 0 dropped).
   - withSkyraLogging (Stdout): 2,656 ops/sec (mean: 355.7 µs, p50: 294.5 µs, 100% written, 0 dropped).
 
+### 2026-10-22 — LOGHUB-PKG-005 — Production-Grade Python Logging SDK, Standard Logging Integration & Reliable JSONL Transport
+- Status: DONE
+- Priority: P0
+- Package: `skyra-logger` (`packages/logger-python/`)
+- Commit: (pending user commit approval)
+- Implemented Deliverables:
+  1. **Production-Grade Python SDK & Public API**: Implemented `create_skyra_logger`, `SkyraLogger`, canonical levels (`trace`, `debug`, `info`, `warn`, `error`, `fatal`), child loggers, context manager support (`with`), and graceful shutdown (`flush`, `close`).
+  2. **Standard Library Python `logging` Integration**: Implemented `SkyraLoggingHandler` mapping standard severities to canonical Skyra levels, preserving `record.name`, serializing `exc_info` and exception chains safely, preventing recursion.
+  3. **Single-Writer Instance Directory Ownership**: Implemented `InstanceOwnershipManager` enforcing atomic marker creation (`.instance.owner` with `os.O_CREAT | os.O_EXCL | os.O_WRONLY`), cross-platform process liveness checks (`os.kill(pid, 0)`), automatic stale lock recovery for crashed PIDs, and an in-process active registry.
+  4. **Daily UTC Midnight Rotation & Size Rollover**: Strict UTC date formatting, rollover at `00:00:00.000Z`, size-based rollover at `max_file_size_bytes` (100 MiB default), and monotonic 4-digit segment indexing (`YYYY-MM-DD.part-0000.jsonl`).
+  5. **Bounded Write Queue & Backpressure**: Thread-safe `WriteQueue` with dedicated daemon worker thread, priority eviction for critical events (`error`, `fatal`), critical saturation bounds protection, and zero drops during normal operations.
+  6. **Crash Recovery & Quarantine**: `recover_partial_line` safely detecting incomplete trailing lines and truncated JSON, quarantine metadata logged with SHA-256 hash to `${YYYY-MM-DD}.corrupt.log`, clean file truncation, and zero plaintext secret leakage by default.
+  7. **Deep Redaction Engine & Post-Redaction Envelope Defense**: Compound keys, JWTs, URLs, tokens, passwords scrubbed; mandatory ECS canonical envelope fields locked post-redaction against caller overwrite.
+  8. **Request & Trace Context Correlation**: `skyra_context` using Python `contextvars`, strict W3C 32-hex trace ID and 16-hex span ID validation (all-zero IDs rejected), and nested scope isolation.
+  9. **Telemetry Instrumentation**: `measure_database` & `measure_database_async`, `measure_job` & `measure_job_async`, `measure_operation` & `measure_operation_async`, monotonic timing (`time.perf_counter_ns()`), exception propagation, and return value preservation.
+  10. **Packaging & Distribution**: Standard `pyproject.toml` with `setuptools.build_meta`, built wheel `skyra_logger-1.0.0-py3-none-any.whl` and sdist `skyra_logger-1.0.0.tar.gz`, PEP 561 `py.typed` marker.
+  11. **Preserved Next.js Release Risks**: Tracked NEXT-RISK-01 (logging overhead), NEXT-RISK-02 (serverless transport selection), and NEXT-RISK-03 (Edge runtime).
+- Test Evidence:
+  - 75 automated Python tests passing across 6 suites (14 contract schema, 12 functional, 5 context & timing, 12 storage & rotation, 12 reliability & concurrency, 12 security & redaction, 8 cross-language interop).
+  - Isolated package consumer test passing 12/12 criteria using wheel installed in a clean virtual environment outside the repository (`scripts/verify_isolated_python_consumer.py`).
+- Benchmarks:
+  - Small Informational Events (Stdout): 636.5 events/sec (p50: 1,431.2 µs).
+  - Typical Structured Events (File): 426.3 ops/sec (p50: 2,090.3 µs).
+  - Errors with Fsync: 345.5 ops/sec (p50: 1,907.2 µs).
+  - Redaction Engine: 10,796.7 ops/sec (p50: 78.0 µs).
+  - Schema Validation: 1,284.9 ops/sec (p50: 675.5 µs).
+  - Multithreaded Burst (8 threads): 513.1 ops/sec (0 drops).
+  - Queue Saturation: Memory strictly bounded to <= 64 KiB, 6,773 non-critical events dropped with metrics, critical events admitted via priority eviction.
+
 ## Update template (copy per completed task)
+
 ```md
 ### YYYY-MM-DD — LH-XXX — Task name
 - Status: DONE / BLOCKED / IN_REVIEW
