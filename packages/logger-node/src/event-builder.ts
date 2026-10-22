@@ -238,7 +238,14 @@ export function buildCanonicalLogEvent(
 
   // 13. Deep Sensitive Data Redaction
   // Redact all sensitive fields and token patterns before serialization
-  const redactedEvent = redactSensitiveData(canonicalEvent);
+  const redactedEvent = redactSensitiveData(canonicalEvent) as SkyraLogEvent;
+
+  // Invariant: Mandatory canonical envelope fields must never be corrupted by pattern matching
+  redactedEvent.event.id = eventId;
+  redactedEvent['@timestamp'] = timestamp;
+  redactedEvent['ecs.version'] = '8.11.0';
+  redactedEvent.skyra.project_id = config.projectId;
+  redactedEvent.skyra.schema_version = '1.0';
 
   // If user configured additional sensitive keys, check and scrub them
   if (config.additionalSensitiveKeys.length > 0) {

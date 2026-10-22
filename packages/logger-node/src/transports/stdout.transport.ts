@@ -53,6 +53,7 @@ export class StdoutTransport implements SkyraTransport {
     return {
       totalEventsWritten: this.totalEventsWritten,
       totalBytesWritten: this.totalBytesWritten,
+      totalEventsFsynced: 0,
       isClosed: this.isClosed,
     };
   }

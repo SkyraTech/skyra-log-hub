@@ -31,11 +31,15 @@ export interface LoggerStatus {
   instanceId: string;
   level: LogLevel;
   isClosed: boolean;
+  totalEventsSubmitted: number;
+  totalEventsAccepted: number;
+  totalEventsDropped: number;
+  droppedEventsCount: number;
   pendingQueueCount: number;
   pendingQueueBytes: number;
-  droppedEventsCount: number;
   totalEventsWritten: number;
   totalBytesWritten: number;
+  totalEventsFsynced: number;
   activeFile?: string;
 }
 
@@ -45,6 +49,7 @@ export class SkyraLogger {
   private readonly writeQueue: WriteQueue;
   private currentLevelValue: number;
   private isClosed = false;
+  private totalEventsSubmitted = 0;
 
   constructor(
     config: ResolvedSkyraLoggerConfig,
@@ -73,7 +78,18 @@ export class SkyraLogger {
         config.limits,
         async (batch) => {
           for (const item of batch) {
-            await this.transport.write(item.level, item.line, item.bytes);
+            try {
+              await this.transport.write(item.level, item.line, item.bytes);
+            } catch (err) {
+              if (this.config.onError && err instanceof Error) {
+                try {
+                  this.config.onError(err);
+                } catch {
+                  // Prevent user error handler from crashing logger
+                }
+              }
+              throw err;
+            }
           }
         },
         (emergencyItem) => {
@@ -137,13 +153,17 @@ export class SkyraLogger {
    * 2. Canonical event construction & UUID generation
    * 3. Deep redaction
    * 4. Single-line JSONL serialization
-   * 5. Enqueue to bounded background write queue
+   * 5. Enforcement of maxEventSizeBytes
+   * 6. Enqueue to bounded background write queue
    *
    * Non-blocking: Returns synchronously.
    */
   public log(level: LogLevel, message: string, metadata?: LogContext): void {
+    this.totalEventsSubmitted++;
+
     if (this.isClosed) {
       emitInternalDiagnostic('WriteAfterClose', `Log call ignored: logger is closed (level=${level})`);
+      this.writeQueue.recordDrop(1, 'Write attempted after logger closed');
       return;
     }
 
@@ -165,6 +185,32 @@ export class SkyraLogger {
       // Serialize to JSONL line
       const strictMode = this.config.validationMode === 'strict';
       const line = formatJsonlEvent(event, strictMode);
+      const lineBytes = Buffer.byteLength(line, 'utf-8');
+
+      // Check maxEventSizeBytes constraint
+      if (lineBytes > this.config.limits.maxEventSizeBytes) {
+        const reason = `Event size ${lineBytes} bytes exceeds maxEventSizeBytes ${this.config.limits.maxEventSizeBytes}`;
+        emitInternalDiagnostic('OversizedEventDropped', reason);
+
+        if (level === 'error' || level === 'fatal') {
+          // Attempt minimal fallback event for critical log
+          const fallbackEvent = buildCanonicalLogEvent(
+            this.config,
+            level,
+            '[Oversized event omitted payload]',
+            { originalMessagePrefix: message.slice(0, 512) },
+            this.parentContext
+          );
+          const fallbackLine = formatJsonlEvent(fallbackEvent, false);
+          if (Buffer.byteLength(fallbackLine, 'utf-8') <= this.config.limits.maxEventSizeBytes) {
+            this.writeQueue.enqueue(level, fallbackLine);
+            return;
+          }
+        }
+
+        this.writeQueue.recordDrop(1, reason);
+        return;
+      }
 
       // Enqueue to write queue
       this.writeQueue.enqueue(level, line);
@@ -225,11 +271,15 @@ export class SkyraLogger {
       instanceId: this.config.instanceId,
       level: this.config.level,
       isClosed: this.isClosed || queueStats.isClosed,
+      totalEventsSubmitted: this.totalEventsSubmitted,
+      totalEventsAccepted: queueStats.acceptedCount,
+      totalEventsDropped: queueStats.droppedCount,
+      droppedEventsCount: queueStats.droppedCount,
       pendingQueueCount: queueStats.pendingCount,
       pendingQueueBytes: queueStats.pendingBytes,
-      droppedEventsCount: queueStats.droppedCount,
       totalEventsWritten: transportStats.totalEventsWritten,
       totalBytesWritten: transportStats.totalBytesWritten,
+      totalEventsFsynced: transportStats.totalEventsFsynced,
       activeFile: transportStats.currentActiveFile,
     };
   }

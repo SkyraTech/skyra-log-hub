@@ -1,13 +1,24 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as crypto from 'node:crypto';
 import { parseStrictJson } from '@skyra/logger-core';
 import { emitInternalDiagnostic } from './diagnostics.js';
+
+export interface RecoveryOptions {
+  /**
+   * Whether to record raw UTF-8 preview and Base64 bytes in quarantine logs.
+   * Security warning: Storing raw fragments may persist unredacted secrets from severed events.
+   * Default: false (privacy-safe metadata only).
+   */
+  enableForensicQuarantine?: boolean;
+}
 
 export interface RecoveryResult {
   recovered: boolean;
   bytesQuarantined: number;
   finalSizeBytes: number;
   quarantineLogPath?: string;
+  corruptionType?: 'incomplete_trailing_line' | 'malformed_trailing_json';
 }
 
 /**
@@ -20,7 +31,12 @@ export interface RecoveryResult {
  * Guarantees that new records appended to this file are NEVER concatenated onto
  * corrupt or incomplete JSON fragments.
  */
-export function recoverPartialLine(filePath: string, instanceDir: string, dateStr: string): RecoveryResult {
+export function recoverPartialLine(
+  filePath: string,
+  instanceDir: string,
+  dateStr: string,
+  options?: RecoveryOptions
+): RecoveryResult {
   try {
     if (!fs.existsSync(filePath)) {
       return { recovered: false, bytesQuarantined: 0, finalSizeBytes: 0 };
@@ -47,14 +63,15 @@ export function recoverPartialLine(filePath: string, instanceDir: string, dateSt
     // Check if the file ends with a valid newline '\n' (0x0A)
     const lastByte = buffer[readLength - 1];
     let needsRecovery = false;
+    let corruptionType: 'incomplete_trailing_line' | 'malformed_trailing_json' | undefined;
     let validEndOffset = totalSize;
 
     if (lastByte !== 0x0A) {
       // Missing terminal newline -> corrupted partial line
       needsRecovery = true;
+      corruptionType = 'incomplete_trailing_line';
     } else {
       // Ends with newline. Verify that the last record is complete and parseable JSON
-      // Find the newline before the last newline to isolate the last line
       let secondLastNewlineIndex = -1;
       for (let i = readLength - 2; i >= 0; i--) {
         if (buffer[i] === 0x0A) {
@@ -73,6 +90,7 @@ export function recoverPartialLine(filePath: string, instanceDir: string, dateSt
         } catch {
           // Last record has \n but is malformed / invalid JSON fragment
           needsRecovery = true;
+          corruptionType = 'malformed_trailing_json';
         }
       }
     }
@@ -83,7 +101,6 @@ export function recoverPartialLine(filePath: string, instanceDir: string, dateSt
 
     // Locate the offset of the last complete newline before the corruption
     let lastValidNewlineOffsetInChunk = -1;
-    // If lastByte was newline but record was invalid, we search backwards from second to last
     const searchEnd = lastByte === 0x0A ? readLength - 2 : readLength - 1;
     for (let i = searchEnd; i >= 0; i--) {
       if (buffer[i] === 0x0A) {
@@ -125,24 +142,48 @@ export function recoverPartialLine(filePath: string, instanceDir: string, dateSt
     const quarantineFilename = `${dateStr}.corrupt.log`;
     const quarantinePath = path.join(instanceDir, quarantineFilename);
 
-    const quarantineEntry = JSON.stringify({
+    // Compute cryptographic hash of corrupt bytes to enable integrity checks without leaking raw text
+    const sha256Hash = crypto.createHash('sha256').update(corruptFragment).digest('hex');
+
+    const metadata: Record<string, unknown> = {
       quarantine_timestamp: new Date().toISOString(),
       source_file: path.basename(filePath),
       truncate_offset: validEndOffset,
       original_file_size: totalSize,
       corrupt_bytes_count: corruptFragment.length,
-      fragment_utf8_preview: corruptFragment.toString('utf-8', 0, Math.min(corruptFragment.length, 1024)),
-      fragment_base64: corruptFragment.toString('base64'),
-    }) + '\n';
+      corruption_type: corruptionType,
+      sha256_hash: sha256Hash,
+      safe_error_code: 'CORRUPT_FRAGMENT_QUARANTINED',
+    };
 
-    fs.appendFileSync(quarantinePath, quarantineEntry, 'utf-8');
+    // Only include raw previews if explicitly requested in forensic mode
+    if (options?.enableForensicQuarantine === true) {
+      metadata['fragment_utf8_preview'] = corruptFragment.toString(
+        'utf-8',
+        0,
+        Math.min(corruptFragment.length, 1024)
+      );
+      metadata['fragment_base64'] = corruptFragment.toString('base64');
+    }
 
-    // Cleanly truncate the file to the valid newline offset
+    const quarantineEntry = JSON.stringify(metadata) + '\n';
+
+    // Safe recovery invariant: Write and fsync quarantine record BEFORE truncating source file
+    const quarantineFd = fs.openSync(quarantinePath, 'a');
+    try {
+      const qBuf = Buffer.from(quarantineEntry, 'utf-8');
+      fs.writeSync(quarantineFd, qBuf, 0, qBuf.length);
+      fs.fsyncSync(quarantineFd);
+    } finally {
+      fs.closeSync(quarantineFd);
+    }
+
+    // Now cleanly truncate the source file to the valid newline offset
     fs.truncateSync(filePath, validEndOffset);
 
     emitInternalDiagnostic(
       'Recovery',
-      `Quarantined ${corruptFragment.length} corrupt bytes from '${path.basename(filePath)}' to '${quarantineFilename}' at offset ${validEndOffset}`
+      `Quarantined ${corruptFragment.length} corrupt bytes (${corruptionType}) from '${path.basename(filePath)}' to '${quarantineFilename}' at offset ${validEndOffset}`
     );
 
     return {
@@ -150,6 +191,7 @@ export function recoverPartialLine(filePath: string, instanceDir: string, dateSt
       bytesQuarantined: corruptFragment.length,
       finalSizeBytes: validEndOffset,
       quarantineLogPath: quarantinePath,
+      corruptionType,
     };
   } catch (err) {
     emitInternalDiagnostic('RecoveryError', `Failed partial line recovery on '${filePath}'`, err);

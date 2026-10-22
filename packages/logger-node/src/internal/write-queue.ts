@@ -17,66 +17,131 @@ export class WriteQueue {
   private isProcessing = false;
   private isClosed = false;
   private flushPromises: Array<{ resolve: () => void; reject: (err: Error) => void }> = [];
+  private acceptedCount = 0;
   private droppedCount = 0;
 
   constructor(
     private readonly limits: ResourceLimits,
     private readonly writeHandler: WriteBatchHandler,
-    private readonly emergencyHandler: EmergencyWriteHandler,
+    private readonly emergencyHandler?: EmergencyWriteHandler,
     private readonly onDrop?: (dropped: number, reason: string) => void
   ) {}
 
   /**
    * Enqueues a formatted log record for background writing.
-   * Returns true if accepted, false if dropped due to queue saturation.
+   * Preserves single-writer serialization: all events (normal and critical)
+   * pass through the serialized write pipeline.
+   *
+   * When queue is full:
+   * - Critical events (error, fatal) evict non-critical events (trace, debug, info, warn)
+   * - Non-critical events are dropped with observable metrics
+   * - If queue is completely saturated with critical events, memory bounds are preserved and drop is recorded
    */
   public enqueue(level: LogLevel, line: string): boolean {
     if (this.isClosed) {
       emitInternalDiagnostic('WriteQueue', 'Write attempted after logger has been closed');
+      this.droppedCount++;
       return false;
     }
 
     const itemBytes = Buffer.byteLength(line, 'utf-8');
+    const isCritical = level === 'error' || level === 'fatal';
 
     // Check bounded capacity limits
-    const wouldExceedCount = this.queue.length + 1 > this.limits.maxPendingEvents;
-    const wouldExceedMemory = this.currentBytes + itemBytes > this.limits.maxQueueMemoryBytes;
+    let wouldExceedCount = this.queue.length + 1 > this.limits.maxPendingEvents;
+    let wouldExceedMemory = this.currentBytes + itemBytes > this.limits.maxQueueMemoryBytes;
 
     if (wouldExceedCount || wouldExceedMemory) {
-      // Emergency bypass for critical events: NEVER drop error or fatal
-      if (level === 'error' || level === 'fatal') {
-        try {
-          this.emergencyHandler({ level, line, bytes: itemBytes });
-          return true;
-        } catch (err) {
-          emitInternalDiagnostic('EmergencyWriteFailed', 'Direct emergency write failed for critical log', err);
+      if (isCritical) {
+        // Priority Eviction: Evict oldest non-critical events to accommodate critical event
+        let evictedBytes = 0;
+        let evictedCount = 0;
+        for (let i = 0; i < this.queue.length; i++) {
+          const item = this.queue[i];
+          if (item && item.level !== 'error' && item.level !== 'fatal') {
+            this.queue.splice(i, 1);
+            this.currentBytes -= item.bytes;
+            evictedBytes += item.bytes;
+            evictedCount++;
+            i--;
+
+            wouldExceedCount = this.queue.length + 1 > this.limits.maxPendingEvents;
+            wouldExceedMemory = this.currentBytes + itemBytes > this.limits.maxQueueMemoryBytes;
+            if (!wouldExceedCount && !wouldExceedMemory) {
+              break;
+            }
+          }
+        }
+
+        if (evictedCount > 0) {
+          this.droppedCount += evictedCount;
+          emitInternalDiagnostic(
+            'QueueEviction',
+            `Evicted ${evictedCount} non-critical events (${evictedBytes} bytes) to accommodate critical event level='${level}'`
+          );
+          if (this.onDrop) {
+            try {
+              this.onDrop(evictedCount, `Evicted by critical event level='${level}'`);
+            } catch {
+              // Prevent callback error
+            }
+          }
+        }
+
+        // Re-evaluate capacity after eviction
+        if (wouldExceedCount || wouldExceedMemory) {
+          // Even after evicting all non-critical events, queue is 100% full of critical events
+          this.droppedCount++;
+          const reason = wouldExceedMemory
+            ? `Critical queue memory saturated (${this.currentBytes} + ${itemBytes} > ${this.limits.maxQueueMemoryBytes} bytes)`
+            : `Critical queue item limit saturated (${this.queue.length} >= ${this.limits.maxPendingEvents})`;
+
+          emitInternalDiagnostic('CriticalQueueSaturation', `Dropped critical log level='${level}' due to: ${reason}`);
+          if (this.onDrop) {
+            try {
+              this.onDrop(1, reason);
+            } catch {}
+          }
           return false;
         }
-      }
+      } else {
+        // For non-critical events (trace, debug, info, warn), drop and record metric
+        this.droppedCount++;
+        const reason = wouldExceedMemory
+          ? `Queue memory limit exceeded (${this.currentBytes} + ${itemBytes} > ${this.limits.maxQueueMemoryBytes} bytes)`
+          : `Queue item limit exceeded (${this.queue.length} >= ${this.limits.maxPendingEvents})`;
 
-      // For non-critical events (trace, debug, info, warn), drop and record metric
-      this.droppedCount++;
-      const reason = wouldExceedMemory
-        ? `Queue memory limit exceeded (${this.currentBytes} + ${itemBytes} > ${this.limits.maxQueueMemoryBytes} bytes)`
-        : `Queue item limit exceeded (${this.queue.length} >= ${this.limits.maxPendingEvents})`;
-
-      if (this.onDrop) {
-        try {
-          this.onDrop(1, reason);
-        } catch {
-          // Prevent user callback failure from crashing logger
+        if (this.onDrop) {
+          try {
+            this.onDrop(1, reason);
+          } catch {
+            // Prevent user callback failure from crashing logger
+          }
         }
-      }
 
-      emitInternalDiagnostic('QueueOverflow', `Dropped log level='${level}' due to: ${reason}`);
-      return false;
+        emitInternalDiagnostic('QueueOverflow', `Dropped log level='${level}' due to: ${reason}`);
+        return false;
+      }
     }
 
     this.queue.push({ level, line, bytes: itemBytes });
     this.currentBytes += itemBytes;
+    this.acceptedCount++;
 
     this.scheduleProcessing();
     return true;
+  }
+
+  /**
+   * Explicitly records an external drop (e.g. oversized event).
+   */
+  public recordDrop(count = 1, reason: string): void {
+    this.droppedCount += count;
+    if (this.onDrop) {
+      try {
+        this.onDrop(count, reason);
+      } catch {}
+    }
   }
 
   private scheduleProcessing(): void {
@@ -85,7 +150,7 @@ export class WriteQueue {
     }
     this.isProcessing = true;
 
-    // Use queueMicrotask or setImmediate for non-blocking asynchronous dispatch
+    // Use queueMicrotask for non-blocking asynchronous dispatch
     queueMicrotask(() => {
       this.processLoop();
     });
@@ -152,6 +217,7 @@ export class WriteQueue {
 
   public getStats() {
     return {
+      acceptedCount: this.acceptedCount,
       pendingCount: this.queue.length,
       pendingBytes: this.currentBytes,
       droppedCount: this.droppedCount,

@@ -97,7 +97,25 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
   - Total tests across workspace: 62 automated tests passing with zero failures.
   - Tarball packing verified (`pnpm pack`) without leaking raw TS sources.
 - Next approved action:
-  Await user review of `LOGHUB-PKG-002`. Next scheduled task is `LH-105` (NestJS/Next.js logging adapters and sample application).
+  Execute LOGHUB-PKG-002A hardening audit and verification.
+
+### 2026-10-22 — LH-103A (LOGHUB-PKG-002A) — Node.js Logging Transport Reliability, Security & Acceptance Hardening
+- Status: DONE (Certified Hardened Production-Grade)
+- Commit: (pending user commit approval)
+- Root Causes & Hardened Corrections:
+  1. **Emergency Write Single-Writer Invariant**: Replaced out-of-band concurrent writes to the file descriptor with serialized priority eviction in `WriteQueue`. Critical events (`error`, `fatal`) evict older non-critical events (`trace`, `debug`, `info`, `warn`) when the queue is saturated, preserving the strict single-writer rule, event ordering, rotation synchronization, and full tracking in `flush()` and `close()`.
+  2. **Atomic Single-Writer Ownership**: Replaced non-atomic file overwrite with `InstanceOwnershipManager`. Uses exclusive file creation (`wx` / `O_EXCL`), process liveness checks (`process.kill(pid, 0)`), automatic recovery of stale locks from crashed dead PIDs, and an in-process active registry to prevent concurrent instances targeting the same directory.
+  3. **Privacy-Safe Quarantine & Safe Recovery**: Hardened `recoverPartialLine` to record metadata only (`quarantine_timestamp`, `source_file`, `truncate_offset`, `corrupt_bytes_count`, `corruption_type`, `sha256_hash`, `safe_error_code`). Eliminated plaintext UTF-8 previews and raw Base64 from quarantine logs by default to prevent secret leakage. Added optional `enableForensicQuarantine: true`. Invariant enforced: quarantine metadata is written and fsynced to disk *before* the source file is truncated.
+  4. **Canonical Schema Length & Unicode Truncation**: Corrected message truncation to reserve suffix room so the output is strictly `<= maxMessageLength` (8,192 chars), preventing schema rejection. Added UTF-16 surrogate pair preservation to prevent dangling high surrogates. Empty or whitespace-only messages now default to `"[empty]"` to satisfy `minLength: 1`.
+  5. **Max Event Size Bounds**: Enforced `limits.maxEventSizeBytes` (1 MiB default). Oversized events drop with observable metrics; critical errors trigger minimal fallback payloads without large metadata payloads.
+  6. **Separate Observability Metrics**: `LoggerStatus` and `TransportStatus` now separately track `totalEventsSubmitted`, `totalEventsAccepted`, `totalEventsDropped`, `totalEventsWritten`, and `totalEventsFsynced`.
+- Test Evidence:
+  - 46 automated tests in `packages/logger-node/tests/` passing with 0 failures across 10 test suites (including 11 targeted scenarios in `tests/hardening/hardening-verification.test.ts`).
+  - Isolated package installation verified outside monorepo (`isolated-consumer-test` using packed `.tgz`).
+  - Full repository regression tests passing: 13 TS contract tests + 14 Python contract tests (73 total automated tests across monorepo).
+  - Schema synchronization check passing with zero drift.
+- Next approved action:
+  Await user review of `LOGHUB-PKG-002A`. Next scheduled task is `LH-105` (NestJS/Next.js framework-specific logging adapters).
 
 ## Update template (copy per completed task)
 ```md

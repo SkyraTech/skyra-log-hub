@@ -9,4 +9,5 @@ export * from './formatter.js';
 export * from './logger.js';
 export * from './transports/index.js';
 export { PathSafetyError } from './internal/path-safety.js';
-export { RecoveryResult } from './internal/recovery.js';
+export { recoverPartialLine, RecoveryResult, RecoveryOptions } from './internal/recovery.js';
+export { InstanceOwnershipConflictError, InstanceOwnershipManager, isProcessAlive } from './internal/ownership.js';

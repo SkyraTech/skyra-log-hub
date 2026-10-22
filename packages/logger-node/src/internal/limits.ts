@@ -24,7 +24,7 @@ export function sanitizeMetadata(
   if (t === 'string') {
     const str = target as string;
     if (str.length > limits.maxMessageLength) {
-      return `${str.substring(0, limits.maxMessageLength)}... [truncated ${str.length - limits.maxMessageLength} chars]`;
+      return truncateUnicodeString(str, limits.maxMessageLength);
     }
     return str;
   }
@@ -130,21 +130,51 @@ export function sanitizeMetadata(
 }
 
 /**
+ * Safely truncates a string so that its total length (including suffix) never exceeds maxLen.
+ * Preserves UTF-16 surrogate pairs and Unicode code points.
+ */
+export function truncateUnicodeString(str: string, maxLen: number, suffix = '... [truncated]'): string {
+  if (str.length <= maxLen) {
+    return str;
+  }
+  if (maxLen <= suffix.length) {
+    return str.slice(0, Math.max(0, maxLen));
+  }
+
+  const targetChars = maxLen - suffix.length;
+  let end = targetChars;
+  // If the character at end - 1 is a high surrogate (0xD800 - 0xDBFF), step back 1 code unit
+  const code = str.charCodeAt(end - 1);
+  if (code >= 0xd800 && code <= 0xdbff) {
+    end -= 1;
+  }
+
+  return str.slice(0, end) + suffix;
+}
+
+/**
  * Truncates and sanitizes a top-level log message string.
+ * Guarantees schema compliance: minLength >= 1 and maxLength <= maxLength.
  */
 export function sanitizeMessage(message: unknown, maxLength: number): string {
   if (typeof message === 'string') {
+    if (message.length === 0 || message.trim().length === 0) {
+      return '[empty]';
+    }
     if (message.length > maxLength) {
-      return `${message.substring(0, maxLength)}... [truncated ${message.length - maxLength} chars]`;
+      return truncateUnicodeString(message, maxLength);
     }
     return message;
   }
   if (message === null || message === undefined) {
-    return '';
+    return '[empty]';
   }
   const str = String(message);
+  if (str.length === 0 || str.trim().length === 0) {
+    return '[empty]';
+  }
   if (str.length > maxLength) {
-    return `${str.substring(0, maxLength)}... [truncated ${str.length - maxLength} chars]`;
+    return truncateUnicodeString(str, maxLength);
   }
   return str;
 }

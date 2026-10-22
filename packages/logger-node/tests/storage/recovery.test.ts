@@ -39,11 +39,19 @@ describe('Storage Recovery: Partial-Line Recovery & Clean Restart', () => {
     const restoredContent = fs.readFileSync(logFile, 'utf-8');
     assert.equal(restoredContent, validLine1 + validLine2);
 
-    // Verify quarantine log was created and contains the corrupt fragment
+    // Verify quarantine log was created with privacy-safe metadata (no secrets/raw text by default)
     const quarantinePath = path.join(instanceDir, '2026-10-22.corrupt.log');
     assert.ok(fs.existsSync(quarantinePath));
     const quarantineContent = fs.readFileSync(quarantinePath, 'utf-8');
-    assert.ok(quarantineContent.includes('Incomplete cut-off record in the mi'));
+    const parsed = JSON.parse(quarantineContent.trim());
+    assert.equal(parsed.source_file, '2026-10-22.part-0000.jsonl');
+    assert.equal(parsed.corrupt_bytes_count, Buffer.byteLength(corruptedTail, 'utf-8'));
+    assert.equal(parsed.corruption_type, 'incomplete_trailing_line');
+    assert.ok(parsed.sha256_hash && parsed.sha256_hash.length === 64);
+    assert.equal(parsed.safe_error_code, 'CORRUPT_FRAGMENT_QUARANTINED');
+    // Ensure raw plaintext is NOT leaked by default
+    assert.equal(parsed.fragment_utf8_preview, undefined);
+    assert.equal(parsed.fragment_base64, undefined);
   });
 
   it('2. Resumes writing safely after recovering from partial line corruption', async () => {

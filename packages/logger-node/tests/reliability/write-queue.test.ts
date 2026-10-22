@@ -52,7 +52,7 @@ describe('Reliability: Bounded Write Queue, Backpressure & Emergency Bypass', ()
     await queue.close();
   });
 
-  it('2. Critical events (error, fatal) bypass saturated queue via emergency write', async () => {
+  it('2. Critical events (error, fatal) evict non-critical events from saturated queue preserving single-writer pipeline', async () => {
     const tightLimits: ResourceLimits = {
       ...DEFAULT_RESOURCE_LIMITS,
       maxPendingEvents: 2,
@@ -60,16 +60,12 @@ describe('Reliability: Bounded Write Queue, Backpressure & Emergency Bypass', ()
     };
 
     const written: QueueItem[] = [];
-    const emergencies: QueueItem[] = [];
 
     const queue = new WriteQueue(
       tightLimits,
       async (batch) => {
         await new Promise((r) => setTimeout(r, 20));
         written.push(...batch);
-      },
-      (emergencyItem) => {
-        emergencies.push(emergencyItem);
       }
     );
 
@@ -77,21 +73,21 @@ describe('Reliability: Bounded Write Queue, Backpressure & Emergency Bypass', ()
     queue.enqueue('info', '{"msg":"filling-1"}\n');
     queue.enqueue('info', '{"msg":"filling-2"}\n');
 
-    // Enqueue an error log while queue is saturated
+    // Enqueue an error log while queue is saturated: should evict an info log and succeed
     const errorAccepted = queue.enqueue('error', '{"msg":"CRITICAL_DB_FAILURE"}\n');
-    // Enqueue a fatal log while queue is saturated
+    // Enqueue a fatal log while queue is saturated: should evict remaining info log and succeed
     const fatalAccepted = queue.enqueue('fatal', '{"msg":"FATAL_SYSTEM_CRASH"}\n');
 
     assert.equal(errorAccepted, true);
     assert.equal(fatalAccepted, true);
 
-    // Critical events must have triggered the emergency handler!
-    assert.equal(emergencies.length, 2);
-    assert.equal(emergencies[0]?.level, 'error');
-    assert.equal(emergencies[1]?.level, 'fatal');
-
     await queue.flush();
     await queue.close();
+
+    // Critical events were preserved through priority eviction and written sequentially
+    assert.equal(written.length, 2);
+    assert.equal(written[0]?.level, 'error');
+    assert.equal(written[1]?.level, 'fatal');
   });
 
   it('3. Repeated flush and close operate deterministically without hanging', async () => {

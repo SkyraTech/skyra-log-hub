@@ -13,6 +13,8 @@ import {
 import { recoverPartialLine } from '../internal/recovery.js';
 import { emitInternalDiagnostic } from '../internal/diagnostics.js';
 
+import { InstanceOwnershipManager } from '../internal/ownership.js';
+
 export class JsonlFileTransport implements SkyraTransport {
   private readonly instanceDir: string;
   private readonly maxFileSizeBytes: number;
@@ -20,6 +22,7 @@ export class JsonlFileTransport implements SkyraTransport {
   private readonly clock: () => Date;
   private readonly dirMode: number;
   private readonly fileMode: number;
+  private readonly ownershipManager: InstanceOwnershipManager;
 
   private currentFd: number | null = null;
   private currentDateStr = '';
@@ -30,6 +33,7 @@ export class JsonlFileTransport implements SkyraTransport {
 
   private totalEventsWritten = 0;
   private totalBytesWritten = 0;
+  private totalEventsFsynced = 0;
 
   constructor(
     private readonly config: ResolvedSkyraLoggerConfig,
@@ -50,6 +54,7 @@ export class JsonlFileTransport implements SkyraTransport {
       config.instanceId
     );
 
+    this.ownershipManager = new InstanceOwnershipManager(this.instanceDir, this.fileMode);
     this.initInstanceDirectory();
     this.openCurrentSegment();
   }
@@ -60,14 +65,8 @@ export class JsonlFileTransport implements SkyraTransport {
         fs.mkdirSync(this.instanceDir, { recursive: true, mode: this.dirMode });
       }
 
-      // Check single-writer instance isolation lock
-      const lockPath = path.join(this.instanceDir, '.instance.owner');
-      const pidInfo = `pid=${process.pid}; time=${new Date().toISOString()}`;
-      try {
-        fs.writeFileSync(lockPath, pidInfo, { flag: 'w', mode: this.fileMode });
-      } catch {
-        // Continue if permissions on Windows restrict lock
-      }
+      // Acquire atomic exclusive single-writer ownership
+      this.ownershipManager.acquire();
     } catch (err) {
       emitInternalDiagnostic('DirectoryInitError', `Failed to initialize log directory '${this.instanceDir}'`, err);
       throw err;
@@ -199,6 +198,7 @@ export class JsonlFileTransport implements SkyraTransport {
     if (this.fsyncLevels.has(level)) {
       try {
         fs.fsyncSync(this.currentFd);
+        this.totalEventsFsynced++;
       } catch (err) {
         emitInternalDiagnostic('FsyncError', `fsync failed on '${this.currentFilename}'`, err);
       }
@@ -206,12 +206,15 @@ export class JsonlFileTransport implements SkyraTransport {
   }
 
   /**
-   * Synchronous emergency write bypassing all queues for unhandled crashes or full queues.
+   * Synchronous emergency write for crash handlers or unhandled exceptions.
+   * Checks rotation and updates durability metrics.
    */
   public emergencyWrite(level: LogLevel, line: string, bytes: number): void {
     if (this.isClosed) return;
 
     try {
+      this.checkRotation(bytes);
+
       if (this.currentFd === null) {
         this.openCurrentSegment();
       }
@@ -223,7 +226,12 @@ export class JsonlFileTransport implements SkyraTransport {
         this.totalBytesWritten += bytes;
 
         if (this.fsyncLevels.has(level)) {
-          fs.fsyncSync(this.currentFd);
+          try {
+            fs.fsyncSync(this.currentFd);
+            this.totalEventsFsynced++;
+          } catch (err) {
+            emitInternalDiagnostic('FsyncError', `fsync failed in emergencyWrite on '${this.currentFilename}'`, err);
+          }
         }
       }
     } catch (err) {
@@ -235,6 +243,7 @@ export class JsonlFileTransport implements SkyraTransport {
     if (this.currentFd !== null) {
       try {
         fs.fsyncSync(this.currentFd);
+        this.totalEventsFsynced++;
       } catch (err) {
         emitInternalDiagnostic('FlushError', `fsync failed during flush on '${this.currentFilename}'`, err);
       }
@@ -245,12 +254,14 @@ export class JsonlFileTransport implements SkyraTransport {
     if (this.isClosed) return;
     this.isClosed = true;
     this.closeCurrentFd();
+    this.ownershipManager.release();
   }
 
   public getStatus(): TransportStatus {
     return {
       totalEventsWritten: this.totalEventsWritten,
       totalBytesWritten: this.totalBytesWritten,
+      totalEventsFsynced: this.totalEventsFsynced,
       currentActiveFile: this.currentFilename ? path.join(this.instanceDir, this.currentFilename) : undefined,
       isClosed: this.isClosed,
     };

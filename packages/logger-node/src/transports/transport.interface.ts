@@ -3,6 +3,7 @@ import type { LogLevel } from '@skyra/logger-core';
 export interface TransportStatus {
   totalEventsWritten: number;
   totalBytesWritten: number;
+  totalEventsFsynced: number;
   currentActiveFile?: string;
   isClosed: boolean;
 }

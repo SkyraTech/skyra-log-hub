@@ -14,8 +14,8 @@ Built on top of `@skyra/logger-core`, `@skyra/logger-node` generates canonical, 
   `${LOG_ROOT}/${PROJECT_ID}/${ENVIRONMENT}/${SERVICE_NAME}/${INSTANCE_ID}/${YYYY-MM-DD}.part-${PART_INDEX}.jsonl`
 - **UTC Midnight Daily Rotation:** Deterministic calendar rotation based on UTC clock, preventing timezone drift. Low-volume services do not require empty file timers.
 - **Size-Based Rollover:** Monotonic zero-padded 4-digit segment indexing (`.part-0000.jsonl`, `.part-0001.jsonl`). Configurable threshold (default 100 MiB).
-- **Partial-Line Recovery:** On restart, detects incomplete trailing records from abrupt shutdowns, quarantines corrupted fragments to `${YYYY-MM-DD}.corrupt.log`, and cleanly truncates the segment before accepting new records.
-- **Bounded Write Queue:** In-memory queue with backpressure protection and memory limits. Non-critical logs are dropped with observable metrics when queue overflows; `error` and `fatal` logs bypass the queue via emergency direct write.
+- **Bounded Write Queue & Single-Writer Priority Eviction:** In-memory queue with backpressure protection and memory limits. Non-critical logs are dropped with observable metrics when queue overflows; `error` and `fatal` logs evict older non-critical logs within the serialized pipeline, preserving strict single-writer FIFO sequencing and eliminating out-of-band concurrent writes.
+- **Atomic Single-Writer Instance Isolation:** Exclusive ownership lock (`.instance.owner`) with `O_EXCL`, verified PID liveness (`kill(pid, 0)`), in-process active registry, and automatic dead PID stale lock cleanup.
 - **Contextual Child Loggers:** Create child loggers inheriting trace correlation, component names, and tags without mutating the parent logger.
 - **Dual Transports:** Supports both local `jsonl-file` and container-native `stdout` transports.
 

@@ -52,6 +52,13 @@ Include valid HTTP request, slow DB query, job success/failure, auth denial, exc
 ## 5. Quality gate targets
 - Proposed 85% unit coverage for logging core/security modules; branch tests for redaction/token validation mandatory. Use thresholds after baseline measurements.
 - Zero failing critical security suites; schema contracts green across Node and Python; nonblocking logging performance regression benchmark.
+- **Node.js Logging SDK Quality Gates (LOGHUB-PKG-002A):**
+  1. *Single-Writer Integrity*: Zero concurrent writes to the file descriptor; critical events evict non-critical records within the serialized queue pipeline.
+  2. *Atomic Instance Ownership*: Exclusive lock acquisition with `O_EXCL`, verified PID liveness (`kill(pid, 0)`), in-process active registry, and automatic dead PID stale lock cleanup.
+  3. *Privacy-Safe Quarantine*: Corrupted trailing records quarantine metadata and SHA-256 hash only; zero plaintext or base64 secrets emitted by default. Quarantine record fsynced before file truncation.
+  4. *Schema-Bound String Truncation*: Truncation reserves suffix space guaranteeing messages strictly `<= 8192` chars and preserving UTF-16 surrogate pairs; empty messages default to `"[empty]"` (`minLength: 1`).
+  5. *Max Event Size*: Strict enforcement of `maxEventSizeBytes` (1 MiB default) with observable drop counters and minimal critical fallback.
+  6. *Multi-Instance & Isolated Distribution*: Zero monorepo source leakage; clean installation in external isolated consumer.
 - Performance targets are **provisional**, not promises: p95 basic search <3s for pilot representative data; ingestion throughput and resource budgets to be established with agreed log volume.
 - Release blocked on critical vulnerability without approved, documented exception.
 

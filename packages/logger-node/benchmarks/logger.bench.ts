@@ -17,24 +17,30 @@ function percentile(sorted: number[], p: number): number {
 
 interface BenchmarkResult {
   scenario: string;
-  count: number;
+  submitted: number;
+  accepted: number;
+  written: number;
+  dropped: number;
+  fsynced: number;
   durationMs: number;
-  opsPerSec: number;
-  avgLatencyUs: number;
-  p50LatencyUs: number;
-  p95LatencyUs: number;
-  p99LatencyUs: number;
-  totalBytes: number;
-  throughputMBs: number;
-  flushLatencyMs: number;
+  effectiveThroughputOpsSec: number;
+  avgEnqueueUs: number;
+  p50EnqueueUs: number;
+  p95EnqueueUs: number;
+  p99EnqueueUs: number;
+  diskThroughputMBs: number;
+  drainLatencyMs: number;
+  heapUsedMB: number;
 }
 
 async function runBenchmark(): Promise<void> {
-  fs.rmSync(BENCH_DIR, { recursive: true, force: true });
+  if (fs.existsSync(BENCH_DIR)) {
+    fs.rmSync(BENCH_DIR, { recursive: true, force: true });
+  }
   fs.mkdirSync(BENCH_DIR, { recursive: true });
 
   console.log('='.repeat(80));
-  console.log('SKYRA LOGHUB — NODE.JS LOGGER PERFORMANCE BENCHMARK');
+  console.log('SKYRA LOGHUB — NODE.JS LOGGER HARDENED PERFORMANCE BENCHMARK (LOGHUB-PKG-002A)');
   console.log('='.repeat(80));
   console.log(`OS: ${os.type()} ${os.release()} (${os.arch()})`);
   console.log(`CPU: ${os.cpus()[0]?.model} (${os.cpus().length} cores)`);
@@ -63,33 +69,37 @@ async function runBenchmark(): Promise<void> {
       const t0 = performance.now();
       logger.info('Application health check passed');
       const t1 = performance.now();
-      latenciesUs.push((t1 - t0) * 1000); // microseconds
+      latenciesUs.push((t1 - t0) * 1000);
     }
 
     const tFlush0 = performance.now();
     await logger.flush();
     const tFlush1 = performance.now();
-    const flushLatencyMs = tFlush1 - tFlush0;
+    const drainLatencyMs = tFlush1 - tFlush0;
     const totalDurationMs = performance.now() - startTime;
 
+    const status = logger.getStatus();
     await logger.close();
 
     latenciesUs.sort((a, b) => a - b);
     const avgLatency = latenciesUs.reduce((a, b) => a + b, 0) / latenciesUs.length;
-    const status = logger.getStatus();
 
     results.push({
       scenario: 'Small Informational Events',
-      count,
-      durationMs: totalDurationMs,
-      opsPerSec: Math.round((count / totalDurationMs) * 1000),
-      avgLatencyUs: Number(avgLatency.toFixed(2)),
-      p50LatencyUs: Number(percentile(latenciesUs, 50).toFixed(2)),
-      p95LatencyUs: Number(percentile(latenciesUs, 95).toFixed(2)),
-      p99LatencyUs: Number(percentile(latenciesUs, 99).toFixed(2)),
-      totalBytes: status.totalBytesWritten,
-      throughputMBs: Number(((status.totalBytesWritten / 1024 / 1024) / (totalDurationMs / 1000)).toFixed(2)),
-      flushLatencyMs: Number(flushLatencyMs.toFixed(2)),
+      submitted: status.totalEventsSubmitted,
+      accepted: status.totalEventsAccepted,
+      written: status.totalEventsWritten,
+      dropped: status.totalEventsDropped,
+      fsynced: status.totalEventsFsynced,
+      durationMs: Number(totalDurationMs.toFixed(1)),
+      effectiveThroughputOpsSec: Math.round((status.totalEventsWritten / totalDurationMs) * 1000),
+      avgEnqueueUs: Number(avgLatency.toFixed(2)),
+      p50EnqueueUs: Number(percentile(latenciesUs, 50).toFixed(2)),
+      p95EnqueueUs: Number(percentile(latenciesUs, 95).toFixed(2)),
+      p99EnqueueUs: Number(percentile(latenciesUs, 99).toFixed(2)),
+      diskThroughputMBs: Number(((status.totalBytesWritten / 1024 / 1024) / (totalDurationMs / 1000)).toFixed(2)),
+      drainLatencyMs: Number(drainLatencyMs.toFixed(2)),
+      heapUsedMB: Number((process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)),
     });
   }
 
@@ -131,31 +141,35 @@ async function runBenchmark(): Promise<void> {
     const tFlush0 = performance.now();
     await logger.flush();
     const tFlush1 = performance.now();
-    const flushLatencyMs = tFlush1 - tFlush0;
+    const drainLatencyMs = tFlush1 - tFlush0;
     const totalDurationMs = performance.now() - startTime;
 
+    const status = logger.getStatus();
     await logger.close();
 
     latenciesUs.sort((a, b) => a - b);
     const avgLatency = latenciesUs.reduce((a, b) => a + b, 0) / latenciesUs.length;
-    const status = logger.getStatus();
 
     results.push({
       scenario: 'Typical Structured Events',
-      count,
-      durationMs: totalDurationMs,
-      opsPerSec: Math.round((count / totalDurationMs) * 1000),
-      avgLatencyUs: Number(avgLatency.toFixed(2)),
-      p50LatencyUs: Number(percentile(latenciesUs, 50).toFixed(2)),
-      p95LatencyUs: Number(percentile(latenciesUs, 95).toFixed(2)),
-      p99LatencyUs: Number(percentile(latenciesUs, 99).toFixed(2)),
-      totalBytes: status.totalBytesWritten,
-      throughputMBs: Number(((status.totalBytesWritten / 1024 / 1024) / (totalDurationMs / 1000)).toFixed(2)),
-      flushLatencyMs: Number(flushLatencyMs.toFixed(2)),
+      submitted: status.totalEventsSubmitted,
+      accepted: status.totalEventsAccepted,
+      written: status.totalEventsWritten,
+      dropped: status.totalEventsDropped,
+      fsynced: status.totalEventsFsynced,
+      durationMs: Number(totalDurationMs.toFixed(1)),
+      effectiveThroughputOpsSec: Math.round((status.totalEventsWritten / totalDurationMs) * 1000),
+      avgEnqueueUs: Number(avgLatency.toFixed(2)),
+      p50EnqueueUs: Number(percentile(latenciesUs, 50).toFixed(2)),
+      p95EnqueueUs: Number(percentile(latenciesUs, 95).toFixed(2)),
+      p99EnqueueUs: Number(percentile(latenciesUs, 99).toFixed(2)),
+      diskThroughputMBs: Number(((status.totalBytesWritten / 1024 / 1024) / (totalDurationMs / 1000)).toFixed(2)),
+      drainLatencyMs: Number(drainLatencyMs.toFixed(2)),
+      heapUsedMB: Number((process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)),
     });
   }
 
-  // Scenario 3: Error Events with Stack Traces & Redaction (5,000 events)
+  // Scenario 3: Error Events with Stack Traces & Redaction + Fsync (5,000 events)
   {
     const count = 5_000;
     const logger = createSkyraLogger({
@@ -191,27 +205,31 @@ async function runBenchmark(): Promise<void> {
     const tFlush0 = performance.now();
     await logger.flush();
     const tFlush1 = performance.now();
-    const flushLatencyMs = tFlush1 - tFlush0;
+    const drainLatencyMs = tFlush1 - tFlush0;
     const totalDurationMs = performance.now() - startTime;
 
+    const status = logger.getStatus();
     await logger.close();
 
     latenciesUs.sort((a, b) => a - b);
     const avgLatency = latenciesUs.reduce((a, b) => a + b, 0) / latenciesUs.length;
-    const status = logger.getStatus();
 
     results.push({
-      scenario: 'Errors with Stack Trace & Redaction',
-      count,
-      durationMs: totalDurationMs,
-      opsPerSec: Math.round((count / totalDurationMs) * 1000),
-      avgLatencyUs: Number(avgLatency.toFixed(2)),
-      p50LatencyUs: Number(percentile(latenciesUs, 50).toFixed(2)),
-      p95LatencyUs: Number(percentile(latenciesUs, 95).toFixed(2)),
-      p99LatencyUs: Number(percentile(latenciesUs, 99).toFixed(2)),
-      totalBytes: status.totalBytesWritten,
-      throughputMBs: Number(((status.totalBytesWritten / 1024 / 1024) / (totalDurationMs / 1000)).toFixed(2)),
-      flushLatencyMs: Number(flushLatencyMs.toFixed(2)),
+      scenario: 'Errors with Stack Trace & Fsync',
+      submitted: status.totalEventsSubmitted,
+      accepted: status.totalEventsAccepted,
+      written: status.totalEventsWritten,
+      dropped: status.totalEventsDropped,
+      fsynced: status.totalEventsFsynced,
+      durationMs: Number(totalDurationMs.toFixed(1)),
+      effectiveThroughputOpsSec: Math.round((status.totalEventsWritten / totalDurationMs) * 1000),
+      avgEnqueueUs: Number(avgLatency.toFixed(2)),
+      p50EnqueueUs: Number(percentile(latenciesUs, 50).toFixed(2)),
+      p95EnqueueUs: Number(percentile(latenciesUs, 95).toFixed(2)),
+      p99EnqueueUs: Number(percentile(latenciesUs, 99).toFixed(2)),
+      diskThroughputMBs: Number(((status.totalBytesWritten / 1024 / 1024) / (totalDurationMs / 1000)).toFixed(2)),
+      drainLatencyMs: Number(drainLatencyMs.toFixed(2)),
+      heapUsedMB: Number((process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)),
     });
   }
 
@@ -239,27 +257,31 @@ async function runBenchmark(): Promise<void> {
     const tFlush0 = performance.now();
     await logger.flush();
     const tFlush1 = performance.now();
-    const flushLatencyMs = tFlush1 - tFlush0;
+    const drainLatencyMs = tFlush1 - tFlush0;
     const totalDurationMs = performance.now() - startTime;
 
+    const status = logger.getStatus();
     await logger.close();
 
     latenciesUs.sort((a, b) => a - b);
     const avgLatency = latenciesUs.reduce((a, b) => a + b, 0) / latenciesUs.length;
-    const status = logger.getStatus();
 
     results.push({
       scenario: 'High-Burst Logging (20k events)',
-      count,
-      durationMs: totalDurationMs,
-      opsPerSec: Math.round((count / totalDurationMs) * 1000),
-      avgLatencyUs: Number(avgLatency.toFixed(2)),
-      p50LatencyUs: Number(percentile(latenciesUs, 50).toFixed(2)),
-      p95LatencyUs: Number(percentile(latenciesUs, 95).toFixed(2)),
-      p99LatencyUs: Number(percentile(latenciesUs, 99).toFixed(2)),
-      totalBytes: status.totalBytesWritten,
-      throughputMBs: Number(((status.totalBytesWritten / 1024 / 1024) / (totalDurationMs / 1000)).toFixed(2)),
-      flushLatencyMs: Number(flushLatencyMs.toFixed(2)),
+      submitted: status.totalEventsSubmitted,
+      accepted: status.totalEventsAccepted,
+      written: status.totalEventsWritten,
+      dropped: status.totalEventsDropped,
+      fsynced: status.totalEventsFsynced,
+      durationMs: Number(totalDurationMs.toFixed(1)),
+      effectiveThroughputOpsSec: Math.round((status.totalEventsWritten / totalDurationMs) * 1000),
+      avgEnqueueUs: Number(avgLatency.toFixed(2)),
+      p50EnqueueUs: Number(percentile(latenciesUs, 50).toFixed(2)),
+      p95EnqueueUs: Number(percentile(latenciesUs, 95).toFixed(2)),
+      p99EnqueueUs: Number(percentile(latenciesUs, 99).toFixed(2)),
+      diskThroughputMBs: Number(((status.totalBytesWritten / 1024 / 1024) / (totalDurationMs / 1000)).toFixed(2)),
+      drainLatencyMs: Number(drainLatencyMs.toFixed(2)),
+      heapUsedMB: Number((process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)),
     });
   }
 
@@ -322,7 +344,9 @@ async function runBenchmark(): Promise<void> {
   console.log(`4. Ajv 2020 Schema Validation: ${validationTimeMs.toFixed(2)} ms (${(validationTimeMs / compCount * 1000).toFixed(2)} µs/op)`);
   console.log('='.repeat(80));
 
-  fs.rmSync(BENCH_DIR, { recursive: true, force: true });
+  try {
+    fs.rmSync(BENCH_DIR, { recursive: true, force: true });
+  } catch {}
 }
 
 runBenchmark().catch((err) => {

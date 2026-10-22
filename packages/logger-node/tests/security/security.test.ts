@@ -31,9 +31,8 @@ describe('Security: Limits, Deep Redaction & Metadata Hardening', () => {
     const longMessage = 'A'.repeat(10_000);
     const sanitized = sanitizeMessage(longMessage, 100);
 
-    assert.equal(sanitized.length > 100, true);
-    assert.ok(sanitized.startsWith('A'.repeat(100)));
-    assert.ok(sanitized.includes('[truncated 9900 chars]'));
+    assert.ok(sanitized.length <= 100, `Expected length <= 100, got ${sanitized.length}`);
+    assert.ok(sanitized.includes('[truncated]'));
   });
 
   it('3. Truncates oversized arrays exceeding maxArrayLength', () => {

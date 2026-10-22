@@ -66,15 +66,20 @@ Dedicated traces/metrics storage approach and sampling policy; initial SDK emits
 - Query worker uses DuckDB with defined concurrency, memory/time budgets; tests distinguish cold Parquet scans from warm cached loads. Exact percentile definition and missing-value policy documented/tested.
 - No raw SQL parameters or confidential HTTP/AI payloads; client-observed DB latency is not database-server execution time.
 
-## 11. Node.js Logging SDK Benchmark Baseline (LOGHUB-PKG-002)
-Measured on Intel(R) Core(TM) i5-10210U @ 1.60GHz (8 cores), 8 GB RAM, Windows NT 10.0.26300, Node.js v24.21.0:
-- **Small Informational Events:** 15,755 ops/sec | Mean latency: 50.32 µs | p50: 35.7 µs | p95: 95.5 µs | p99: 262.7 µs | Disk throughput: 5.93 MB/s
-- **Typical Structured Events (HTTP metadata, trace/span IDs):** 8,201 ops/sec | Mean latency: 104.1 µs | p50: 66.9 µs | p95: 183.8 µs | p99: 459.3 µs | Disk throughput: 6.21 MB/s
-- **Error Events (with Error stack traces & deep redaction):** 1,168 ops/sec | Mean latency: 120.6 µs | p50: 78.7 µs | p95: 272.5 µs | p99: 715.7 µs
-- **High-Burst Logging (20k events):** 17,702 ops/sec | Mean latency: 52.09 µs | p50: 35.9 µs | p95: 96.7 µs | p99: 253.7 µs
+## 11. Node.js Logging SDK Benchmark Baseline (LOGHUB-PKG-002 & PKG-002A)
+Measured on Intel(R) Core(TM) i5-10210U @ 1.60GHz (8 cores), 8 GB RAM, Windows NT 10.0.26300, Node.js v24.21.0.
+Hardened measurement standard enforces separate tracking of submitted, accepted, written, dropped, and fsynced events. Effective throughput is calculated strictly as `eventsWritten / totalDurationSec`:
+
+| Scenario | Submitted | Accepted | Written | Dropped | Fsynced | Duration | Effective Throughput | p50 Enqueue | p95 Enqueue | p99 Enqueue | Disk Throughput | Drain Latency |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Small Info Events** | 10,000 | 10,000 | 10,000 | 0 | 1 | 1,387 ms | **7,209 ops/sec** | 90.2 µs | 210.5 µs | 672.7 µs | 2.72 MB/s | 288 ms |
+| **Typical Structured Events** | 10,000 | 10,000 | 10,000 | 0 | 1 | 3,401 ms | **2,940 ops/sec** | 228.3 µs | 562.8 µs | 1,670 µs | 2.23 MB/s | 483 ms |
+| **Errors + Stack Traces + Fsync** | 5,000 | 5,000 | 5,000 | 0 | 5,001 | 9,222 ms | **542 ops/sec** | 213.0 µs | 599.5 µs | 1,658 µs | 0.47 MB/s | 7,633 ms |
+| **High-Burst Logging (20k burst)** | 20,000 | 10,000 | 10,000 | 10,000 | 1 | 3,054 ms | **3,274 ops/sec** | 120.6 µs | 265.8 µs | 614.2 µs | 1.31 MB/s | 291 ms |
+
 - **Component Overhead Breakdown (per 10k iterations):**
-  - Canonical Event Build + UUIDv4: 86.78 µs/op
-  - JSONL Serialization (`JSON.stringify` + single line newline): 5.06 µs/op
-  - Deep Sensitive Data Redaction: 29.58 µs/op
-  - Ajv 2020 Schema Validation: 17.09 µs/op
-- Bounded in-memory write queue prevents unconstrained memory consumption with configurable thresholds (default 64 MiB, 10k items) and safe emergency direct bypass for `error` and `fatal` events.
+  - Canonical Event Build + UUIDv4: 113.88 µs/op
+  - JSONL Serialization (`JSON.stringify` + single line newline): 6.82 µs/op
+  - Deep Sensitive Data Redaction: 27.13 µs/op
+  - Ajv 2020 Schema Validation: 17.23 µs/op
+- **Hardened Invariants:** Bounded in-memory write queue strictly enforces memory bounds (default 64 MiB, 10k items). Queue saturation drops non-critical events while critical events (`error`, `fatal`) prioritize via queue eviction within the single-writer pipeline, completely avoiding out-of-band concurrent writes. Hard disk errors trigger `onError` without crashing the host process. Plaintext secrets are never stored in quarantine recovery files.
