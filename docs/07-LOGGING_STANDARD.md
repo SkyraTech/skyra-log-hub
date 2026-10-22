@@ -89,12 +89,17 @@ Never log raw passwords, access/refresh tokens, API keys, cookies, authorization
 
 ## 8. Files and retention
 ```text
-${LOG_ROOT}/${PROJECT_ID}/${ENV}/${SERVICE}/${INSTANCE}/2026-10-21.jsonl
-${LOG_ROOT}/${PROJECT_ID}/${ENV}/${SERVICE}/${INSTANCE}/2026-10-21.001.jsonl
+${LOG_ROOT}/${PROJECT_ID}/${ENVIRONMENT}/${SERVICE_NAME}/${INSTANCE_ID}/${YYYY-MM-DD}.part-${PART_INDEX}.jsonl
 ```
-- UTC daily cutoff and size rollover (starting proposal **100 MiB**, configurable). Local retention starting suggestion **7 days**; centralized retention proposal **30 days application**, **90 days security audit** only after compliance/storage review. Previous organization used 90 days locally; **not adopted automatically**.
-- Storage quota/disk reserve, permissions e.g. directory owner-only, restricted file readers, safe symlink handling; no path traversal.
-- Avoid shared-file concurrent writes across replicas; unique instance ID. Serverless stdout path may supersede files.
+- E.g.: `logs/skyra-erp/production/erp-api/instance-01/2026-10-21.part-0000.jsonl`
+- UTC daily cutoff at midnight (`00:00:00.000Z`) and size rollover (default **100 MiB**, configurable 10–250 MiB).
+- Monotonic part indexing: zero-padded 4 digits (`0000`, `0001`, ...).
+- **Mandatory Single-Writer Instance Isolation:** Each process, pod, or worker writes exclusively to its dedicated `${INSTANCE_ID}` directory without shared file descriptors or locks.
+- **Partial-Line Recovery:** If abrupt power failure or crash leaves an incomplete line without trailing `\n`, the SDK tail scanner quarantines corrupt fragments to `${YYYY-MM-DD}.corrupt.log` and truncates the file back to the last valid newline before new records are appended.
+- Local retention default suggestion 48 hours; centralized retention proposal 30 days application, 90 days security audit after compliance review. Unshipped logs are never automatically deleted by default.
+- Storage quota/disk reserve, permissions 0750 dir, 0640 files, path traversal prevention.
+- Ephemeral/serverless stdout path supported via `StdoutTransport`.
+- Reference implementation: `@skyra/logger-node` (`JsonlFileTransport`).
 
 ## 9. Identity and routing protection
 Never accept `skyra.project_id` solely from the body for authorization. Verify registered service credential/collector identity ↔ allowed project/service; enrich trusted origin; reject mismatches. Use event ID for replay dedupe when warranted.

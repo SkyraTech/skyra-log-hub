@@ -125,6 +125,16 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1(ajv@8.20.0)
 
+  packages/logger-node:
+    dependencies:
+      '@skyra/logger-core':
+        specifier: workspace:*
+        version: link:../logger-core
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.5
+        version: 26.6.5
+
 packages:
 
   '@types/node@26.6.5':

@@ -28,6 +28,14 @@ Include valid HTTP request, slow DB query, job success/failure, auth denial, exc
 4. **Strict Parser Hardening**: Duplicate JSON keys at root or nested levels, and Unicode escape variations (e.g., `\u0061`) must trigger strict parser errors.
 5. **Redaction & Privacy Security**: Normalized case-insensitive compound key checks (`dbPassword`, `client_secret`, `access-token`), URL embedded credentials, Bearer/JWT values, and circular reference safety (`WeakMap`/visited id set) without mutating caller inputs. Validation diagnostic paths never leak sensitive payload values.
 6. **Distribution & Isolated Consumer Gates**: `@skyra/logger-core` compiles to `dist/` with `.d.ts` types and passes clean consumer module and type resolution. Python wheel builds cleanly with embedded schemas and installs in isolated environments without source tree dependencies.
+7. **LOGHUB-PKG-002 Node.js Logger & Daily JSONL Transport Gates**:
+   - Bounded Queue & Backpressure: Memory limit (64 MiB default) and pending events limit (10,000 default). Drops non-critical logs on saturation with observable metrics; critical events (`error`, `fatal`) bypass via direct emergency write.
+   - Path Safety & Instance Isolation: Strict regex verification on `projectId`, `serviceName`, `instanceId`, and log root path traversal rejection (`..`, `/`, `\`, null bytes). Single-writer instance directory isolation.
+   - UTC Midnight Rollover: Injectable clock verifies rollover from `23:59:59Z` to `00:00:00Z` rotates to `${newDate}.part-0000.jsonl` with zero event loss.
+   - Size Rollover: Monotonic zero-padded 4-digit segment indexing (`.part-0000.jsonl`, `.part-0001.jsonl`) at configured threshold (default 100 MiB).
+   - Partial-Line Recovery: Tail scanner quarantines incomplete trailing records to `${date}.corrupt.log` and cleanly truncates prior to new writes.
+   - End-to-End Consumer Verification: Built package produces physical JSONL files, and each line passes both the strict duplicate-key parser and Ajv 2020 canonical schema validator.
+   - 35 automated tests in `packages/logger-node/tests/` passing across unit, storage, reliability, security, and integration suites.
 
 ## 4. Non-negotiable integration scenarios
 1. Two projects with same service name cannot share log file path, file/catalog visibility or token access.

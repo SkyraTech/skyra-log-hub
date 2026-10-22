@@ -5,13 +5,15 @@
   "type": "module",
   "description": "Skyra LogHub — Centralized Logging and Observability Platform",
   "scripts": {
-    "build": "pnpm --filter @skyra/logger-core build",
-    "typecheck": "pnpm --filter @skyra/logger-core exec tsc --noEmit",
+    "build": "pnpm --filter @skyra/logger-core build && pnpm --filter @skyra/logger-node build",
+    "typecheck": "pnpm --filter @skyra/logger-core exec tsc --noEmit && pnpm --filter @skyra/logger-node exec tsc --noEmit",
     "sync:schemas": "node scripts/sync-schemas.mjs",
     "check:schema-sync": "node scripts/sync-schemas.mjs --check",
-    "test": "node --experimental-strip-types --test tests/contracts/schema-validation.test.ts",
+    "test": "node --experimental-strip-types --test tests/contracts/schema-validation.test.ts && node --experimental-strip-types --test packages/logger-node/tests/**/*.test.ts",
     "test:contracts": "node --experimental-strip-types --test tests/contracts/schema-validation.test.ts",
-    "test:python": "python -m unittest discover -s packages/logger-python/tests"
+    "test:node": "node --experimental-strip-types --test packages/logger-node/tests/**/*.test.ts",
+    "test:python": "python -m unittest discover -s packages/logger-python/tests",
+    "bench:node": "node --experimental-strip-types packages/logger-node/benchmarks/logger.bench.ts"
   },
   "engines": {
     "node": ">=20.0.0",

@@ -1,0 +1,51 @@
+{
+  "name": "@skyra/logger-node",
+  "version": "1.0.0",
+  "description": "Production-Grade Node.js Logging SDK & Daily JSONL Transport for Skyra LogHub",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./transports": {
+      "types": "./dist/transports/index.d.ts",
+      "import": "./dist/transports/index.js",
+      "default": "./dist/transports/index.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "import": "./dist/config.js",
+      "default": "./dist/config.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
+    "test": "node --experimental-strip-types --test tests/**/*.test.ts",
+    "bench": "node --experimental-strip-types benchmarks/logger.bench.ts"
+  },
+  "keywords": [
+    "skyra",
+    "logging",
+    "jsonl",
+    "ecs",
+    "observability",
+    "rotation",
+    "daily-rotation"
+  ],
+  "author": "Skyra Tech <hello@skyra-tech.com>",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@skyra/logger-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5"
+  }
+}

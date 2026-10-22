@@ -76,8 +76,8 @@ function run() {
       console.error(`[DRIFT] TypeScript schema file missing: ${TS_SCHEMA_PATH}`);
       hasDrift = true;
     } else {
-      const actualTs = fs.readFileSync(TS_SCHEMA_PATH, 'utf-8');
-      if (actualTs.trim() !== expectedTs.trim()) {
+      const actualTs = fs.readFileSync(TS_SCHEMA_PATH, 'utf-8').replace(/\r\n/g, '\n');
+      if (actualTs.trim() !== expectedTs.replace(/\r\n/g, '\n').trim()) {
         console.error(`[DRIFT] TypeScript schema in ${TS_SCHEMA_PATH} has drifted from canonical schema!`);
         hasDrift = true;
       }
@@ -87,8 +87,8 @@ function run() {
       console.error(`[DRIFT] Python schema file missing: ${PY_SCHEMA_PATH}`);
       hasDrift = true;
     } else {
-      const actualPy = fs.readFileSync(PY_SCHEMA_PATH, 'utf-8');
-      if (actualPy.trim() !== expectedPy.trim()) {
+      const actualPy = fs.readFileSync(PY_SCHEMA_PATH, 'utf-8').replace(/\r\n/g, '\n');
+      if (actualPy.trim() !== expectedPy.replace(/\r\n/g, '\n').trim()) {
         console.error(`[DRIFT] Python schema in ${PY_SCHEMA_PATH} has drifted from canonical schema!`);
         hasDrift = true;
       }

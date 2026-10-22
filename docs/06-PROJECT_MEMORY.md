@@ -76,8 +76,28 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
 1. Confirm identity provider (Keycloak / Auth0 / Azure Entra) for Phase 3.
 2. Confirm deployment target (Azure / AWS / Self-hosted VM).
 
-## Next approved action
-Awaiting user review of `LOGHUB-PKG-001C`. Next scheduled task is `LOGHUB-PKG-002` (Reusable Node.js Logging SDK & Daily JSONL File Writer).
+### 2026-10-22 — LOGHUB-PKG-002 — Production-Grade Node.js Logging SDK & Daily JSONL Transport
+- Status: DONE
+- Deliverables:
+  - Created package `@skyra/logger-node` under `packages/logger-node/` built on `@skyra/logger-core`.
+  - Implemented `SkyraLogger` with required methods: `trace()`, `debug()`, `info()`, `warn()`, `error()`, `fatal()`, `log()`, `flush()`, `close()`, `child()`, `isLevelEnabled()`, `setLevel()`, `getStatus()`.
+  - Canonical event construction adhering to ECS 8.11.0, Skyra Logging Standard v1.0, and strict RFC 4122 UUIDv4 generation.
+  - Deep redaction integration: pre-serialization scrubbing of passwords, bearer tokens, JWTs, cookies, URL credentials, and additional configurable sensitive keys.
+  - Storage contract compliance (`contracts/storage-contract.md`): layout `${LOG_ROOT}/${PROJECT_ID}/${ENVIRONMENT}/${SERVICE_NAME}/${INSTANCE_ID}/${YYYY-MM-DD}.part-${PART_INDEX}.jsonl`.
+  - UTC daily rotation at midnight UTC (`00:00:00Z`) with zero event loss and part index reset.
+  - Size-based rollover at 100 MiB (configurable) with monotonic 4-digit zero-padded indexing (`0000`, `0001`, ...).
+  - Partial-line corruption recovery: tail scanner detects incomplete records from crashes/power loss, quarantines corrupt fragments to `${YYYY-MM-DD}.corrupt.log`, and cleanly truncates `.jsonl` before accepting new records.
+  - Bounded write queue with backpressure protection, queue overflow dropping for non-critical events, and emergency direct bypass for `error` and `fatal` events.
+  - Dual transports: `JsonlFileTransport` with `fsync` durability on error/fatal, and `StdoutTransport` for containers/serverless.
+  - Performance benchmarks: >15,700 ops/sec for small info events, >8,200 ops/sec for typical structured HTTP events, >17,700 ops/sec during bursts, p50 enqueue latency 35–66 µs.
+- Test evidence:
+  - 35 automated tests in `packages/logger-node/tests/` passing across unit, storage, reliability, security, and integration suites (`node --experimental-strip-types --test packages/logger-node/tests/**/*.test.ts`).
+  - 13 schema contract tests in `tests/contracts/schema-validation.test.ts` passing.
+  - 14 Python contract tests in `packages/logger-python/tests/` passing.
+  - Total tests across workspace: 62 automated tests passing with zero failures.
+  - Tarball packing verified (`pnpm pack`) without leaking raw TS sources.
+- Next approved action:
+  Await user review of `LOGHUB-PKG-002`. Next scheduled task is `LH-105` (NestJS/Next.js logging adapters and sample application).
 
 ## Update template (copy per completed task)
 ```md
