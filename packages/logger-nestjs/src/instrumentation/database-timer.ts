@@ -96,7 +96,7 @@ export async function measureDatabase<T>(
     skyraDbSection['client_duration_ms'] = elapsedMs;
 
     logger.debug(`Database ${operation} completed${tableName ? ` on ${tableName}` : ''}`, {
-      action: 'db.query.completed',
+      action: 'database.query.completed',
       outcome: 'success',
       category: ['database'],
       durationMs: elapsedMs,
@@ -116,7 +116,7 @@ export async function measureDatabase<T>(
     skyraDbSection['client_duration_ms'] = elapsedMs;
 
     logger.error(`Database ${operation} failed${tableName ? ` on ${tableName}` : ''}`, {
-      action: 'db.query.failed',
+      action: 'database.query.failed',
       outcome: 'failure',
       category: ['database'],
       durationMs: elapsedMs,

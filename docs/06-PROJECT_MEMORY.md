@@ -141,6 +141,45 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
 - Next approved action:
   Await user review of `LOGHUB-PKG-003`. Next scheduled task is Next.js logging adapter or Package registry/release automation (`LH-106`).
 
+### 2026-10-22 — LOGHUB-PKG-004 — Next.js Server-Side Logging Adapter, Instrumentation & Framework Integration
+- Status: DONE
+- Priority: P0
+- Package: `@skyra/logger-next` (`packages/logger-next/`)
+- Commit: (pending user commit approval)
+- Implemented Deliverables:
+  1. Mandatory Phase A NestJS Hardening & Envelope Defense:
+     - A1 (Aborted HTTP requests): Detected premature client disconnects (`req.aborted`, `req.destroyed`, `!res.writableEnded` on close); mapped to HTTP status 499, severity `warn`, outcome `'failure'`, preventing false recordings of abandoned requests as successful.
+     - A2 (Unknown-route privacy): Scrubbed emails and arbitrary tokens in unknown routes, falling back to safe placeholder `[unmatched-route]`.
+     - A3 (Canonical envelope integrity): Strictly validated W3C `traceId` (32 hex, non-zero) and `spanId` (16 hex, non-zero); locked canonical envelope fields post-redaction against metadata overrides.
+     - A4 (Database instrumentation): Emitted canonical actions `database.query.completed` and `database.query.failed` with duration consistency and schema validation.
+     - 4 regression tests added to `@skyra/logger-nestjs` (tests 7-10); full NestJS suite passing 46/46.
+  2. Next.js App Router Route Handler Wrapper (`withSkyraLogging`):
+     - Wrapped route handlers preserving streaming response bodies (zero consumption/buffering), mapping status codes, recording monotonic durations, and stamping `x-request-id`.
+     - Parameterized dynamic route template handling (e.g. `/api/users/[userId]`) and `[unmatched-route]` fallback for arbitrary raw paths.
+  3. Server Actions & Server Functions Wrapper (`withSkyraAction`):
+     - Measured asynchronous action duration, logged `action.completed` on success and `action.failed` on error.
+     - Never serialized raw function arguments, form data, or return payloads by default; allowed approved metadata extraction only.
+  4. Next.js Instrumentation Hooks (`instrumentation.ts`):
+     - Integration helpers `registerSkyraInstrumentation` (for `register()`) and `createSkyraRequestErrorHandler` (for `onRequestError()`) with error deduplication.
+  5. React Server Components Logging:
+     - Explicit server logging via `getSkyraServerLogger()`.
+  6. Distributed Tracing & Request Correlation:
+     - AsyncLocalStorage context isolation across concurrent requests; W3C `traceparent` extraction and validation.
+  7. Runtime Safety:
+     - Auto-detected Node.js vs Serverless (stdout fallback) vs Edge runtime (file operations safely guarded).
+- Test Evidence:
+  - 40/40 unit tests passing in `packages/logger-next/tests/unit/` & `tests/security/`.
+  - 7/7 real Next.js App Router integration tests passing against production build (`tests/integration/real-app-router.test.ts`).
+  - Isolated package consumer test passing (10/10 criteria) using packed tarballs outside monorepo (`isolated-next-consumer`).
+  - Full workspace test suite: 148 total tests passing across all packages (contracts: 13, node: 46, nestjs: 46, next: 47, python: 14).
+- Benchmarks:
+  - Baseline Route Handler: 22,835 ops/sec (mean: 23.0 µs, p50: 16.0 µs).
+  - Correlation-Only (ALS + W3C): 19,648 ops/sec (mean: 34.5 µs, p50: 23.1 µs).
+  - withSkyraLogging (JSONL File): 1,481 ops/sec (mean: 602.8 µs, p50: 503.2 µs, 100% written, 0 dropped).
+  - Error-Logging (Exception serialization): 561 ops/sec (mean: 1,733.9 µs, 100% written, 0 dropped).
+  - High-Concurrency Burst (50 burst): 6,899 ops/sec (mean: 6,296.5 µs, 100% written, 0 dropped).
+  - withSkyraLogging (Stdout): 2,656 ops/sec (mean: 355.7 µs, p50: 294.5 µs, 100% written, 0 dropped).
+
 ## Update template (copy per completed task)
 ```md
 ### YYYY-MM-DD — LH-XXX — Task name

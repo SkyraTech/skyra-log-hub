@@ -117,6 +117,18 @@ export class SkyraHttpLoggingInterceptor implements NestInterceptor {
         statusCode = sanitizedErr?.httpStatus ?? (res.statusCode >= 400 ? res.statusCode : 500);
       }
 
+      // Safeguard A1: Ensure abandoned/aborted responses are never falsely recorded as successful
+      const isClientAborted = Boolean((req as any).aborted || (req as any).destroyed);
+      const isPrematureClose = caughtError instanceof Error && caughtError.message.includes('Client');
+      if (!res.writableEnded && (isClientAborted || isPrematureClose)) {
+        if (statusCode < 400 || statusCode === 500) {
+          statusCode = 499; // Client Closed Request
+        }
+        if (!sanitizedErr) {
+          sanitizedErr = sanitizeError(new Error('Client closed request prematurely'));
+        }
+      }
+
       // Sampling check: errors (status >= 400) are NEVER dropped by sampling
       if (statusCode < 400 && this.sampleRate < 1.0) {
         if (Math.random() >= this.sampleRate) {
@@ -136,7 +148,9 @@ export class SkyraHttpLoggingInterceptor implements NestInterceptor {
       const frameworkRoute = req.route?.path
         ? (req.baseUrl || '') + req.route.path
         : undefined;
-      const routeTemplate = sanitizeRouteTemplate(rawPath, frameworkRoute);
+      const routeTemplate = frameworkRoute
+        ? sanitizeRouteTemplate(rawPath, frameworkRoute)
+        : sanitizeRouteTemplate(rawPath);
 
       const eventContext = buildHttpCompletedEventContext({
         method: req.method || 'GET',
@@ -155,12 +169,25 @@ export class SkyraHttpLoggingInterceptor implements NestInterceptor {
       this.logger.log(level, message, eventContext);
     };
 
-    // Attach finish listener to capture final status code when Express finishes
+    // Attach finish and close listeners
     if (typeof res.once === 'function') {
       res.once('finish', () => logCompletion());
       res.once('close', () => {
         if (!res.writableEnded) {
           // Client disconnected prematurely
+          logCompletion(new Error('Client closed request prematurely'));
+        }
+      });
+    }
+
+    if (typeof (req as any).once === 'function') {
+      (req as any).once('aborted', () => {
+        if (!res.writableEnded) {
+          logCompletion(new Error('Client aborted request'));
+        }
+      });
+      (req as any).once('close', () => {
+        if (!res.writableEnded) {
           logCompletion(new Error('Client closed request prematurely'));
         }
       });

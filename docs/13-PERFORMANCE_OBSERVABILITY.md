@@ -101,3 +101,22 @@ Workload iterations: 10,000 requests per scenario.
   - Asynchronous background JSONL file logging processes ~14.8k ops/sec with a p50 latency of 51.6 µs, ensuring minimal impact on client response times.
   - Deep sensitive data and route sanitization during exceptions operates at ~6.7k ops/sec while preventing sensitive credentials, tokens, or internal stack traces from leaking to clients or storage.
 
+### Next.js App Router Integration Benchmarks (@skyra/logger-next)
+Tested with 10,000 iterations per scenario on Node.js v24.21.0, Intel Core i5-10210U (8 cores), Next.js v15.5.28:
+
+| Scenario | Ops/sec | Mean Latency | p50 Latency | p95 Latency | p99 Latency | Submitted | Written | Dropped | Flush (ms) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **1. Baseline Route Handler (Uninstrumented)** | 22,835 | 23.0 µs | 16.0 µs | 41.2 µs | 111.6 µs | 0 | 0 | 0 | 0.0 ms |
+| **2. Correlation-Only (ALS + W3C)** | 19,648 | 34.5 µs | 23.1 µs | 48.2 µs | 175.1 µs | 0 | 0 | 0 | 0.0 ms |
+| **3. withSkyraLogging (JSONL File Transport)** | 1,481 | 602.8 µs | 503.2 µs | 1,205.7 µs | 2,773.7 µs | 10,000 | 10,000 | 0 | 7.7 ms |
+| **4. Error-Logging (Exception Serialization)** | 561 | 1,733.9 µs | 1,610.2 µs | 2,521.7 µs | 5,796.0 µs | 10,000 | 10,000 | 0 | 0.2 ms |
+| **5. High-Concurrency Burst (50 Concurrent Burst)** | 6,899 | 6,296.5 µs | 5,920.4 µs | 9,790.3 µs | 13,303.7 µs | 10,000 | 10,000 | 0 | 220.9 ms |
+| **6. withSkyraLogging (Stdout Transport)** | 2,656 | 355.7 µs | 294.5 µs | 669.7 µs | 1,138.3 µs | 10,000 | 10,000 | 0 | 0.2 ms |
+
+- **Key Observations (@skyra/logger-next):**
+  - Next.js AsyncLocalStorage correlation and W3C traceparent extraction add only ~7.1 µs p50 overhead over uninstrumented baseline.
+  - End-to-end Route Handler logging with JSONL file transport achieves 1,481 ops/sec with a p50 latency of 503 µs and 100% write completion with 0 event drops.
+  - Non-blocking stdout transport (serverless profile) achieves 2,656 ops/sec with a p50 latency of 294 µs.
+  - Zero buffering or body consumption: streaming response bodies pass directly through to client.
+
+

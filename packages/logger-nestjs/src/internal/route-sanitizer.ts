@@ -51,7 +51,12 @@ export function sanitizeRouteTemplate(rawPath: string | undefined, frameworkRout
     return '/';
   }
 
-  // 4. Parameterize raw IDs in path segments
+  // 4. Privacy protection: unknown or unmatched routes containing email addresses or tokens fall back to safe placeholder
+  if (path.includes('@') || /[a-fA-F0-9]{32,}/.test(path)) {
+    return '[unmatched-route]';
+  }
+
+  // 5. Parameterize raw IDs in path segments
   // Replace UUIDs with :id
   path = path.replace(UUID_REGEX, ':id');
   // Replace Mongo/24-hex object IDs with :id

@@ -135,3 +135,12 @@ The following canonical artifacts and foundation packages are implemented, verif
 - **Route Template Sanitization**: Strips query strings, tokens, and raw dynamic IDs (`:id`) from path templates (e.g. `/users/:userId/orders`), preventing sensitive data leakage into metrics and log indices.
 - **Preserved Framework Error Semantics**: `SkyraHttpExceptionFilter` captures `HttpException` and uncaught exceptions with sanitized stack traces while strictly preserving standard NestJS HTTP response semantics (stack traces are never exposed to API clients).
 - **Instrumentation Helpers**: Standardized helpers for measuring background jobs (`measureJob`) and database queries (`measureDatabase`) with bounded duration and zero raw parameter values.
+
+## 14. Next.js App Router Integration (@skyra/logger-next)
+- **App Router Route Handlers**: Reusable `withSkyraLogging` wrapper capturing monotonic duration (`durationMs`, `durationNs`), HTTP method, status code, outcome, route template (`skyra.http.route_template`), and W3C trace identifiers without buffering or consuming streaming response bodies.
+- **Dynamic Route & Privacy Sanitization**: Explicit parameterized templates (e.g. `/api/users/[userId]`) are preserved; unparameterized paths scrub query strings and hashes, with sensitive tokens or email addresses collapsing safely to `[unmatched-route]`.
+- **Server Actions & Server Functions**: Reusable `withSkyraAction` wrapper measuring asynchronous server execution (`action.completed`, `action.failed`). Raw function arguments, form data, and returned business entities are never serialized by default.
+- **Next.js Instrumentation Hooks**: Official integration for `register()` and `onRequestError()` in `instrumentation.ts` via `registerSkyraInstrumentation()` and `createSkyraRequestErrorHandler()`, featuring error deduplication.
+- **React Server Components (RSC)**: Explicit server-side logging via `getSkyraServerLogger()` adhering to Server Component concurrency boundaries.
+- **Runtime-Aware Transport Selection**: Local JSONL file storage with daily UTC rotation and bounded queue buffering for persistent Node.js servers; automatic fallback to non-blocking `stdout` in serverless environments (AWS Lambda, Vercel, Google Cloud Run). Node-specific modules are safely guarded in Edge runtime.
+

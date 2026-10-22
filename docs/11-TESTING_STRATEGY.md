@@ -66,6 +66,13 @@ Include valid HTTP request, slow DB query, job success/failure, auth denial, exc
   4. *Preserved HTTP Error Semantics*: `SkyraHttpExceptionFilter` captures `HttpException` and uncaught exceptions with sanitized stack traces without altering default client error responses.
   5. *Instrumentation Telemetry*: `measureJob()` and `measureDatabase()` record monotonic execution times without logging raw SQL parameter values or credentials.
   6. *External Consumer Distribution*: Tarball verified in isolated external NestJS application with real HTTP requests and canonical schema validation.
+- **Next.js Logging Adapter Quality Gates (LOGHUB-PKG-004):**
+  1. *App Router Route Handler Observability*: Generates `http.request.completed` on real Next.js requests without buffering or consuming streaming responses.
+  2. *W3C Distributed Tracing & Request ID*: Validates W3C `traceparent` headers, generates safe request IDs, and maintains strict AsyncLocalStorage isolation across concurrent requests.
+  3. *Dynamic Route & Unknown-Route Privacy*: Parameterizes dynamic routes (e.g. `/api/users/[userId]`) and forces unknown routes with arbitrary tokens or email addresses to `[unmatched-route]`.
+  4. *Server Actions Safety*: Measures execution duration and logs `action.completed` / `action.failed` while strictly forbidding raw function argument and form data serialization.
+  5. *Next.js Instrumentation Hooks*: Tested with Next.js `register()` and `onRequestError()` lifecycle hooks with error deduplication.
+  6. *Production Build Integration & Isolated Consumer*: Real integration tests against production Next.js build; tarball verified in external isolated consumer application with zero secret leakage.
 - Performance targets are **provisional**, not promises: p95 basic search <3s for pilot representative data; ingestion throughput and resource budgets to be established with agreed log volume.
 - Release blocked on critical vulnerability without approved, documented exception.
 

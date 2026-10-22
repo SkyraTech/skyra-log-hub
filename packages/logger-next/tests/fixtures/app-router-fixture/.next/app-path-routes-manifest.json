@@ -1,0 +1,9 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/api/stream/route": "/api/stream",
+  "/api/orders/route": "/api/orders",
+  "/api/users/[userId]/route": "/api/users/[userId]",
+  "/api/error/route": "/api/error",
+  "/api/status/route": "/api/status",
+  "/page": "/"
+}

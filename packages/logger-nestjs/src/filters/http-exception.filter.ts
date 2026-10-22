@@ -84,7 +84,9 @@ export class SkyraHttpExceptionFilter implements ExceptionFilter {
       const frameworkRoute = req?.route?.path
         ? (req.baseUrl || '') + req.route.path
         : undefined;
-      const routeTemplate = sanitizeRouteTemplate(rawPath, frameworkRoute);
+      const routeTemplate = frameworkRoute
+        ? sanitizeRouteTemplate(rawPath, frameworkRoute)
+        : (status === 404 ? '[unmatched-route]' : sanitizeRouteTemplate(rawPath));
 
       const elapsedMs = this.requestContextService?.getElapsedMs() ?? 0;
       const elapsedNs = Math.round(elapsedMs * 1_000_000);

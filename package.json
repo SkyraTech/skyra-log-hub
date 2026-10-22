@@ -5,17 +5,19 @@
   "type": "module",
   "description": "Skyra LogHub — Centralized Logging and Observability Platform",
   "scripts": {
-    "build": "pnpm --filter @skyra/logger-core build && pnpm --filter @skyra/logger-node build && pnpm --filter @skyra/logger-nestjs build",
-    "typecheck": "pnpm --filter @skyra/logger-core exec tsc --noEmit && pnpm --filter @skyra/logger-node exec tsc --noEmit && pnpm --filter @skyra/logger-nestjs exec tsc --noEmit",
+    "build": "pnpm --filter @skyra/logger-core build && pnpm --filter @skyra/logger-node build && pnpm --filter @skyra/logger-nestjs build && pnpm --filter @skyra/logger-next build",
+    "typecheck": "pnpm --filter @skyra/logger-core exec tsc --noEmit && pnpm --filter @skyra/logger-node exec tsc --noEmit && pnpm --filter @skyra/logger-nestjs exec tsc --noEmit && pnpm --filter @skyra/logger-next exec tsc --noEmit",
     "sync:schemas": "node scripts/sync-schemas.mjs",
     "check:schema-sync": "node scripts/sync-schemas.mjs --check",
-    "test": "node --experimental-strip-types --test tests/contracts/schema-validation.test.ts && node --experimental-strip-types --test packages/logger-node/tests/**/*.test.ts && pnpm --filter @skyra/logger-nestjs test",
+    "test": "node --experimental-strip-types --test tests/contracts/schema-validation.test.ts && node --experimental-strip-types --test packages/logger-node/tests/**/*.test.ts && pnpm --filter @skyra/logger-nestjs test && pnpm --filter @skyra/logger-next test",
     "test:contracts": "node --experimental-strip-types --test tests/contracts/schema-validation.test.ts",
     "test:node": "node --experimental-strip-types --test packages/logger-node/tests/**/*.test.ts",
     "test:nestjs": "pnpm --filter @skyra/logger-nestjs test",
+    "test:next": "pnpm --filter @skyra/logger-next test",
     "test:python": "python -m unittest discover -s packages/logger-python/tests",
     "bench:node": "node --experimental-strip-types packages/logger-node/benchmarks/logger.bench.ts",
-    "bench:nestjs": "pnpm --filter @skyra/logger-nestjs bench"
+    "bench:nestjs": "pnpm --filter @skyra/logger-nestjs bench",
+    "bench:next": "pnpm --filter @skyra/logger-next bench"
   },
   "engines": {
     "node": ">=20.0.0",

@@ -1,0 +1,83 @@
+{
+  "name": "@skyra/logger-next",
+  "version": "1.0.0",
+  "description": "Production-grade Next.js server-side logging adapter, route handler instrumentation, and automatic API observability for Skyra LogHub",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./route-handler": {
+      "types": "./dist/route-handler.d.ts",
+      "import": "./dist/route-handler.js",
+      "default": "./dist/route-handler.js"
+    },
+    "./server-action": {
+      "types": "./dist/server-action.d.ts",
+      "import": "./dist/server-action.js",
+      "default": "./dist/server-action.js"
+    },
+    "./instrumentation": {
+      "types": "./dist/instrumentation.d.ts",
+      "import": "./dist/instrumentation.js",
+      "default": "./dist/instrumentation.js"
+    },
+    "./timing": {
+      "types": "./dist/timing.d.ts",
+      "import": "./dist/timing.js",
+      "default": "./dist/timing.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "node -e \"fs.rmSync('dist', { recursive: true, force: true }); fs.rmSync('dist-test', { recursive: true, force: true })\"",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/**/*.test.js",
+    "bench": "node --experimental-strip-types benchmarks/nextjs-overhead.bench.ts"
+  },
+  "keywords": [
+    "skyra",
+    "nextjs",
+    "app-router",
+    "logging",
+    "jsonl",
+    "ecs",
+    "observability",
+    "tracing",
+    "route-handlers",
+    "server-actions",
+    "server-components",
+    "instrumentation"
+  ],
+  "author": "Skyra Tech <hello@skyra-tech.com>",
+  "license": "UNLICENSED",
+  "peerDependencies": {
+    "next": ">=14.0.0",
+    "react": ">=18.2.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@skyra/logger-core": "workspace:*",
+    "@skyra/logger-node": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.0.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.6.3"
+  }
+}

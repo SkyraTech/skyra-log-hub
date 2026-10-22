@@ -171,14 +171,22 @@ export function buildCanonicalLogEvent(
     },
   };
 
-  // 10. Optional Tracing
-  const traceId = sanitized['traceId'] || sanitized['trace_id'] || (sanitized['trace'] as any)?.id;
-  if (typeof traceId === 'string' && traceId.length > 0) {
-    canonicalEvent.trace = { id: traceId };
+  // 10. Optional Tracing (strictly validated W3C 32-hex trace ID and 16-hex span ID, non-zero)
+  const rawTraceId = sanitized['traceId'] || sanitized['trace_id'] || (sanitized['trace'] as any)?.id;
+  if (
+    typeof rawTraceId === 'string' &&
+    /^[0-9a-fA-F]{32}$/.test(rawTraceId) &&
+    rawTraceId !== '00000000000000000000000000000000'
+  ) {
+    canonicalEvent.trace = { id: rawTraceId.toLowerCase() };
   }
-  const spanId = sanitized['spanId'] || sanitized['span_id'] || (sanitized['span'] as any)?.id;
-  if (typeof spanId === 'string' && spanId.length > 0) {
-    canonicalEvent.span = { id: spanId };
+  const rawSpanId = sanitized['spanId'] || sanitized['span_id'] || (sanitized['span'] as any)?.id;
+  if (
+    typeof rawSpanId === 'string' &&
+    /^[0-9a-fA-F]{16}$/.test(rawSpanId) &&
+    rawSpanId !== '0000000000000000'
+  ) {
+    canonicalEvent.span = { id: rawSpanId.toLowerCase() };
   }
 
   // 11. Optional Subsections (HTTP, DB, Job, User, Client, Url, Labels, Tags)
@@ -259,6 +267,8 @@ export function buildCanonicalLogEvent(
   redactedEvent.event.id = eventId;
   redactedEvent['@timestamp'] = timestamp;
   redactedEvent['ecs.version'] = '8.11.0';
+  redactedEvent.service.name = config.serviceName;
+  redactedEvent.service.environment = normalizeEnvironment(config.environment);
   redactedEvent.skyra.project_id = config.projectId;
   redactedEvent.skyra.schema_version = '1.0';
   if (canonicalEvent.trace) {
