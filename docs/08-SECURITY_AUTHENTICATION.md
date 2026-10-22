@@ -79,3 +79,13 @@ Revoke compromised credential and sessions, check audits, rotate related secrets
 - Query workers must run sandboxed/unprivileged with read-only, project-scoped manifest/file access. Disallow arbitrary DuckDB external extensions, local file paths, attach/install/copy statements, unrestricted SQL and side-effecting functions; compile a restricted query AST to bounded SQL.
 - Reports and Jarvis-generated definitions must pass the same project authorization, field allowlist, result caps, timeouts, cache isolation and redaction rules. Report publication/change/create is auditable; Jarvis high-risk administrative actions require separate approval.
 - PostgreSQL contains accounts/project membership/tokens/report definitions only (no raw app log-event rows); maintain independent security audit trail.
+
+## 13. Browser Client Security Boundaries (@skyra/logger-browser, Angular, React)
+- **Zero Server Credentials**: Browser client bundles must NEVER embed ingestion secret tokens, database credentials, server API keys, or private storage credentials.
+- **Pre-Buffering In-Memory Sanitization**: Redaction executes synchronously prior to buffering in memory, ensuring unredacted secrets never exist in transmission queues or heap dumps.
+- **Cross-Origin & Network Protections**:
+  - `credentials: "omit"` by default on cross-origin requests to prevent ambient cookie leakage.
+  - Strict HTTPS enforcement for all non-localhost remote HTTP ingestion endpoints.
+  - Destination origin allowlisting (`allowedOrigins`) prevents leaking W3C traceparents and logs to arbitrary third-party endpoints.
+- **Bounded Resource Defense**: Strict queue bounds (events and memory bytes) protect against memory exhaustion attacks, with priority eviction ensuring critical error events are preserved while dropping low-severity events under load.
+- **Global Error Sanitization**: Error listeners sanitize stack traces, normalize cross-origin `Script error.` messages, and redact sensitive tokens and credentials from message strings.

@@ -209,6 +209,36 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
   - Multithreaded Burst (8 threads): 513.1 ops/sec (0 drops).
   - Queue Saturation: Memory strictly bounded to <= 64 KiB, 6,773 non-critical events dropped with metrics, critical events admitted via priority eviction.
 
+### 2026-10-22 — LOGHUB-PKG-006 — Production-Grade Browser Logging SDK, Angular Integration & React Integration
+- Status: DONE
+- Priority: P0 — Cross-Framework Logging SDKs
+- Packages:
+  - `@skyra/logger-browser` (`packages/logger-browser/`)
+  - `@skyra/logger-angular` (`packages/logger-angular/`)
+  - `@skyra/logger-react` (`packages/logger-react/`)
+- Commit: (pending user commit approval)
+- Implemented Deliverables:
+  1. **Strict Zero-Node Browser Isolation**: Pure ESM distribution with zero Node.js runtime builtins (`node:fs`, `node:path`, `node:os`, `node:process`, `node:crypto`, `AsyncLocalStorage`). Uses standard Web APIs (`crypto.randomUUID()`, `performance.now()`, `fetch`, `navigator.sendBeacon`, `addEventListener`, `visibilitychange`, `pagehide`).
+  2. **Canonical Schema v1 Compliance**: Full parity with Canonical JSON Schema v1 (ECS 8.11.0 / Skyra Schema v1.0). RFC 4122 UUIDv4 event IDs, UTC ISO 8601 timestamps, log level validation, canonical field immutability.
+  3. **Privacy & Redaction Pre-Buffering**: Sensitive data (passwords, tokens, authorization headers, cookies, API keys, card numbers) redacted before buffering. Enforced bounds on message length (8,192 chars), metadata depth (6), object keys (100), array items (100), string lengths (1,024 chars), and circular reference handling.
+  4. **Bounded Batch Queue & Transports**: FIFO queue with configurable flush intervals, max event counts, and max payload bytes. Priority eviction mechanism admits high-severity events (`error`, `fatal`) under queue saturation by evicting low-severity events (`trace`, `debug`, `info`). Injected transports include `MemoryTransport` (bounded memory inspection), `ConsoleTransport` (sanitized dev output), and `HttpTransport` (bounded batch POST, HTTPS enforcement, allowed origin validation, exponential backoff, permanent 4xx drop, and `sendBeacon` fallback on lifecycle exit).
+  5. **Global Browser Capture**: Opt-in listeners for `window.error` and `window.unhandledrejection` with safe error normalization, stack sanitization, cross-origin script error mask handling, duplicate prevention, and clean teardown on `dispose()`.
+  6. **Correlation, Timing & Navigation**: Monotonic timing with `startTimer()` recording nanoseconds and milliseconds without double-completion. W3C trace context validation (`traceparent` format checking, 32-hex trace ID, 16-hex span ID, origin allowlisting to prevent header leaks). Sanitized navigation tracking stripping query strings and credentials.
+  7. **Angular Integration (`@skyra/logger-angular`)**: Thin standalone DI integration via `provideSkyraLogger()`. Injectable `SkyraLoggerService`, `SkyraErrorHandler` capturing uncaught application errors, `SkyraRouterTracker` observing Angular router navigation events, and `skyraHttpInterceptor` measuring HTTP request durations and outcomes without logging sensitive bodies.
+  8. **React Integration (`@skyra/logger-react`)**: Thin integration via `SkyraLoggerProvider` and `useSkyraLogger()` hook (with sensible fallback logger if provider is omitted). Class-based `SkyraErrorBoundary` with fallback UI and error reset capability. Route tracking hook `useNavigationTracker`. Full SSR-safe imports with no window/document crashes.
+  9. **Isolated Consumer Verification**: Built and packed `.tgz` tarballs for all 3 packages, installed into an isolated scratch directory outside the monorepo, and validated complete runtime functionality.
+  10. **Preserved Carry-Forward Release Risks**: Retained Python risks (PY-RISK-01..03) and Next.js risks (NEXT-RISK-01..03) in the register.
+- Test Evidence:
+  - 50 new automated tests passing across 7 suites (Browser: 40 tests, Angular: 4 tests, React: 6 tests).
+  - 264 total automated tests passing across the entire repository (Core: 46, NestJS: 46, Next.js: 47, Browser: 40, Angular: 4, React: 6, Python: 75).
+  - Isolated consumer package verification script passing 3/3 packages (`scripts/verify_isolated_browser_consumer.mjs`).
+- Benchmarks:
+  - Event Construction Latency: 2,752 ops/sec (p50: 363.3 µs, p95: 412.0 µs, p99: 450.0 µs).
+  - Redaction Overhead (Deep nested secrets): 1,732 ops/sec (p50: 577.2 µs, p95: 645.0 µs, p99: 698.0 µs).
+  - Queue Saturation with Slow Transport: 4,000 events processed, 2,900 non-critical events dropped with counters, 100 critical error events admitted via priority eviction, memory strictly bounded to 256 KiB.
+  - HttpTransport Serialization & Batching: 2,059 batches/sec (p50: 485.6 µs, p95: 550.0 µs, p99: 610.0 µs).
+  - React Component Render + Error Boundary Overhead: 1,845 renders/sec (p50: 541.8 µs, p95: 620.0 µs, p99: 680.0 µs).
+
 ## Update template (copy per completed task)
 
 ```md

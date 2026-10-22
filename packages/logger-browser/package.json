@@ -1,0 +1,59 @@
+{
+  "name": "@skyra/logger-browser",
+  "version": "1.0.0",
+  "description": "Production-grade, framework-independent browser structured logging SDK for Skyra LogHub",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./transports": {
+      "types": "./dist/transports/index.d.ts",
+      "import": "./dist/transports/index.js",
+      "default": "./dist/transports/index.js"
+    },
+    "./capture": {
+      "types": "./dist/capture/index.d.ts",
+      "import": "./dist/capture/index.js",
+      "default": "./dist/capture/index.js"
+    },
+    "./instrumentation": {
+      "types": "./dist/instrumentation/index.d.ts",
+      "import": "./dist/instrumentation/index.js",
+      "default": "./dist/instrumentation/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "node -e \"fs.rmSync('dist', { recursive: true, force: true }); fs.rmSync('dist-test', { recursive: true, force: true })\"",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/**/*.test.js",
+    "bench": "node --experimental-strip-types benchmarks/browser-overhead.bench.ts"
+  },
+  "keywords": [
+    "skyra",
+    "logging",
+    "browser",
+    "jsonl",
+    "ecs",
+    "observability",
+    "tracing",
+    "performance",
+    "error-tracking"
+  ],
+  "author": "Skyra Tech <hello@skyra-tech.com>",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@skyra/logger-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^5.6.3"
+  }
+}

@@ -81,6 +81,14 @@ Include valid HTTP request, slow DB query, job success/failure, auth denial, exc
   5. *Privacy-Safe Crash Recovery*: Trailing partial lines detected on restart, quarantined with metadata and SHA-256 hash to `${date}.corrupt.log` (fsynced before truncation), without persisting raw plaintext tokens or credentials.
   6. *Context & Telemetry Instrumentation*: `contextvars` context propagation with strict W3C trace validation; `measure_database` and `measure_job` helpers recording monotonic nanosecond durations without logging raw SQL parameter values or credentials.
   7. *Cross-Language Compatibility & Isolated Verification*: 100% bidirectional JSONL parser compatibility between Node.js and Python; wheel distribution verified in isolated external virtualenv with zero repository-local imports.
+- **Browser, Angular & React Logging SDK Quality Gates (LOGHUB-PKG-006):**
+  1. *Zero Node.js Dependency Verification*: Static bundle checks confirm 0 imports of Node builtins (`node:fs`, `node:path`, `node:os`, `node:process`, `node:crypto`, `AsyncLocalStorage`).
+  2. *Canonical Schema Compliance*: Emitted browser events match ECS 8.11.0 / Skyra Schema v1.0, with Web Crypto RFC 4122 UUIDv4 and UTC ISO 8601 timestamps.
+  3. *In-Memory Pre-Buffering Redaction*: Passwords, tokens, cookies, auth headers, and credit card numbers redacted before queue ingress; hard limits prevent circular structures and oversized messages.
+  4. *Queue Memory Bounds & Priority Eviction*: Queue memory is bounded; critical events (`error`, `fatal`) evict non-critical events under pressure; drop counters are observable.
+  5. *Transport Reliability & Lifecycle Flush*: Injected `HttpTransport` enforces HTTPS and origin allowlists, backs off with jitter on 5xx errors, drops on 4xx errors, and flushes via `navigator.sendBeacon` upon page hide/unload.
+  6. *Framework Integrations*: Angular standalone DI (`provideSkyraLogger()`, `SkyraErrorHandler`, `SkyraRouterTracker`) and React context/boundaries (`SkyraLoggerProvider`, `useSkyraLogger()`, `SkyraErrorBoundary`) preserve framework error propagation and SSR safety.
+  7. *Distribution & Isolated Verification*: Packed `.tgz` tarballs verify clean installation, types, and runtime operation in isolated external consumers.
 - Performance targets are **provisional**, not promises: p95 basic search <3s for pilot representative data; ingestion throughput and resource budgets to be established with agreed log volume.
 - Release blocked on critical vulnerability without approved, documented exception.
 
