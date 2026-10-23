@@ -80,3 +80,10 @@ Requirements and threat considerations satisfied; code reviewed; tests and docs 
 - Every archive mutation/compaction needs integrity, idempotency, retry and recovery tests; preserve source files until verified safe deletion under approved retention.
 - UI generic components go into Skyra Platform via independently tested PR/releases; domain-specific report modules stay here.
 - Do not assume small LogHub team means low scale of monitored business apps.
+
+## 14. Cross-SDK Discipline and Release Integrity (LOGHUB-PKG-007)
+- **Universal Canonical Contract**: No SDK package may define a private or relaxed schema version. The authoritative contract is `contracts/schemas/v1/log-event.schema.json`. Schema drift checks are mandatory.
+- **Cross-SDK Fixture Testing**: Any change to canonical event construction, normalization, or redaction must execute against the 14 shared golden fixtures in `contracts/fixtures/cross-sdk/` across both TypeScript and Python test runners.
+- **Safe Fallback Rule**: If an SDK context provider (such as `<SkyraLoggerProvider>`) is missing, consumer hooks must fall back to a safe, restricted no-op logger (`SafeNoopBrowserLogger`) that warns once in development and registers 0 listeners, allocates 0 unbounded queues, and transmits 0 unrouted logs. Never silently instantiate an unrestricted logging pipeline.
+- **Process Ownership Safety**: Lockfile acquisition retry loops must handle collisions gracefully and raise typed `InstanceOwnershipConflictError` rather than leaking raw OS filesystem errors (`EEXIST` / `FileExistsError`).
+- **Real Browser Testing**: Browser logging and UI integrations must be verified in real browser runtimes (Chromium/Edge via CDP) to validate real event-loop, navigation, and `sendBeacon` semantics.

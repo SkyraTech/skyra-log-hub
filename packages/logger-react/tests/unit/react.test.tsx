@@ -100,10 +100,10 @@ describe('Logger React: Provider, Hook, and Error Boundary', () => {
       children: React.createElement('div', null, 'Normal'),
     });
 
-    errorBoundary.setState({
+    (errorBoundary as any).state = {
       hasError: true,
       error: new Error('Crash'),
-    });
+    };
 
     errorBoundary.resetError();
     assert.equal(errorBoundary.state.hasError, false);
@@ -149,7 +149,8 @@ describe('Logger React: Provider, Hook, and Error Boundary', () => {
     assert.doesNotThrow(() => {
       const fallback = getFallbackLogger();
       assert.ok(fallback);
-      assert.equal(fallback.isLevelEnabled('info'), true);
+      // Fallback logger is a safe no-op that disables logging when provider is missing
+      assert.equal(fallback.isLevelEnabled('info'), false);
     });
   });
 });

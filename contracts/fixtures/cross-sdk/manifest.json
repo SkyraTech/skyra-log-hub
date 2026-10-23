@@ -1,0 +1,22 @@
+{
+  "suite": "Skyra LogHub Cross-SDK Verification Fixtures",
+  "version": "1.0.0",
+  "schema_version": "1.0",
+  "ecs_version": "8.11.0",
+  "fixtures": [
+    { "file": "valid-basic-canonical.json", "type": "valid", "description": "Canonical user login audit event" },
+    { "file": "valid-escaped-unicode.json", "type": "valid", "description": "Multilingual and emoji character preservation" },
+    { "file": "valid-date-boundary.json", "type": "valid", "description": "Leap day 2024-02-29 UTC midnight boundary" },
+    { "file": "valid-database-query.json", "type": "valid", "description": "Database query timing and system telemetry" },
+    { "file": "valid-http-request.json", "type": "valid", "description": "HTTP request completed event with sanitized route" },
+    { "file": "valid-browser-ui-error.json", "type": "valid", "description": "Browser React Error Boundary exception event" },
+    { "file": "valid-background-job.json", "type": "valid", "description": "Scheduled background job execution event" },
+    { "file": "invalid-missing-mandatory.json", "type": "invalid", "expected_error": "missing mandatory properties" },
+    { "file": "invalid-event-action.json", "type": "invalid", "expected_error": "action naming pattern violation" },
+    { "file": "invalid-malformed-trace-context.json", "type": "invalid", "expected_error": "all-zero W3C trace ID rejection" },
+    { "file": "invalid-bad-severity.json", "type": "invalid", "expected_error": "unapproved severity level enum" },
+    { "file": "invalid-unsupported-field-types.json", "type": "invalid", "expected_error": "type mismatch for event.duration" },
+    { "file": "security-sensitive-nested-metadata.json", "type": "security", "description": "Pre-buffering deep redaction verification" },
+    { "file": "security-url-credentials.json", "type": "security", "description": "URL credential and token scrubbing verification" }
+  ]
+}

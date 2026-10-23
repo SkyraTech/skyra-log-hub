@@ -11,11 +11,11 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
 |---|---|
 | Product | Skyra LogHub |
 | Repository | `skyra-log-hub` |
-| Current phase | Phase 1 — Contracts and package foundations |
-| Current task | LOGHUB-PKG-001B (Completed) |
-| Implemented LogHub features | Canonical schema contracts (Draft 2020-12), storage contract, `@skyra/logger-core` (compiled `dist/`), `skyra-logger` (wheel verified), hardened redaction, test suites |
-| Documents | 14 baseline documents aligned with file-first architecture (ADR-011) |
-| Tests | 17 automated tests passing (8 Node.js contract suites + 9 Python unit tests) |
+| Current phase | Phase 1 — Contracts and package foundations (SDK Foundation Gate PASSED) |
+| Current task | LOGHUB-PKG-007 (Completed) |
+| Implemented LogHub features | Complete 8-SDK Foundation: Canonical Schema v1 (Ajv 2020 + Draft 2020-12), `@skyra/logger-core`, `@skyra/logger-node`, `@skyra/logger-nestjs`, `@skyra/logger-next`, `skyra-logger` (Python), `@skyra/logger-browser`, `@skyra/logger-angular`, `@skyra/logger-react`. Real browser CDP automation, shared cross-SDK fixtures, CI verification workflow. |
+| Documents | 14 baseline documents aligned with file-first architecture (ADR-011) + release hardening report |
+| Tests | 275 automated tests passing (197 TypeScript + 78 Python), 2 Real Browser E2E suites passing (Chrome 155, Edge 155), 2 isolated consumer test runners passing |
 | Hosting | AWS / Azure / own server portable (Docker / Linux filesystem) |
 | Identity provider | OIDC / OAuth2 + scoped machine tokens (spec approved) |
 | Design branding | Skyra Platform tokens |
@@ -237,7 +237,37 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
   - Redaction Overhead (Deep nested secrets): 1,732 ops/sec (p50: 577.2 µs, p95: 645.0 µs, p99: 698.0 µs).
   - Queue Saturation with Slow Transport: 4,000 events processed, 2,900 non-critical events dropped with counters, 100 critical error events admitted via priority eviction, memory strictly bounded to 256 KiB.
   - HttpTransport Serialization & Batching: 2,059 batches/sec (p50: 485.6 µs, p95: 550.0 µs, p99: 610.0 µs).
-  - React Component Render + Error Boundary Overhead: 1,845 renders/sec (p50: 541.8 µs, p95: 620.0 µs, p99: 680.0 µs).
+
+### 2026-10-23 — LOGHUB-PKG-007 — Cross-SDK Integration, Security, Performance, Compatibility & Release Hardening
+- Status: DONE
+- Priority: P0 — SDK Foundation Release Gate
+- Scope: Independent Audit + Targeted Corrections + End-to-End Integration + Release Readiness across all 8 SDK packages:
+  1. `@skyra/logger-core`
+  2. `@skyra/logger-node`
+  3. `@skyra/logger-nestjs`
+  4. `@skyra/logger-next`
+  5. `skyra-logger` (Python)
+  6. `@skyra/logger-browser`
+  7. `@skyra/logger-angular`
+  8. `@skyra/logger-react`
+- Confirmed Defects & Targeted Corrections:
+  - **DEF-001 (Medium — `@skyra/logger-react`):** Missing `<SkyraLoggerProvider>` previously initialized a real `createSkyraBrowserLogger` logging to console and attaching listeners. Replaced with `SafeNoopBrowserLogger` in `skyra-logger-context.ts`, emitting a one-time dev warning, zero memory queues, zero attached listeners, and no unrouted logs.
+  - **DEF-002 (High — Reliability & Competing Processes in Node.js and Python):** In `packages/logger-node/src/internal/ownership.ts` and `packages/logger-python/skyra_logger/internal/ownership.py`, after retry loop exhaustion, an unguarded `openSync('wx')` could leak an unhandled raw `EEXIST` / `FileExistsError`. Replaced with explicit lock inspection and clean `InstanceOwnershipConflictError`.
+  - **DEF-003 (Minor — Cross-SDK schema_version inconsistency):** Browser SDK `skyra.schema_version` was `'1.0.0'` while all other SDKs used `'1.0'`. Aligned to canonical `'1.0'` across all SDKs and updated test assertions.
+  - **DEF-004 (Minor — React Error Boundary test warning):** `resetError()` in `skyra-error-boundary.tsx` updated to eliminate unmounted `setState` warnings.
+- Deliverables & Verification:
+  1. **Canonical Schema Parity & Drift Protection:** Pinned ECS 8.11.0 and Skyra Schema v1.0 enforced across all 8 packages. Drift checks run via `check:schema-sync`.
+  2. **Cross-SDK Shared Fixture Suite (`contracts/fixtures/cross-sdk/`):** 14 canonical JSON/JSONL fixtures covering valid canonical, Unicode escaping, date boundaries, database queries, HTTP requests, UI errors, background jobs, missing mandatory fields, invalid actions, malformed trace contexts, invalid severity, unsupported field types, nested metadata secrets, and URL credentials. Exercised by both TypeScript (`tests/contracts/cross-sdk-fixtures.test.ts`) and Python (`packages/logger-python/tests/interop/test_cross_sdk_fixtures.py`).
+  3. **Real Browser End-to-End Suite (`tests/e2e/real-browser.test.mjs`):** Fully automated CDP execution against real headless Google Chrome 155 and Microsoft Edge 155. Verified UI event emission, sensitive key redaction, route sanitization, unhandled promise rejection capture, unhandled error capture, batch delivery to mock ingestion server, and clean listener teardown. 100% of received events pass authoritative Ajv Canonical Schema v1 validation.
+  4. **Angular Integration Expanded:** Expanded test suite to 8 comprehensive tests covering standalone providers, DI, ErrorHandler, RouterTracker, HTTP interceptor, request/response body privacy exclusion, intermediate navigation filtering, `ngOnDestroy` teardown, and SSR safety.
+  5. **Python Performance (PY-RISK-01 reproduced):** Measured on realistic representative workloads: Stdout: 1,366.5 ops/s (p50: 597.2 µs); File JSONL: 911.9 ops/s (p50: 953.2 µs); Fsync on Error: 727.2 ops/s (p50: 705.0 µs); Multithreaded (8 threads): 1,146.9 ops/s with 0 drops.
+  6. **Isolated Consumer Verification:** Fresh tarballs and wheels installed in isolated directories outside the monorepo; verified 3/3 browser packages and 12/12 Python criteria.
+  7. **CI Matrix:** Created reproducible `.github/workflows/sdk-verification.yml` spanning Schema, TypeScript, Python (3.10, 3.11, 3.12 on Linux/Windows/macOS), Chromium E2E, and isolated distribution checks.
+- Test Evidence:
+  - 275 total automated tests passing across the repository (197 TypeScript + 78 Python, 0 failures, 0 skips).
+  - 2 Real Browser E2E test suites passing 100% (Chrome 155, Edge 155).
+  - 2 isolated consumer test scripts passing 100%.
+- Verdict: SDK Foundation Gate PASSED. Centralized ingestion development may proceed.
 
 ## Update template (copy per completed task)
 

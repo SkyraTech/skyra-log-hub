@@ -165,7 +165,7 @@ export function buildBrowserLogEvent(config, options) {
     event['@timestamp'] = timestamp;
     event['ecs.version'] = '8.11.0';
     event['skyra']['project_id'] = config.projectId;
-    event['skyra']['schema_version'] = '1.0.0';
+    event['skyra']['schema_version'] = '1.0';
     event['event']['id'] = eventId;
     event['log']['level'] = options.level;
     event['message'] = sanitizedMsg;

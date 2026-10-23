@@ -21,7 +21,7 @@ describe('Logger Browser: Core Functionality', () => {
         assert.equal(events.length, 1);
         const ev = events[0];
         assert.equal(ev['ecs.version'], '8.11.0');
-        assert.equal(ev.skyra.schema_version, '1.0.0');
+        assert.equal(ev.skyra.schema_version, '1.0');
         assert.equal(ev.skyra.project_id, 'skyra-portal');
         assert.equal(ev.service.name, 'portal-web');
         assert.equal(ev.service.environment, 'production');

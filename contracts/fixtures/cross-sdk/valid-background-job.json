@@ -1,0 +1,29 @@
+{
+  "@timestamp": "2026-10-23T05:30:04.000Z",
+  "ecs.version": "8.11.0",
+  "event": {
+    "action": "job.process_invoices",
+    "dataset": "worker.jobs",
+    "duration": 1250000000,
+    "id": "77777777-8888-4999-8aaa-bbbbbbbbbbbb",
+    "outcome": "success"
+  },
+  "log": {
+    "level": "info"
+  },
+  "message": "Background job process_invoices finished successfully",
+  "service": {
+    "environment": "production",
+    "name": "billing-worker"
+  },
+  "skyra": {
+    "duration_ms": 1250.0,
+    "project_id": "skyra-billing",
+    "schema_version": "1.0",
+    "job": {
+      "id": "job-89101",
+      "status": "completed",
+      "type": "process_invoices"
+    }
+  }
+}

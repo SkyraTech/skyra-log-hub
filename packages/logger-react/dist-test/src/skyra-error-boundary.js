@@ -37,10 +37,19 @@ export class SkyraErrorBoundary extends Component {
         }
     }
     resetError() {
-        this.setState({
+        this.state = {
             hasError: false,
             error: null,
-        });
+        };
+        try {
+            this.setState({
+                hasError: false,
+                error: null,
+            });
+        }
+        catch {
+            // Ignored if unmounted
+        }
     }
     render() {
         if (this.state.hasError && this.state.error) {

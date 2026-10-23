@@ -202,21 +202,18 @@ class InstanceOwnershipManager:
 
                 time.sleep(0.01)
 
-        # Final attempt
-        flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
-        if hasattr(os, "O_BINARY"):
-            flags |= os.O_BINARY
-        fd = os.open(str(self.lock_path), flags, self.file_mode)
+        # If exhausted retries while another process holds or races for the lock
+        final_lock: Optional[LockMetadata] = None
         try:
-            os.write(fd, lock_payload)
-            if hasattr(os, "fsync"):
-                os.fsync(fd)
-        finally:
-            os.close(fd)
-
-        self._is_owned = True
-        with InstanceOwnershipManager._global_lock:
-            InstanceOwnershipManager._active_owned_directories.add(self.canonical_dir)
+            with open(self.lock_path, "r", encoding="utf-8") as f:
+                final_lock = parse_lock_content(f.read())
+        except Exception:
+            pass
+        raise InstanceOwnershipConflictError(
+            self.canonical_dir,
+            final_lock.pid if final_lock else -1,
+            "Failed to acquire exclusive lock after multiple attempts."
+        )
 
     def release(self) -> None:
         """

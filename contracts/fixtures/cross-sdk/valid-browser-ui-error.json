@@ -1,0 +1,31 @@
+{
+  "@timestamp": "2026-10-23T05:30:03.000Z",
+  "ecs.version": "8.11.0",
+  "error": {
+    "message": "Render failed: Invalid widget state",
+    "stack_trace": "Error: Render failed\n    at Widget (widget.js:10:15)",
+    "type": "Error"
+  },
+  "event": {
+    "action": "react.error.boundary",
+    "dataset": "browser.errors",
+    "id": "66666666-7777-4888-8999-aaaaaaaaaaaa",
+    "outcome": "failure"
+  },
+  "log": {
+    "level": "error"
+  },
+  "message": "React Error Boundary caught: Render failed: Invalid widget state",
+  "service": {
+    "environment": "production",
+    "name": "portal-web"
+  },
+  "skyra": {
+    "component": "widget_panel",
+    "project_id": "skyra-portal",
+    "schema_version": "1.0",
+    "business": {
+      "component_stack": "at Widget\nat Dashboard"
+    }
+  }
+}

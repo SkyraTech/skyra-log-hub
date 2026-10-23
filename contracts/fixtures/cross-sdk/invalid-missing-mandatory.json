@@ -1,0 +1,7 @@
+{
+  "@timestamp": "2026-10-23T05:30:00.000Z",
+  "log": {
+    "level": "info"
+  },
+  "message": "Missing mandatory service and skyra envelope fields"
+}

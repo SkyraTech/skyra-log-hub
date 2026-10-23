@@ -1,0 +1,23 @@
+{
+  "@timestamp": "2026-10-23T05:30:00.000Z",
+  "ecs.version": "8.11.0",
+  "event": {
+    "action": "trace.forward",
+    "id": "99999999-aaaa-4bbb-8ccc-dddddddddddd"
+  },
+  "log": {
+    "level": "info"
+  },
+  "message": "Malformed trace context with non-hex trace ID",
+  "service": {
+    "environment": "production",
+    "name": "gateway-service"
+  },
+  "skyra": {
+    "project_id": "skyra-trace",
+    "schema_version": "1.0"
+  },
+  "trace": {
+    "id": "not-a-valid-hex-trace-id-zzzz"
+  }
+}

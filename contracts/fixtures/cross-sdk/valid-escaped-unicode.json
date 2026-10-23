@@ -1,0 +1,26 @@
+{
+  "@timestamp": "2026-10-23T05:30:00.123Z",
+  "ecs.version": "8.11.0",
+  "event": {
+    "action": "i18n.render",
+    "dataset": "ui.events",
+    "id": "22222222-3333-4444-8555-666666666666",
+    "outcome": "success"
+  },
+  "log": {
+    "level": "debug"
+  },
+  "message": "Multilingual: こんにちは世界 / Привет мир / 🚀 ✨ / \u0000\u001f sanitized",
+  "service": {
+    "environment": "staging",
+    "name": "portal-web"
+  },
+  "skyra": {
+    "project_id": "skyra-portal",
+    "schema_version": "1.0",
+    "business": {
+      "greeting_ja": "こんにちは",
+      "emoji": "🎉"
+    }
+  }
+}

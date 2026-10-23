@@ -1,0 +1,22 @@
+{
+  "@timestamp": "2024-02-29T23:59:59.999Z",
+  "ecs.version": "8.11.0",
+  "event": {
+    "action": "calendar.leap_year_rollover",
+    "dataset": "system.audit",
+    "id": "33333333-4444-4555-8666-777777777777",
+    "outcome": "success"
+  },
+  "log": {
+    "level": "info"
+  },
+  "message": "Leap day boundary execution",
+  "service": {
+    "environment": "production",
+    "name": "scheduler-service"
+  },
+  "skyra": {
+    "project_id": "skyra-cron",
+    "schema_version": "1.0"
+  }
+}

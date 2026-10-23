@@ -1,0 +1,20 @@
+{
+  "@timestamp": "2026-10-23T05:30:00.000Z",
+  "ecs.version": "8.11.0",
+  "event": {
+    "action": "system.status",
+    "id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
+  },
+  "log": {
+    "level": "critical"
+  },
+  "message": "Bad severity level 'critical' not in approved enum (trace, debug, info, warn, error, fatal)",
+  "service": {
+    "environment": "production",
+    "name": "status-service"
+  },
+  "skyra": {
+    "project_id": "skyra-status",
+    "schema_version": "1.0"
+  }
+}

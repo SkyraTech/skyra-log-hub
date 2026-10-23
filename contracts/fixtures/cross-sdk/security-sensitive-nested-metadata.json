@@ -1,0 +1,22 @@
+{
+  "unredacted_input": {
+    "password": "SuperSecretPassword123!",
+    "nested": {
+      "api_token": "skyra_sec_token_9999",
+      "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.t-IDcSemACt8x4iTMCda8Yhe3iZaWbvV5XKSTbuAn0M",
+      "credit_card": "4111111111111111",
+      "connection_string": "postgres://admin:topsecret@db.internal:5432/skyra"
+    },
+    "public_info": "safe_value"
+  },
+  "expected_redacted_output": {
+    "password": "[REDACTED]",
+    "nested": {
+      "api_token": "[REDACTED]",
+      "authorization": "[REDACTED]",
+      "credit_card": "[REDACTED]",
+      "connection_string": "[REDACTED]"
+    },
+    "public_info": "safe_value"
+  }
+}

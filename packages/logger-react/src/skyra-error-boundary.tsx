@@ -64,10 +64,18 @@ export class SkyraErrorBoundary extends Component<
   }
 
   public resetError(): void {
-    this.setState({
+    this.state = {
       hasError: false,
       error: null,
-    });
+    };
+    try {
+      this.setState({
+        hasError: false,
+        error: null,
+      });
+    } catch {
+      // Ignored if unmounted
+    }
   }
 
   override render(): ReactNode {

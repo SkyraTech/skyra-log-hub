@@ -1,0 +1,31 @@
+{
+  "@timestamp": "2026-10-23T05:30:01.000Z",
+  "ecs.version": "8.11.0",
+  "event": {
+    "action": "database.query",
+    "dataset": "database.telemetry",
+    "duration": 4500000,
+    "id": "44444444-5555-4666-8777-888888888888",
+    "outcome": "success"
+  },
+  "log": {
+    "level": "info"
+  },
+  "message": "Executed SELECT FROM users WHERE id = ?",
+  "service": {
+    "environment": "production",
+    "name": "user-service"
+  },
+  "skyra": {
+    "duration_ms": 4.5,
+    "project_id": "skyra-crm",
+    "schema_version": "1.0",
+    "db": {
+      "query_fingerprint": "SELECT id, email, status FROM users WHERE id = ?",
+      "client_duration_ms": 4.5
+    }
+  },
+  "trace": {
+    "id": "4bf92f3577b34da6a3ce929d0e0e4736"
+  }
+}

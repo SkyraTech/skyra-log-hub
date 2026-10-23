@@ -73,6 +73,9 @@ export function Dashboard() {
 }
 ```
 
+### Missing Provider Safeguard
+If `useSkyraLogger()` is called outside of a `<SkyraLoggerProvider>`, it returns a `SafeNoopBrowserLogger`. In non-production environments, it logs a one-time warning. It safely no-ops on all logging and timing calls without allocating queues, attaching global window listeners, or transmitting unrouted network requests.
+
 ## Error Boundary
 
 ```tsx

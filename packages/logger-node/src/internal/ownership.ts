@@ -120,7 +120,7 @@ export class InstanceOwnershipManager {
       `lockId=${this.lockId}`,
     ].join('\n') + '\n';
 
-    const maxRetries = 2;
+    const maxRetries = 3;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         // Attempt atomic exclusive creation: flag 'wx' fails if file already exists
@@ -185,17 +185,17 @@ export class InstanceOwnershipManager {
       }
     }
 
-    // Final attempt after removing stale lock
-    const fd = fs.openSync(this.lockPath, 'wx', this.fileMode);
+    // Exhausted retries while another process holds or races for the lock
+    let finalLock: LockMetadata | null = null;
     try {
-      const buf = Buffer.from(lockPayload, 'utf-8');
-      fs.writeSync(fd, buf, 0, buf.length);
-      fs.fsyncSync(fd);
-    } finally {
-      fs.closeSync(fd);
-    }
-    this.isOwned = true;
-    InstanceOwnershipManager.activeOwnedDirectories.add(this.canonicalDir);
+      const content = fs.readFileSync(this.lockPath, 'utf-8');
+      finalLock = parseLockContent(content);
+    } catch {}
+    throw new InstanceOwnershipConflictError(
+      this.instanceDir,
+      finalLock ? finalLock.pid : -1,
+      'Failed to acquire exclusive lock after multiple attempts.'
+    );
   }
 
   /**

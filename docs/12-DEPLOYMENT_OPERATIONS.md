@@ -57,3 +57,13 @@ Local synthetic → isolated staging with 2 demo services → private pilot with
 - Development/pilot: local Docker Compose with mounted volumes and off-host backups. AWS: S3 + container/VM query worker + suitable persistent cache. Azure: Blob Storage + container/VM worker. Self-host: SSD/archive drive or compatible object store. Avoid storage-provider-specific APIs in SDKs.
 - Monitor bytes/day, retained days, local spool overflow, ingestion ACK latency, segment finalization, Parquet compaction freshness, file count, query p95 and CPU/RAM, cache hit rate, archive integrity, restore speed. Scale decisions based primarily on source-app event volume and report workload, not 5–10 internal dashboard users.
 - Never treat Parquet/cache as backup; backups cover JSONL archive, PostgreSQL metadata, security audit trail and configuration. Verify restore, replay and derived-data rebuild.
+
+## 12. SDK Packaging, Distribution & CI Quality Gates (LOGHUB-PKG-007)
+- **Zero-Registry Local Validation**: SDK packages are verified without publishing to public npm or PyPI registries. Tarballs (`.tgz`) and wheels (`.whl`) are built locally and verified in isolated consumer projects (`scripts/verify_isolated_browser_consumer.mjs` and `scripts/verify_isolated_python_consumer.py`).
+- **Reproducible CI Verification Workflow**: Automated multi-OS/runtime verification defined in `.github/workflows/sdk-verification.yml`:
+  1. *Schema & Contracts*: Schema synchronization verification and contract tests.
+  2. *TypeScript SDKs*: Build, strict typecheck, and unit/integration tests across Core, Node, NestJS, Next.js, Browser, Angular, and React.
+  3. *Python SDK Matrix*: Python 3.10, 3.11, and 3.12 tested across Ubuntu, Windows, and macOS.
+  4. *Browser E2E Automation*: Real headless Chromium automated execution via Chrome DevTools Protocol.
+  5. *Distribution Verification*: Clean isolated consumer installation testing packed artifacts.
+- **Release Gating Discipline**: All 8 SDK foundation packages must pass compilation, typecheck, contract tests, and consumer verification before beginning centralized ingestion service development.
