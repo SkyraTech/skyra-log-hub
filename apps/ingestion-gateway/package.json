@@ -1,0 +1,36 @@
+{
+  "name": "@skyra/ingestion-gateway",
+  "version": "0.1.0",
+  "description": "Secure Centralized Ingestion Gateway for Skyra LogHub",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "clean": "node -e \"fs.rmSync('dist', { recursive: true, force: true }); fs.rmSync('dist-test', { recursive: true, force: true })\"",
+    "start": "node dist/main.js",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/**/*.test.js",
+    "test:unit": "tsc -p tsconfig.test.json && node --test dist-test/tests/unit/**/*.test.js",
+    "test:integration": "tsc -p tsconfig.test.json && node --test dist-test/tests/integration/**/*.test.js",
+    "test:security": "tsc -p tsconfig.test.json && node --test dist-test/tests/security/**/*.test.js",
+    "bench": "tsc -p tsconfig.test.json && node dist-test/tests/benchmarks/gateway.bench.js",
+    "prisma:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-fastify": "^10.4.15",
+    "@prisma/client": "^5.22.0",
+    "@skyra/logger-core": "workspace:*",
+    "@skyra/logger-node": "workspace:*",
+    "@skyra/logger-nestjs": "workspace:*",
+    "fastify": "^4.28.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.22",
+    "@types/node": "^26.6.5",
+    "prisma": "^5.22.0",
+    "typescript": "^7.0.2"
+  }
+}

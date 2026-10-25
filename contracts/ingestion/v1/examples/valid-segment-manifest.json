@@ -1,0 +1,21 @@
+{
+  "manifest_version": "1.0",
+  "tenant_id": "tenant-skyra-internal",
+  "project_id": "skyra-tech",
+  "environment": "production",
+  "service_name": "auth-service",
+  "date": "2026-10-24",
+  "segment_filename": "segment-0000.jsonl",
+  "record_count": 25000,
+  "byte_size": 14250320,
+  "sha256_checksum": "a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0",
+  "first_event_timestamp": "2026-10-24T00:00:00.100Z",
+  "last_event_timestamp": "2026-10-24T03:45:12.890Z",
+  "finalized_at": "2026-10-24T03:45:15.000Z",
+  "writer_instance_id": "worker-ingest-archiver-pod-8b4c9f-x1",
+  "journal_commit_range": {
+    "segment_id": "journal-2026-10-24-0001.wal",
+    "start_offset": 0,
+    "end_offset": 14250320
+  }
+}

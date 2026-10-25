@@ -1,7 +1,9 @@
 node_modules/
 dist/
+dist-test/
 build/
 .turbo/
+.next/
 *.log
 .DS_Store
 Thumbs.db
@@ -20,6 +22,15 @@ venv/
 coverage/
 .nyc_output/
 
-# Temporary / Scratch
+# Temporary / Scratch & Test Logs
 .tmp/
 temp/
+temp-*/
+temp-test-hardening-logs/
+*-logs/
+
+# Environment and secrets
+.env
+.env*.local
+.env.*
+!.env.example

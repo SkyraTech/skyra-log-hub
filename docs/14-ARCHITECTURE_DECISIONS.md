@@ -19,6 +19,12 @@ Each ADR is a *proposal* until the owner approves it. Record context, alternativ
 | ADR-008 | Hosted containers portable to AWS, Azure, dedicated server | Proposed |
 | ADR-009 | Read-only MCP tools initially | Proposed |
 | ADR-010 | Safe visual filter AST first; advanced query subset before full Skyra Query Language | Proposed |
+| ADR-011 | Centralized file-first analytical engine (JSONL + Parquet + DuckDB) | Proposed |
+| ADR-012 | Browser Ingestion Trust Boundary via Same-Origin Backend Proxy | Proposed |
+| ADR-013 | Durable Ingestion Acknowledgement Boundary via Crash-Recoverable Journal | Proposed |
+| ADR-014 | Tenant-Isolated File-First Archive Segments and Manifests | Proposed |
+| ADR-015 | Authoritative Durable Idempotency and Journal-Reconstructible Replay State | Proposed |
+| ADR-016 | Atomic All-or-Nothing Batch Ingestion Semantics | Proposed |
 
 ## ADR-001 — Monorepo and repo boundaries
 **Context:** All operational apps, SDKs, UI and MCP must be coordinated and documented. Existing Skyra Platform focuses on Web Components and cannot own Python/server runtime distribution cleanly. **Decision:** Keep all LogHub-related code under renamed `skyra-loghub`; continue consuming Skyra Platform packages and authoritative service contracts by version. **Consequence:** Multi-language CI orchestration required; publish SDKs independently. **Alternative:** separate `skyra-logging` repo (less toolchain coupling, more coordination).
@@ -62,3 +68,74 @@ Identity provider, exact design token palette, regulatory retention requirements
 **Decision candidate:** centralized immutable per-project daily JSONL archive as source of truth; derived Parquet optimized for analytical/report queries; bounded DuckDB query workers; Valkey report caching; PostgreSQL **only** for admin/report metadata. No Elasticsearch/OpenSearch/Kibana requirement and no raw diagnostic event rows in PostgreSQL.
 **Rationale:** file-first ownership, portable AWS/Azure/self-host storage, strong columnar report loading and fewer infrastructure services. **Trade-offs:** Parquet is a second file representation; DuckDB is not a full indexed full-text search engine, so arbitrary text search may need a future Tantivy index once measured. Require ingestion safety, archive manifests, query access isolation, conversion/recovery and realistic performance benchmarks.
 **Decision gate:** approve only after test corpus, report query workload and volume sizing; validate cold/warm report p95, searchable fields, cross-project isolation, cache freshness, backups and failure recovery. **Supersedes earlier proposed ADR-003 Elasticsearch option**, without erasing its historical rationale.
+
+
+## ADR-012 — Browser Ingestion Trust Boundary via Same-Origin Backend Proxy (new proposal, 2026-10-24)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Browser clients (@skyra/logger-browser, Angular, React) run in untrusted user runtimes. Direct transmission to LogHub gateway using static API keys risks credential extraction, unmetered log injection, and project spoofing.
+- **Previous Proposal:** Direct ingestion using client-embedded static secrets or custom `X-Skyra-Proxy-Secret` header, or complex ephemeral JWT grant infrastructure.
+- **Corrected MVP Decision:** Ingestion from browser applications must traverse a trusted same-origin application backend proxy (e.g. Next.js, NestJS backend) using the application's existing session authentication, CSRF protections, and rate limits. The application backend forwards batches to LogHub using standard `Authorization: Bearer <token>`. Custom header `X-Skyra-Proxy-Secret` is superseded by standard RFC 6750 Bearer authentication.
+- **Alternatives Rejected:**
+  - *Direct browser-to-gateway with static token:* Rejected due to credential theft and unbounded DDoS vulnerability.
+  - *Short-lived JWT grant tokens:* Rejected for MVP due to distributed cryptographic key distribution and clock-skew complexity; preserved as future enhancement candidate.
+- **Security Impact:** Eliminates client-side secret exposure; binds browser telemetry to authenticated application user sessions; enables centralized rate-limiting.
+- **Data-Loss Assumptions:** Application backend failure drops un-spooled browser telemetry; acceptable for non-critical client UI diagnostics.
+- **Implementation Dependencies:** `LOGHUB-ING-002` (Gateway Bearer authentication), existing `@skyra/logger-browser` HTTP transport.
+- **Unresolved Risks:** High-traffic consumer applications require properly scaled backend telemetry proxies to prevent reverse-proxy bottlenecks.
+
+
+## ADR-013 — Durable Ingestion Acknowledgement Boundary via Crash-Recoverable Journal (new proposal, 2026-10-24)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Preliminary designs permitted acknowledging batches as `durably_accepted` without rigorous specification of physical disk synchronization, risking data loss if the server crashed while data remained in volatile OS page cache.
+- **Previous Proposal:** Acknowledging batches after in-memory ingestion buffer or asynchronous worker queue enqueue.
+- **Corrected MVP Decision:** Durable acceptance (`200 OK`, `status: "durably_accepted"`) is emitted **if and only if** the entire batch is serialized into a contiguous binary journal frame, appended via `write()`, and synchronously persisted to non-volatile disk via `fsync()` (or `fdatasync()`) on the journal file descriptor and parent directory (on file creation/rotation). In-memory acknowledgement is strictly prohibited.
+- **Alternatives Rejected:**
+  - *Asynchronous background fsync:* Rejected because sudden host power loss causes unacknowledged data loss for batches previously reported as successful.
+  - *Per-event database transaction:* Rejected due to severe throughput bottlenecks (<500 EPS).
+- **Security Impact:** Guarantees auditability and crash consistency; prevents false telemetry confirmation during service crashes.
+- **Data-Loss Assumptions:** RPO = 0 for all acknowledged batches on hardware with power-loss protected (PLP) write caches. Non-PLP consumer SSDs with lying flush implementations carry residual risk upon physical power loss.
+- **Implementation Dependencies:** `LOGHUB-ING-002` (must return 503 until journal is mounted), `LOGHUB-ING-003` (WAL engine implementation).
+- **Unresolved Risks:** High IOPS pressure on slow storage volumes if concurrent batches are not grouped within bounded microsecond commit windows.
+
+
+## ADR-014 — Tenant-Isolated File-First Archive Segments and Manifests (new proposal, 2026-10-24)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Centralized storage must preserve strict multi-tenancy, cross-project isolation, and zero concurrent write collisions without requiring complex database locks.
+- **Previous Proposal:** Loosely defined central archive paths or multi-writer append into shared remote objects.
+- **Corrected MVP Decision:** Central archive is partitioned strictly by `${ARCHIVE_ROOT}/${TENANT_ID}/${PROJECT_ID}/${ENVIRONMENT}/${SERVICE_NAME}/${YYYY-MM-DD}/segment-${PART_INDEX}.jsonl`. Every finalized segment is accompanied by a cryptographically signed companion `segment-${PART_INDEX}.manifest.json` containing record counts, byte sizes, timestamp ranges, and a SHA-256 checksum. Segments rotate at 100 MiB or UTC midnight, after which they are marked read-only (`0o440`).
+- **Alternatives Rejected:**
+  - *Concurrent application writes to central archive:* Rejected due to file corruption and lock contention.
+  - *Storing raw event JSON in PostgreSQL:* Rejected to preserve file-first architecture and avoid database bloat.
+- **Security Impact:** Path traversal prevention through strict regex allowlists (`^[a-z0-9_-]+$`) and realpath containment checks. Tenant ID is server-authoritative.
+- **Data-Loss Assumptions:** Storage media reliability. Offline segment checksums detect bit rot.
+- **Implementation Dependencies:** `LOGHUB-ING-003` (Archive Writer), `contracts/storage-contract.md`.
+- **Unresolved Risks:** Long-term file-count scaling on standard filesystems requires periodic Parquet compaction (`LH-DATA-002`).
+
+
+## ADR-015 — Authoritative Durable Idempotency and Journal-Reconstructible Replay State (new proposal, 2026-10-24)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** The preliminary design proposed a transient 24-hour Valkey/Redis cache as the authoritative deduplication mechanism. Transient caches can evict keys, restart, or be flushed, causing client retries to inject duplicate events into the permanent archive.
+- **Previous Proposal:** 24-hour Valkey replay cache as the authoritative duplicate prevention mechanism.
+- **Corrected MVP Decision:** Authoritative deduplication is backed by the persistent Write-Ahead Journal (WAL) and a PostgreSQL receipt index (`deduplication_receipts`). Valkey is relegated strictly to an **optional, non-authoritative read-through optimization**. Deduplication keys use the namespace `${TENANT_ID}#${PROJECT_ID}#${BATCH_ID}` combined with a SHA-256 payload digest. Reusing a batch ID with altered content yields `409 Conflict` (`IDEMPOTENCY_CONFLICT`). A bounded 7-day retention horizon is enforced.
+- **Alternatives Rejected:**
+  - *Relying solely on Valkey/Redis:* Rejected due to volatile eviction, lack of durable crash recovery, and total loss on `FLUSHALL`.
+  - *Global infinite exactly-once delivery:* Rejected because unbounded deduplication indexes consume infinite storage; 7-day horizon is an explicit, bounded trade-off.
+- **Security Impact:** Prevents replay attacks, cross-tenant collisions, and silent telemetry tampering via batch ID reuse.
+- **Data-Loss Assumptions:** Within the 7-day horizon, deduplication is 100% guaranteed. Client spools replayed after 7 days will be appended as new events.
+- **Implementation Dependencies:** `LOGHUB-ING-003` (WAL receipt index), `LOGHUB-ING-004` (High-concurrency locking and Valkey integration).
+- **Unresolved Risks:** Manual operator re-spooling of multi-week outages can introduce duplicate events after the 7-day cutoff.
+
+
+## ADR-016 — Atomic All-or-Nothing Batch Ingestion Semantics (new proposal, 2026-10-24)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Preliminary proposals permitted partial batch acceptance using HTTP 207 Multi-Status, creating ambiguous client delivery states, complex retry spools, and partial journal writes.
+- **Previous Proposal:** Optional HTTP 207 Multi-Status partial batch acceptance where valid events were accepted and invalid events were rejected.
+- **Corrected MVP Decision:** Ingestion Gateway enforces **atomic all-or-nothing batch processing**. If any single event in a batch violates Canonical Schema v1 or project authorization, the entire batch is rejected (`422 Unprocessable Content` or `403 Forbidden`). Only batches where 100% of events are valid are committed to the journal and acknowledged with `200 OK` (`durably_accepted`). HTTP 207 Multi-Status is removed from the active contract and rejected for MVP.
+- **Alternatives Rejected:**
+  - *HTTP 207 Multi-Status:* Rejected due to client retry complexity (requiring clients to split and re-serialize failed sub-batches) and unrecoverable partial journal framing.
+  - *HTTP 202 Accepted without durability:* Rejected due to false delivery confirmation.
+- **Security Impact:** Eliminates partial-injection attacks; simplifies client error handling and deterministic retry loops.
+- **Data-Loss Assumptions:** Entire batches containing invalid events are quarantined by the shipper; client applications are alerted to schema bugs immediately.
+- **Implementation Dependencies:** `LOGHUB-ING-002` (Validation Pipe), `contracts/ingestion/v1/openapi.yaml`.
+- **Unresolved Risks:** A single invalid log event in a batch of 500 will cause all 500 events to be rejected until the shipper quarantines the offending record.
+

@@ -32,8 +32,11 @@ All data APIs and MCP tools enforce membership **server-side** per request and a
 ## 5. OAuth for remote MCP
 Remote MCP access follows its supported OAuth protected-resource flow; require audience-bound access tokens, discovery metadata, verifiable issuer, expiry, scopes, user/client identity and resource restrictions. **API keys cannot simply be treated as OAuth bearer tokens without a validated auth bridge.** Check actual Antigravity/Claude Code MCP client behavior during integration; support authorized local stdio with credential injection where necessary.
 
-## 6. Ingestion identity
-Dedicated service/agent credentials, transport TLS or mTLS, credential ↔ project/service mapping; quota, network controls, schema allowlist, payload caps, batch caps, integrity checks, replay resistance where appropriate; no browser shared ingestion secret.
+## 6. Ingestion identity & Browser Perimeter (ADR-012, ADR-015)
+- **Machine Authentication:** Dedicated service/agent Bearer tokens (`Authorization: Bearer <token>`). Tokens are 256-bit high-entropy opaque strings hashed with SHA-256 in PostgreSQL (`ingestion_credentials`). The previously proposed `X-Skyra-Proxy-Secret` header is deprecated in favor of standard Bearer authentication.
+- **Tenant & Project Binding:** Credentials map strictly to authorized `tenant_id`, `allowed_projects`, and `allowed_environments`. The gateway rejects batches declaring unauthorized project IDs (`403 PROJECT_ACCESS_DENIED`). Clients cannot supply or forge `tenant_id`.
+- **Zero Browser Secrets:** Browser bundles (@skyra/logger-browser, Angular, React) must NEVER embed ingestion tokens or database credentials. Browser telemetry traverses an authenticated same-origin application backend proxy with session authorization, CSRF protection, and rate limiting.
+- **Durable Replay Resistance:** Idempotency is enforced authoritatively via crash-recoverable WAL journal and persistent receipt index (7-day retention). Reusing a batch ID with modified payload is rejected with `409 IDEMPOTENCY_CONFLICT`. Valkey is strictly an optional acceleration cache.
 
 ## 7. Rate limiting (initial nonbinding configuration)
 | Surface | Starter cap | Additional enforcement |

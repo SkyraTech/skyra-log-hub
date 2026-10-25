@@ -1,1 +1,0 @@
-{"version":3,"file":"navigation.d.ts","sourceRoot":"","sources":["../../../src/capture/navigation.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAEH,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,cAAc,CAAC;AACvD,OAAO,KAAK,EAAE,sBAAsB,EAAE,MAAM,aAAa,CAAC;AAE1D,wBAAgB,aAAa,CAAC,KAAK,EAAE,MAAM,GAAG,MAAM,CAInD;AAED,wBAAgB,sBAAsB,CACpC,MAAM,EAAE,kBAAkB,EAC1B,OAAO,EAAE,sBAAsB,GAC9B,IAAI,CAWN"}

@@ -1,0 +1,13 @@
+{
+  "status": "durably_accepted",
+  "batch_id": "550e8400-e29b-41d4-a716-446655440000",
+  "accepted_count": 2,
+  "duplicate": true,
+  "receipt": {
+    "receipt_id": "rcpt_7f9a8b1c2d3e4f50",
+    "journal_segment": "journal-2026-10-24-0001.wal",
+    "journal_offset": 1048576,
+    "committed_at": "2026-10-24T00:00:01.123Z",
+    "content_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

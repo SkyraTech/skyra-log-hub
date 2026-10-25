@@ -4,6 +4,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { validateLogEvent } from '@skyra/logger-core';
 
 const PORT = 3589;
@@ -31,14 +32,16 @@ describe('Real Next.js App Router Integration (Production Build)', () => {
   before(async () => {
     fs.mkdirSync(LOG_DIR, { recursive: true });
 
-    // Launch Next.js production server
     const fixtureDir = path.resolve(process.cwd(), 'tests/fixtures/app-router-fixture');
-    const isWindows = process.platform === 'win32';
-    const nextCmd = isWindows ? 'npx.cmd' : 'npx';
+    const nextEntry = fileURLToPath(import.meta.resolve('next'));
+    const nextBin = path.resolve(path.dirname(nextEntry), '../bin/next');
+    const cmd = process.execPath;
+    const args = [nextBin, 'start', '-p', String(PORT), '-H', '127.0.0.1'];
 
-    serverProcess = spawn(nextCmd, ['next', 'start', '-p', String(PORT)], {
+    let serverLogs = '';
+    serverProcess = spawn(cmd, args, {
       cwd: fixtureDir,
-      shell: isWindows,
+      shell: false,
       env: {
         ...process.env,
         PORT: String(PORT),
@@ -48,8 +51,8 @@ describe('Real Next.js App Router Integration (Production Build)', () => {
       stdio: ['ignore', 'pipe', 'pipe']
     });
 
-    serverProcess.stdout?.on('data', () => {});
-    serverProcess.stderr?.on('data', () => {});
+    serverProcess.stdout?.on('data', (d) => { serverLogs += d.toString(); });
+    serverProcess.stderr?.on('data', (d) => { serverLogs += d.toString(); });
 
     // Wait for server to become healthy
     let ready = false;
@@ -67,7 +70,7 @@ describe('Real Next.js App Router Integration (Production Build)', () => {
     }
 
     if (!ready) {
-      throw new Error('Next.js integration server failed to start within 20 seconds');
+      throw new Error(`Next.js integration server failed to start within 20 seconds. Logs:\n${serverLogs}`);
     }
   });
 

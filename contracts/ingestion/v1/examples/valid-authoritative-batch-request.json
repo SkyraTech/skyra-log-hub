@@ -1,0 +1,52 @@
+{
+  "protocol_version": "1.0",
+  "batch_id": "550e8400-e29b-41d4-a716-446655440000",
+  "sent_at": "2026-10-24T00:00:01.000Z",
+  "batch_size": 2,
+  "events": [
+    {
+      "@timestamp": "2026-10-24T00:00:00.100Z",
+      "ecs.version": "8.11.0",
+      "event": {
+        "id": "11111111-2222-4333-8444-555555555555",
+        "action": "user.login",
+        "dataset": "auth.audit",
+        "outcome": "success"
+      },
+      "log": {
+        "level": "info"
+      },
+      "message": "User authenticated successfully",
+      "service": {
+        "environment": "production",
+        "name": "auth-service"
+      },
+      "skyra": {
+        "project_id": "skyra-tech",
+        "schema_version": "1.0"
+      }
+    },
+    {
+      "@timestamp": "2026-10-24T00:00:00.200Z",
+      "ecs.version": "8.11.0",
+      "event": {
+        "id": "22222222-3333-4444-8555-666666666666",
+        "action": "order.checkout",
+        "dataset": "commerce.orders",
+        "outcome": "success"
+      },
+      "log": {
+        "level": "info"
+      },
+      "message": "Order checkout initiated",
+      "service": {
+        "environment": "production",
+        "name": "commerce-service"
+      },
+      "skyra": {
+        "project_id": "skyra-tech",
+        "schema_version": "1.0"
+      }
+    }
+  ]
+}

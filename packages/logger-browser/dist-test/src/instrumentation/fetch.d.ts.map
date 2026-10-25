@@ -1,1 +1,0 @@
-{"version":3,"file":"fetch.d.ts","sourceRoot":"","sources":["../../../src/instrumentation/fetch.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAEH,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,cAAc,CAAC;AAGvD,wBAAsB,eAAe,CACnC,MAAM,EAAE,kBAAkB,EAC1B,KAAK,EAAE,WAAW,GAAG,GAAG,EACxB,IAAI,CAAC,EAAE,WAAW,EAClB,WAAW,CAAC,EAAE,OAAO,KAAK,GACzB,OAAO,CAAC,QAAQ,CAAC,CA2DnB"}

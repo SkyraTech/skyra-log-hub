@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/ingestion/v1/batch-response.schema.json",
+  "title": "SkyraIngestionBatchResponseV1",
+  "description": "Authoritative atomic batch acceptance response for Skyra LogHub Ingestion Gateway v1.",
+  "type": "object",
+  "required": [
+    "status",
+    "batch_id",
+    "accepted_count",
+    "duplicate",
+    "receipt"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["durably_accepted"],
+      "description": "Durable acceptance status. Emitted only after fsync to crash-recoverable journal log."
+    },
+    "batch_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "description": "Canonical batch UUID (either client-supplied or gateway-assigned for legacy envelope)."
+    },
+    "accepted_count": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Total number of events durably accepted in this atomic batch."
+    },
+    "duplicate": {
+      "type": "boolean",
+      "description": "Indicates whether this response is an idempotent confirmation of a previously committed batch."
+    },
+    "receipt": {
+      "type": "object",
+      "required": [
+        "receipt_id",
+        "journal_segment",
+        "journal_offset",
+        "committed_at",
+        "content_digest"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "receipt_id": {
+          "type": "string",
+          "description": "Unique durable receipt identifier for tracking and reconciliation."
+        },
+        "journal_segment": {
+          "type": "string",
+          "description": "Identifier of the active journal WAL segment containing this batch."
+        },
+        "journal_offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Byte offset of the committed batch record within the journal segment."
+        },
+        "committed_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{1,9})?Z$",
+          "description": "Server commit timestamp in RFC3339 UTC format ending with Z."
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-fA-F]{64}$",
+          "description": "SHA-256 payload digest verified by the gateway against batch content."
+        }
+      }
+    }
+  }
+}

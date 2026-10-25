@@ -1,0 +1,8 @@
+{
+  "error": {
+    "code": "STORAGE_NOT_READY",
+    "message": "Durable journal storage engine is not ready to accept writes. Retrying is advised.",
+    "requestId": "req_err_storage_001",
+    "retryable": true
+  }
+}

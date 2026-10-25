@@ -1,0 +1,147 @@
+// Prisma Schema for Skyra LogHub Metadata & Operational Catalog
+// Task: LOGHUB-ING-002 (Metadata Foundation)
+// Reference: docs/ingestion/09-METADATA_MODEL.md
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  DECOMMISSIONED
+}
+
+enum ProjectStatus {
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+/// Registered enterprise tenants
+model Tenant {
+  id          String        @id @default(uuid()) @db.Uuid
+  code        String        @unique @db.VarChar(64) // e.g. "skyra-internal"
+  name        String        @db.VarChar(255)
+  status      TenantStatus  @default(ACTIVE)
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  projects    Project[]
+  credentials IngestionCredential[]
+  quotas      ProjectQuota[]
+
+  @@map("tenants")
+}
+
+/// Registered observability projects within a tenant
+model Project {
+  id          String        @id @db.VarChar(64) // Canonical kebab-case ID, e.g. "skyra-tech"
+  tenantId    String        @map("tenant_id") @db.Uuid
+  name        String        @db.VarChar(255)
+  status      ProjectStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  quotas      ProjectQuota[]
+
+  @@map("projects")
+}
+
+/// Ingestion machine credentials for servers, shippers, and proxies
+model IngestionCredential {
+  id                  String    @id @default(uuid()) @db.Uuid
+  tenantId            String    @map("tenant_id") @db.Uuid
+  keyHash             String    @unique @map("key_hash") @db.VarChar(64)
+  keyPrefix           String    @map("key_prefix") @db.VarChar(24)
+  description         String    @db.VarChar(255)
+  allowedProjects     String[]  @map("allowed_projects")
+  allowedEnvironments String[]  @map("allowed_environments")
+  rateLimitPerMin     Int       @default(600) @map("rate_limit_per_minute")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  expiresAt           DateTime  @map("expires_at") @db.Timestamptz
+  isRevoked           Boolean   @default(false) @map("is_revoked")
+  lastUsedAt          DateTime? @map("last_used_at") @db.Timestamptz
+
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("ingestion_credentials")
+}
+
+/// Project-specific quotas and ingestion admission budgets
+model ProjectQuota {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  projectId       String   @map("project_id") @db.VarChar(64)
+  maxBatchSize    Int      @default(500) @map("max_batch_size")
+  maxPayloadBytes Int      @default(5242880) @map("max_payload_bytes") // 5 MiB
+  maxEventsPerSec Int      @default(5000) @map("max_events_per_sec")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, projectId])
+  @@map("project_quotas")
+}
+
+/// Catalog of finalized immutable archive segments (Source of truth in .manifest.json)
+model ArchiveSegment {
+  id                  String   @id @default(uuid()) @db.Uuid
+  tenantId            String   @map("tenant_id") @db.VarChar(64)
+  projectId           String   @map("project_id") @db.VarChar(64)
+  environment         String   @db.VarChar(32)
+  serviceName         String   @map("service_name") @db.VarChar(64)
+  date                String   @db.VarChar(10) // YYYY-MM-DD
+  segmentFilename     String   @map("segment_filename") @db.VarChar(64)
+  recordCount         Int      @map("record_count")
+  byteSize            BigInt   @map("byte_size")
+  sha256Checksum      String   @map("sha256_checksum") @db.VarChar(64)
+  firstEventTimestamp DateTime @map("first_event_timestamp") @db.Timestamptz
+  lastEventTimestamp  DateTime @map("last_event_timestamp") @db.Timestamptz
+  finalizedAt         DateTime @map("finalized_at") @db.Timestamptz
+  writerInstanceId    String   @map("writer_instance_id") @db.VarChar(128)
+  journalSegmentId    String   @map("journal_segment_id") @db.VarChar(64)
+  journalStartOffset  BigInt   @map("journal_start_offset")
+  journalEndOffset    BigInt   @map("journal_end_offset")
+
+  @@unique([tenantId, projectId, environment, serviceName, date, segmentFilename])
+  @@index([tenantId, projectId, date])
+  @@map("archive_segments")
+}
+
+/// Durable deduplication receipts (retained for 7 days)
+model DeduplicationReceipt {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.VarChar(64)
+  projectId      String   @map("project_id") @db.VarChar(64)
+  batchId        String   @map("batch_id") @db.VarChar(64)
+  contentDigest  String   @map("content_digest") @db.VarChar(71) // sha256:<hex_64>
+  journalSegment String   @map("journal_segment") @db.VarChar(64)
+  journalOffset  BigInt   @map("journal_offset")
+  acceptedCount  Int      @map("accepted_count")
+  committedAt    DateTime @default(now()) @map("committed_at") @db.Timestamptz
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz
+
+  @@unique([tenantId, projectId, batchId])
+  @@index([expiresAt])
+  @@map("deduplication_receipts")
+}
+
+/// Watermark checkpoints for background consumers and compactor workers
+model IngestionCheckpoint {
+  id             String   @id @db.VarChar(64) // e.g. "archive_writer_primary"
+  journalSegment String   @map("journal_segment") @db.VarChar(64)
+  byteOffset     BigInt   @map("byte_offset")
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("ingestion_checkpoints")
+}

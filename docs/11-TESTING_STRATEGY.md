@@ -95,6 +95,18 @@ Include valid HTTP request, slow DB query, job success/failure, auth denial, exc
   3. *Real Browser CDP Automation*: Automated headless browser tests in Chromium (Google Chrome 155) and Microsoft Edge 155 via CDP over native Node 24 WebSocket. 100% of emitted browser events pass Ajv schema validation at the mock ingestion server.
   4. *Targeted Defect Corrections*: Fixed React missing provider fallback logger with `SafeNoopBrowserLogger` (DEF-001); fixed competing process `EEXIST` unhandled leaks in Node.js and Python with `InstanceOwnershipConflictError` (DEF-002); aligned browser `schema_version` to canonical `'1.0'` (DEF-003); eliminated unmounted setState warnings in React Error Boundary (DEF-004).
   5. *CI Verification Workflow*: GitHub Actions workflow (`.github/workflows/sdk-verification.yml`) automating TypeScript, Schema sync, Python multi-OS/version matrix (3.10-3.12 on Linux/Windows/macOS), Chromium E2E, and packed artifact consumer installation checks.
+- **Centralized Ingestion Contracts & Hardening Quality Gates (LOGHUB-ING-001A):**
+  1. *OpenAPI 3.1.0 Structural Completeness*: All routes (`/ingest/v1/logs`, `/health/live`, `/health/ready`), Bearer security schemes, and responses verified against OpenAPI 3.1.0 specifications.
+  2. *Authoritative and Legacy Envelope Parity*: `batch-request.schema.json` rigorously tested for both authoritative v1 envelopes (with `protocol_version: "1.0"` and UUIDv4 `batch_id`) and legacy browser SDK envelopes (without version/batch ID).
+  3. *Atomic All-or-Nothing Verification*: Rejection of malformed JSON, duplicate keys, empty batches, oversized batches (>500 events), and partial schema failures. Asserts total absence of HTTP 207 Multi-Status.
+  4. *Durable Receipt & Error Code Schema Compliance*: All durable responses validate against `batch-response.schema.json`; all error responses conform to `error-response.schema.json` with stable error codes.
+  5. *Archive Segment Manifest Validation*: Segment manifests validated against `segment-manifest.schema.json` with SHA-256 checksums and journal commit ranges.
+  6. *Offline Test Suite*: 20 automated tests in `tests/contracts/ingestion-contracts.test.ts` running via native Node.js test runner with Ajv 2020.
+- **PostgreSQL Integration, Durability Acceptance & Crash-Recovery Quality Gates (LOGHUB-ING-003A):**
+  1. *Production DI & Repository Fail-Closed Security*: In-memory repositories strictly blocked in production (`NODE_ENV === 'production'`); missing/placeholder `DATABASE_URL` halts gateway startup with fatal error; readiness probe `/health/ready` returns 503 `not_ready` with `database: 'disconnected'` if PostgreSQL is unreachable.
+  2. *WAL Mid-File Corruption Protection*: Distinguishes torn trailing crash writes (safely truncated to last commit) from mid-file corruption. If downstream committed frames exist, truncation is forbidden; system sets `isRecoveryRequired = true` and fails readiness and ingestion with 503 `STORAGE_NOT_READY` until reconciled.
+  3. *Authoritative WAL Deduplication (Scenario A)*: In-memory index of committed frames prevents duplicate WAL appends during client retries when PostgreSQL receipt inserts fail; returns `duplicate: true` and original receipt.
+  4. *Subprocess Crash Recovery (SIGKILL / exit 137)*: Independent child process termination tests prove startup recovery recovers committed frames and truncates incomplete tails without data loss.
 - Performance targets are **provisional**, not promises: p95 basic search <3s for pilot representative data; ingestion throughput and resource budgets to be established with agreed log volume.
 - Release blocked on critical vulnerability without approved, documented exception.
 

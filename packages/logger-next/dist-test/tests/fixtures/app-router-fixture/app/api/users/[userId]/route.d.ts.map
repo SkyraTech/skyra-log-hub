@@ -1,1 +1,0 @@
-{"version":3,"file":"route.d.ts","sourceRoot":"","sources":["../../../../../../../../tests/fixtures/app-router-fixture/app/api/users/[userId]/route.ts"],"names":[],"mappings":"AAEA,eAAO,MAAM,GAAG;YAC+B,OAAO,CAAC;QAAE,MAAM,EAAE,MAAM,CAAA;KAAE,CAAC,GAAG;QAAE,MAAM,EAAE,MAAM,CAAA;KAAE;uBAU9F,CAAC"}

@@ -1,1 +1,0 @@
-{"version":3,"file":"route.js","sourceRoot":"","sources":["../../../../../../../tests/fixtures/app-router-fixture/app/api/error/route.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,gBAAgB,EAAE,MAAM,kCAAkC,CAAC;AAEpE,MAAM,CAAC,MAAM,GAAG,GAAG,gBAAgB,CACjC,KAAK,EAAE,QAAiB,EAAE,EAAE;IAC1B,MAAM,IAAI,KAAK,CAAC,mCAAmC,CAAC,CAAC;AACvD,CAAC,EACD;IACE,KAAK,EAAE,YAAY;CACpB,CACF,CAAC"}

@@ -32,13 +32,18 @@
 
 
 ## Phase 2 — Ingestion and data persistence
-| ID | Task | Dependencies | Evidence / acceptance |
-|---|---|---|---|
-| LH-201 | Local Compose stack (archive volumes, Parquet/DuckDB worker, PG, cache, collector) | LH-002 | Health checks, TLS/security defaults, deterministic startup |
-| LH-202 | Agent filelog pipelines and checkpoints | LH-103, LH-201 | Rotation/restart/replay/no-loss-under-test assertions |
-| LH-203 | Secure gateway with identity, quotas and normalization | LH-101, LH-201 | Wrong project, malformed JSON, oversized payload denied |
-| LH-204 | Archive layout, Parquet compaction and retention lifecycle | LH-101, LH-201 | Archive/Parquet retention and authorized query integration tests |
-| LH-205 | Ingestion observability and failure queues | LH-202, LH-203 | Archive/compaction failures and dropped events measurable |
+| ID | Task | Status | Dependencies | Evidence / acceptance |
+|---|---|---|---|---|
+| LOGHUB-ING-001A | Centralized Ingestion Architecture Corrections & Contract Approval Gate | DONE | Architectural review | `contracts/ingestion/v1/`, `docs/ingestion/`, 20 offline tests passing, report `SKYRA_LOGHUB_ING_001A_CORRECTION_REPORT.md` |
+| LOGHUB-ING-002 | Secure Gateway Foundation (NestJS/Fastify shell, Bearer auth, canonical validation, storage 503 gate) | DONE | LOGHUB-ING-001A | `apps/ingestion-gateway`, 47 unit/integration/security tests passing, 29.8k events/sec benchmark, report `SKYRA_LOGHUB_ING_002_IMPLEMENTATION_REPORT.md` |
+| LOGHUB-ING-003 | Durable Journal & Archive Writer (WAL framing, fsync barrier, receipt foundation, segment writer, manifest generator) | DONE | LOGHUB-ING-002 | WAL engine, synchronous fsync barrier, CRC32C framing, receipt reconciliation, segment rotation, manifest checksums, crash recovery tests, 64 gateway tests passing, benchmarked at >29k events/sec |
+| LOGHUB-ING-003A | PostgreSQL Integration, Durability Acceptance & Crash-Recovery Hardening | DONE (CONDITIONAL PASS) | LOGHUB-ING-003 | Hardened production DI & config validation, mid-file corruption detection, Scenario A WAL-authoritative deduplication, subprocess crash tests (exit 137/SIGKILL), 75 gateway tests passing, report `SKYRA_LOGHUB_ING_003A_VERIFICATION_REPORT.md` |
+| LOGHUB-ING-003B | Live PostgreSQL Integration, Durability Acceptance & Production Readiness Verification | DONE (CONDITIONAL PASS) | LOGHUB-ING-003A | Preflight connectivity check, non-invasive live PostgreSQL test suite with graceful skip, 7-day retention boundary & expiration verification, test-count discrepancy resolved (388 unique tests), report `SKYRA_LOGHUB_ING_003B_ACCEPTANCE_REPORT.md` |
+| LOGHUB-ING-003C | Live PostgreSQL Acceptance, Migration Verification & Final Durable Ingestion Gate | DONE (CONDITIONAL PASS) | LOGHUB-ING-003B | Complete 20-scenario live integration suite implemented in `live-postgresql.test.ts`; safe preflight connection gate; migration SQL reviewed (7 metadata tables, zero log body payloads, no destructive DDL); all 388 unique tests passing (310 TS + 78 Python); report `SKYRA_LOGHUB_ING_003C_ACCEPTANCE_REPORT.md` |
+| LOGHUB-DB-001 | Existing PostgreSQL Server Connection & Isolated Database Provisioning | DONE | User authorization | Dedicated role `skyra_loghub_user` & database `skyra_loghub_dev` created on localhost:5432; read-only verification passed; existing Bachina Labs databases untouched; report `SKYRA_LOGHUB_DATABASE_SETUP_REPORT.md` |
+| LOGHUB-DB-002 | Prisma Migration Deployment, Live PostgreSQL Integration & Final Durability Acceptance | DONE (PASS) | LOGHUB-DB-001, User authorization | Initial migration `20261024000000_init_metadata` deployed to `skyra_loghub_dev`; 7 metadata tables verified; all 21 live PostgreSQL test scenarios passed (100 in gateway); 408 total unique automated tests passing across monorepo; report `SKYRA_LOGHUB_DB_002_ACCEPTANCE_REPORT.md` |
+| LOGHUB-ING-004 | Idempotency & Replay Hardening (concurrency locking, optional Valkey cache, 7-day retention pruner, multi-process ownership, compaction safeguards, 20-scenario failure tests) | DONE (PASS) | LOGHUB-DB-002 | Concurrency mutex (`DeduplicationLockService`), single-writer ownership (`JournalOwnershipManager`), non-authoritative read-through cache (`IReceiptCache`), 7-day retention pruner, WAL compaction safeguards, 120 gateway tests passing (428 total workspace tests passing), report `SKYRA_LOGHUB_ING_004_IMPLEMENTATION_REPORT.md` |
+| LOGHUB-ING-005 | Local Shipper & Cross-SDK E2E (filelog follower, receipt verification before spool deletion, cross-SDK integration) | READY | LOGHUB-ING-004 | Shipper daemon, cross-SDK E2E integration verification |
 
 ## Phase 3 — Identity and search foundation
 | ID | Task | Dependencies | Evidence / acceptance |

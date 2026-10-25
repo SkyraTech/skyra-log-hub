@@ -1,5 +1,9 @@
 packages:
   - "packages/*"
+  - "apps/*"
   - "contracts"
 allowBuilds:
   '@nestjs/core': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  prisma: true

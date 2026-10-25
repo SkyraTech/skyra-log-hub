@@ -1,0 +1,28 @@
+{
+  "sent_at": "2026-10-24T00:00:01.000Z",
+  "batch_size": 1,
+  "events": [
+    {
+      "@timestamp": "2026-10-24T00:00:00.100Z",
+      "ecs.version": "8.11.0",
+      "event": {
+        "id": "33333333-4444-4555-8666-777777777777",
+        "action": "ui.button.click",
+        "dataset": "telemetry.browser",
+        "outcome": "success"
+      },
+      "log": {
+        "level": "info"
+      },
+      "message": "User clicked submit button",
+      "service": {
+        "environment": "production",
+        "name": "browser-app"
+      },
+      "skyra": {
+        "project_id": "skyra-tech",
+        "schema_version": "1.0"
+      }
+    }
+  ]
+}

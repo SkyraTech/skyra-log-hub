@@ -64,17 +64,54 @@ Cursor must be opaque, time-bound, signed, and bound to caller/project/query has
 ## 6. Query language policy
 MVP: validated structured filter AST and safe visual builder; advanced text mode may use an **explicitly defined limited grammar** compiled into AST. Future restricted Skyra Query Language support requires parser validation and fully enforced scoping, cost/row limits, routing safeguards and thorough adversarial tests. Never construct unrestricted `FROM <index>` from user input or forward full restricted Skyra Query Language text to central JSONL/Parquet storage and DuckDB query service unreviewed.
 
-## 7. Ingestion API
-`POST /ingest/v1/logs` accepts **bounded batched JSON** from authenticated service agents only. Validate service identity ↔ project; maximum uncompressed payload, batch count, schema version, event IDs, timestamps, field lengths. Return accepted/rejected counts and stable error categories, never echo sensitive records; retries use deterministic IDs. Browsers use a distinct safe frontend error endpoint, never trusted service tokens.
+## 7. Ingestion API (Canonical v1 Contract: contracts/ingestion/v1/openapi.yaml)
+`POST /ingest/v1/logs` accepts **atomic, bounded batched JSON** (max 500 events, max 5 MiB uncompressed) from authenticated backend services, shippers, or same-origin application proxies via `Authorization: Bearer <token>`.
 
-## 8. Errors and pagination
+### Semantics & Guarantees (ADR-012, ADR-013, ADR-015, ADR-016)
+1. **Atomic All-or-Nothing Acceptance:** If any event violates Canonical Schema v1 or project authorization, the whole batch is rejected (`422 Unprocessable Content` or `403 Forbidden`). HTTP 207 Multi-Status is strictly prohibited in MVP.
+2. **Durable Journal Acceptance:** `200 OK` (`status: "durably_accepted"`) is emitted only after synchronous fsync to the write-ahead journal (WAL) on non-volatile physical storage.
+3. **Idempotency & Replay:** Clients provide RFC 4122 UUIDv4 `batch_id`. Identical retries return `200 OK` with `duplicate: true` and the original durable receipt. Modifying content with an existing batch ID returns `409 Conflict` (`IDEMPOTENCY_CONFLICT`).
+4. **Legacy Browser SDK Compatibility:** Batches omitting `protocol_version` or `batch_id` are accepted; the gateway derives a deterministic synthetic batch ID.
+5. **Durable Receipt Format:**
 ```json
-{"error":{"code":"PROJECT_ACCESS_DENIED","message":"Access denied","requestId":"req_example"}}
+{
+  "status": "durably_accepted",
+  "batch_id": "550e8400-e29b-41d4-a716-446655440000",
+  "accepted_count": 2,
+  "duplicate": false,
+  "receipt": {
+    "receipt_id": "rcpt_7f9a8b1c2d3e4f50",
+    "journal_segment": "journal-2026-10-24-0001.wal",
+    "journal_offset": 1048576,
+    "committed_at": "2026-10-24T00:00:01.123Z",
+    "content_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
 ```
-HTTP 400 invalid input; 401 unauthenticated; 403 forbidden; 404 not visible; 409 conflict; 413 too large; 422 schema invalid; 429 throttled with `Retry-After`; 503 temporary failure. Standard max time window/page size are **TBD** by measured load, default proposed 24h and 100 records per page.
 
-## 9. Tests and versioning
-OpenAPI schema snapshot tests, generated client compilation, query fuzz tests, authz cross-project negative tests, allowed field/type tests, expired cursor tests, ingest retry/dedupe, timeouts, response sanitization and backward compatibility. Breaking APIs require version bump and migration notes.
+## 8. Errors and Standard Codes
+```json
+{
+  "error": {
+    "code": "PROJECT_ACCESS_DENIED",
+    "message": "Credential is not authorized to submit logs for project 'skyra-forbidden'.",
+    "requestId": "req_example_001",
+    "retryable": false
+  }
+}
+```
+HTTP Status Mapping:
+- **400 Bad Request:** `INVALID_JSON`, `BATCH_EMPTY` (`retryable: false`)
+- **401 Unauthorized:** `UNAUTHORIZED` (`retryable: false`)
+- **403 Forbidden:** `PROJECT_ACCESS_DENIED`, `ENVIRONMENT_MISMATCH` (`retryable: false`)
+- **409 Conflict:** `IDEMPOTENCY_CONFLICT` (`retryable: false`)
+- **413 Payload Too Large:** `BATCH_OVERSIZED`, `PAYLOAD_TOO_LARGE` (`retryable: false`)
+- **422 Unprocessable Content:** `SCHEMA_VALIDATION_FAILED`, `UNSUPPORTED_PROTOCOL_VERSION` (`retryable: false`)
+- **429 Too Many Requests:** `RATE_LIMIT_EXCEEDED` (`retryable: true`, with `Retry-After` header)
+- **503 Service Unavailable:** `STORAGE_NOT_READY`, `JOURNAL_UNAVAILABLE` (`retryable: true`)
+
+## 9. Tests and Contract Governance
+All contracts are machine-verified offline via `tests/contracts/ingestion-contracts.test.ts` (OpenAPI 3.1.0 compliance, Ajv Draft 2020 schema validation, atomic response assertions, and error-code exhaustiveness). Breaking contract changes require formal ADR, major version bump, and backward compatibility verification.
 
 
 ## Report-first API additions (proposed)

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/ingestion/v1/error-response.schema.json",
+  "title": "SkyraIngestionErrorResponseV1",
+  "description": "Standardized machine-readable error response envelope for Skyra LogHub Ingestion Gateway v1.",
+  "type": "object",
+  "required": ["error"],
+  "additionalProperties": false,
+  "properties": {
+    "error": {
+      "type": "object",
+      "required": ["code", "message", "requestId", "retryable"],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "INVALID_JSON",
+            "SCHEMA_VALIDATION_FAILED",
+            "BATCH_EMPTY",
+            "BATCH_OVERSIZED",
+            "PAYLOAD_TOO_LARGE",
+            "UNAUTHORIZED",
+            "PROJECT_ACCESS_DENIED",
+            "ENVIRONMENT_MISMATCH",
+            "IDEMPOTENCY_CONFLICT",
+            "UNSUPPORTED_PROTOCOL_VERSION",
+            "RATE_LIMIT_EXCEEDED",
+            "STORAGE_NOT_READY",
+            "JOURNAL_UNAVAILABLE"
+          ],
+          "description": "Stable machine-readable error classification code."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable diagnostic message (sanitized, privacy-safe, never echoing credentials or raw unredacted payloads)."
+        },
+        "requestId": {
+          "type": "string",
+          "description": "Gateway trace/request identifier for correlating client diagnostics with server logs."
+        },
+        "retryable": {
+          "type": "boolean",
+          "description": "Explicit directive indicating whether the client/shipper should retry this request."
+        },
+        "details": {
+          "type": "array",
+          "description": "Optional granular diagnostic errors (e.g. schema validation path failures).",
+          "items": {
+            "type": "object",
+            "required": ["path", "message"],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "JSON path or field identifier associated with the error."
+              },
+              "message": {
+                "type": "string",
+                "description": "Specific validation failure message."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

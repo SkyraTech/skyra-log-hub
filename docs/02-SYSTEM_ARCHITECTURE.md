@@ -116,12 +116,13 @@ Use bounded queues/async writes, rotating files, collector checkpoints and backp
 OIDC provider, archive partition and manifest design, token verification design, query language subset, retention/security immutability model, broker/Valkey selection, alert delivery and HA topology.
 
 
-## File-first, report-first storage architecture (2026-10-21 revision)
+## File-first, report-first storage architecture (2026-10-24 revision)
 ```mermaid
 flowchart TD
   A[Skyra application SDKs] --> B[stdout or bounded durable spool]
-  B --> C[collector / authenticated ingestion gateway]
-  C --> D[central immutable daily JSONL segments]
+  B --> C[authenticated ingestion gateway / Fastify]
+  C --> C1[crash-recoverable fsynced WAL journal]
+  C1 --> D[central immutable daily JSONL segments + manifests]
   D --> E[validated JSONL-to-Parquet compactor]
   E --> F[partitioned Parquet analytics archive]
   F --> G[bounded DuckDB query workers]
@@ -130,13 +131,14 @@ flowchart TD
   H --> I[Angular custom LogHub dashboard]
   J[Jarvis / MCP client] --> K[Scoped MCP server]
   K --> H
-  H --> L[(PostgreSQL: users, projects, report definitions only)]
-  H --> M[(Valkey: cache, rate limits)]
+  H --> L[(PostgreSQL: metadata, credentials, segment catalog)]
+  H --> M[(Valkey: optional cache, rate limits)]
 ```
-- **Storage contract:** source archive is partitioned by safe immutable project ID, environment, service, UTC date and unique segment/instance identifier. Write segments via one ingestion owner with atomic finalize/manifest; avoid concurrent app writes to same archive object. Protect archive from modification and define retention/backups.
-- **Centralization:** application host spool is transient, configurable and bounded; no requirement to keep permanent host copies. Serverless apps use stdout or async export. Agents/SDKs retry with checkpoints; ingress authenticates source and ignores any untrusted project ID assertion.
+- **Storage contract:** source archive is partitioned by `${ARCHIVE_ROOT}/${TENANT_ID}/${PROJECT_ID}/${ENVIRONMENT}/${SERVICE_NAME}/${YYYY-MM-DD}/segment-${PART_INDEX}.jsonl` with companion `.manifest.json`. Write segments via single-writer ingestion archiver with atomic finalize/manifest; avoid concurrent app writes to same archive object. Protect archive from modification and define retention/backups.
+- **Centralization:** application host spool is transient, configurable and bounded; no requirement to keep permanent host copies. Serverless apps use stdout or async export. Agents/SDKs retry with checkpoints; ingress authenticates source and derives tenant/project identity server-side.
+- **Durability & Idempotency:** Ingestion returns `durably_accepted` only after atomic journal write and fsync. Deduplication is authoritative via journal-backed state; Valkey is strictly an optional acceleration cache.
 - **Archive backends:** filesystem/local volume or S3/Azure Blob/object-compatible provider chosen via storage adapter. Parquet partitions are generated with schema evolution controls, column/row-group statistics and sensible file sizes to avoid too many tiny files. Failed conversion must not delete original JSONL.
 - **Query service:** isolated DuckDB execution workers with controlled concurrency, fixed archive roots, read-only credentials, SQL generated only from a validated report/search AST, per-request budgets/timeouts and project-scoped file manifest resolved server-side. No arbitrary path globs or user SQL. Guard against stale caches and query results crossing permissions.
 - **Report acceleration:** metadata/manifest pruning by project/service/date, partition pruning, column projection, derived rollups for frequently used reports and versioned cache invalidation on finalized segments. Full-text search limitations of DuckDB remain a benchmark risk; add Tantivy only if measured requirements require it.
-- **Admin DB:** PostgreSQL is NOT a log events store. Entities may include users, projects, memberships, tokens, saved reports/queries, report execution metadata, file manifests, retention policies and administrative audit records; never duplicate raw application diagnostic events.
+- **Admin DB:** PostgreSQL is NOT a log events store. Entities may include users, projects, memberships, credentials, saved reports/queries, report execution metadata, file manifests, retention policies, deduplication receipts and administrative audit records; never duplicate raw application diagnostic events.
 - **Sizing:** 1 current / 5–10 future LogHub operators; application end-user counts independent and potentially large. Prioritize ingest volume and report workloads over dashboard seats.

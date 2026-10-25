@@ -67,3 +67,15 @@ Local synthetic → isolated staging with 2 demo services → private pilot with
   4. *Browser E2E Automation*: Real headless Chromium automated execution via Chrome DevTools Protocol.
   5. *Distribution Verification*: Clean isolated consumer installation testing packed artifacts.
 - **Release Gating Discipline**: All 8 SDK foundation packages must pass compilation, typecheck, contract tests, and consumer verification before beginning centralized ingestion service development.
+
+## 13. Ingestion Gateway Deployment & Durability Gates (LOGHUB-ING-001A)
+- **Separate Liveness & Readiness Probes**:
+  - `/health/live`: Returns 200 OK as long as the NestJS/Fastify process event loop is responsive.
+  - `/health/ready`: Returns 200 OK **only if** the durable Write-Ahead Journal (WAL) volume is mounted, writable, and disk capacity is within safe thresholds. If WAL volume is unmounted or disk space is exhausted (`ENOSPC`), it returns `503 Service Unavailable` with diagnostic reason.
+  - Kubernetes/orchestrator ingress must bind routing strictly to `/health/ready`, preventing traffic routing to un-persisted gateways.
+- **Durability Prerequisite (Task ING-002 Gate)**:
+  - During `LOGHUB-ING-002`, the gateway shell is implemented without the physical storage engine (`ING-003`). The gateway **must not** return false durable success acknowledgements. Ingestion routes return `503 STORAGE_NOT_READY` until `ING-003` mounts the WAL engine.
+- **Central Archive Volume Configuration**:
+  - Local NVMe volumes formatted with XFS or ext4 using `noatime,nodiratime` mount options for optimal WAL write and fsync throughput.
+  - Enterprise SSDs with hardware Power-Loss Protection (PLP) are required for RPO = 0 crash durability.
+

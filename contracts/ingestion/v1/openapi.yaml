@@ -1,0 +1,272 @@
+openapi: 3.1.0
+info:
+  title: Skyra LogHub Ingestion Gateway API
+  version: 1.0.0
+  description: |
+    Centralized Ingestion Gateway API for Skyra LogHub.
+    Accepts atomic, batched structured log events conforming to Canonical Schema v1.
+    Durability is guaranteed through a crash-recoverable, fsynced journal (WAL) before acknowledging acceptance.
+    MVP implements atomic all-or-nothing batch processing; HTTP 207 partial acceptance is explicitly prohibited.
+servers:
+  - url: https://loghub.skyra-tech.com
+    description: Production Ingestion Gateway
+  - url: http://localhost:4000
+    description: Local Development Ingestion Gateway
+
+paths:
+  /ingest/v1/logs:
+    post:
+      summary: Ingest log batch
+      description: |
+        Ingests a batch of structured log events atomically.
+        The batch is validated against Canonical Schema v1, checked for tenant/project authorization,
+        and durably appended to the fsynced write-ahead journal before a response is emitted.
+        
+        If any event in the batch fails schema validation or project authorization, the entire batch is rejected.
+        Idempotent retries using the same `batch_id` and payload hash return 200 OK with `duplicate: true`.
+        Reusing an existing `batch_id` with different payload content yields a 409 Conflict.
+      operationId: ingestLogsBatch
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: X-Skyra-Client-Session-Id
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Optional client session identifier for telemetry tracing forwarded by same-origin application proxy.
+        - name: X-Skyra-Forwarded-Client-IP
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Client IP forwarded by trusted application backend proxy.
+      requestBody:
+        required: true
+        description: Batched log events in either authoritative v1 envelope or backward-compatible legacy envelope.
+        content:
+          application/json:
+            schema:
+              $ref: './batch-request.schema.json'
+      responses:
+        '200':
+          description: Batch durably accepted into crash-recoverable journal (or recognized as an idempotent duplicate).
+          content:
+            application/json:
+              schema:
+                $ref: './batch-response.schema.json'
+              examples:
+                durable_success:
+                  summary: Newly committed durable batch
+                  value:
+                    status: "durably_accepted"
+                    batch_id: "550e8400-e29b-41d4-a716-446655440000"
+                    accepted_count: 2
+                    duplicate: false
+                    receipt:
+                      receipt_id: "rcpt_7f9a8b1c2d3e4f50"
+                      journal_segment: "journal-2026-10-24-0001.wal"
+                      journal_offset: 1048576
+                      committed_at: "2026-10-24T00:00:00.123Z"
+                      content_digest: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                idempotent_duplicate:
+                  summary: Previously committed batch replayed by client
+                  value:
+                    status: "durably_accepted"
+                    batch_id: "550e8400-e29b-41d4-a716-446655440000"
+                    accepted_count: 2
+                    duplicate: true
+                    receipt:
+                      receipt_id: "rcpt_7f9a8b1c2d3e4f50"
+                      journal_segment: "journal-2026-10-24-0001.wal"
+                      journal_offset: 1048576
+                      committed_at: "2026-10-24T00:00:00.123Z"
+                      content_digest: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        '400':
+          description: Malformed JSON, non-JSON payload, duplicate keys, empty batch, or batch size mismatch.
+          content:
+            application/json:
+              schema:
+                $ref: './error-response.schema.json'
+              examples:
+                invalid_json:
+                  value:
+                    error:
+                      code: "INVALID_JSON"
+                      message: "Request payload could not be parsed as valid JSON or contained duplicate keys."
+                      requestId: "req_bad_json_1"
+                      retryable: false
+        '401':
+          description: Missing, invalid, expired, or malformed authentication credentials.
+          content:
+            application/json:
+              schema:
+                $ref: './error-response.schema.json'
+              examples:
+                unauthorized:
+                  value:
+                    error:
+                      code: "UNAUTHORIZED"
+                      message: "Missing or invalid Bearer authentication token."
+                      requestId: "req_auth_fail_1"
+                      retryable: false
+        '403':
+          description: Authenticated credential is not authorized for the specified project, tenant, or environment.
+          content:
+            application/json:
+              schema:
+                $ref: './error-response.schema.json'
+              examples:
+                project_denied:
+                  value:
+                    error:
+                      code: "PROJECT_ACCESS_DENIED"
+                      message: "Credential is not authorized to submit logs for project 'skyra-forbidden'."
+                      requestId: "req_forbidden_1"
+                      retryable: false
+        '409':
+          description: Idempotency conflict. Batch ID has already been committed with different payload content.
+          content:
+            application/json:
+              schema:
+                $ref: './error-response.schema.json'
+              examples:
+                idempotency_conflict:
+                  value:
+                    error:
+                      code: "IDEMPOTENCY_CONFLICT"
+                      message: "Batch ID '550e8400-e29b-41d4-a716-446655440000' was previously submitted with a different payload hash."
+                      requestId: "req_conflict_1"
+                      retryable: false
+        '413':
+          description: Payload exceeds maximum size limit (5MB uncompressed) or batch event count exceeds 500.
+          content:
+            application/json:
+              schema:
+                $ref: './error-response.schema.json'
+              examples:
+                batch_oversized:
+                  value:
+                    error:
+                      code: "BATCH_OVERSIZED"
+                      message: "Batch event count 600 exceeds the maximum allowable limit of 500 events."
+                      requestId: "req_oversized_1"
+                      retryable: false
+        '422':
+          description: Unprocessable content. One or more events failed canonical schema validation. The entire batch is rejected.
+          content:
+            application/json:
+              schema:
+                $ref: './error-response.schema.json'
+              examples:
+                schema_validation_failed:
+                  value:
+                    error:
+                      code: "SCHEMA_VALIDATION_FAILED"
+                      message: "Batch contains 1 event that failed canonical schema validation."
+                      requestId: "req_schema_err_1"
+                      retryable: false
+                      details:
+                        - path: "events[0].log.level"
+                          message: "must be equal to one of the allowed values: trace, debug, info, warn, error, fatal"
+        '429':
+          description: Rate limit or ingestion quota exceeded.
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Recommended wait time in seconds before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: './error-response.schema.json'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: "RATE_LIMIT_EXCEEDED"
+                      message: "Rate limit exceeded for project 'skyra-tech'. Retry after specified interval."
+                      requestId: "req_rate_limit_1"
+                      retryable: true
+        '503':
+          description: Ingestion gateway or durable journal storage is unavailable. Clients must retry with backoff.
+          content:
+            application/json:
+              schema:
+                $ref: './error-response.schema.json'
+              examples:
+                storage_not_ready:
+                  value:
+                    error:
+                      code: "STORAGE_NOT_READY"
+                      message: "Durable journal storage engine is not ready to accept writes. Retrying is advised."
+                      requestId: "req_unavailable_1"
+                      retryable: true
+
+  /health/live:
+    get:
+      summary: Liveness check
+      description: Returns 200 OK if the gateway process is running and responding to HTTP requests.
+      operationId: getLiveness
+      responses:
+        '200':
+          description: Gateway process is alive.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: ["status"]
+                properties:
+                  status:
+                    type: string
+                    enum: ["ok"]
+
+  /health/ready:
+    get:
+      summary: Readiness check
+      description: |
+        Returns 200 OK only if the gateway is fully initialized AND the durable journal backend is operational.
+        Returns 503 if journal storage is unavailable, disk space is exhausted, or the gateway is in maintenance.
+        Traffic orchestrators MUST use this endpoint to route ingestion traffic.
+      operationId: getReadiness
+      responses:
+        '200':
+          description: Gateway and durable storage are ready to accept traffic.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: ["status", "durability_backend"]
+                properties:
+                  status:
+                    type: string
+                    enum: ["ready"]
+                  durability_backend:
+                    type: string
+                    enum: ["operational"]
+        '503':
+          description: Durability backend not operational or storage unavailable.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: ["status", "durability_backend", "reason"]
+                properties:
+                  status:
+                    type: string
+                    enum: ["not_ready"]
+                  durability_backend:
+                    type: string
+                    enum: ["unavailable", "degraded", "initializing"]
+                  reason:
+                    type: string
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Opaque
+      description: |
+        Scoped, rotatable machine token issued to application backends, forwarders, or shippers.
+        Token is cryptographically hashed and verified against the registered PostgreSQL credentials table.

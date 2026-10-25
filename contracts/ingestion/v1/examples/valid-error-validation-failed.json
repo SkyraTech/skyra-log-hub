@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "SCHEMA_VALIDATION_FAILED",
+    "message": "Batch contains 1 event that failed canonical schema validation.",
+    "requestId": "req_err_schema_001",
+    "retryable": false,
+    "details": [
+      {
+        "path": "events[0].log.level",
+        "message": "must be equal to one of the allowed values: trace, debug, info, warn, error, fatal"
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "error": {
+    "code": "IDEMPOTENCY_CONFLICT",
+    "message": "Batch ID '550e8400-e29b-41d4-a716-446655440000' was previously submitted with a different payload hash.",
+    "requestId": "req_err_conflict_001",
+    "retryable": false
+  }
+}

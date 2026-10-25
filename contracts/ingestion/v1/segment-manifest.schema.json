@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/ingestion/v1/segment-manifest.schema.json",
+  "title": "SkyraArchiveSegmentManifestV1",
+  "description": "Authoritative metadata manifest schema for finalized, immutable central archive segments.",
+  "type": "object",
+  "required": [
+    "manifest_version",
+    "tenant_id",
+    "project_id",
+    "environment",
+    "service_name",
+    "date",
+    "segment_filename",
+    "record_count",
+    "byte_size",
+    "sha256_checksum",
+    "first_event_timestamp",
+    "last_event_timestamp",
+    "finalized_at",
+    "writer_instance_id",
+    "journal_commit_range"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "manifest_version": {
+      "type": "string",
+      "enum": ["1.0"],
+      "description": "Manifest schema version."
+    },
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "maxLength": 64,
+      "description": "Tenant identifier derived from trusted server authentication."
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "maxLength": 64,
+      "description": "Project identifier authorized for this segment."
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["production", "staging", "development", "test", "local"],
+      "description": "Environment tier."
+    },
+    "service_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "maxLength": 64,
+      "description": "Originating service or application name."
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+      "description": "UTC calendar partition date."
+    },
+    "segment_filename": {
+      "type": "string",
+      "pattern": "^segment-[0-9]{4}\\.jsonl$",
+      "description": "Name of the finalized archive segment file."
+    },
+    "record_count": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Total number of verified canonical JSONL records in the segment."
+    },
+    "byte_size": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Total size in bytes of the finalized segment."
+    },
+    "sha256_checksum": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Cryptographic SHA-256 digest of the finalized segment file."
+    },
+    "first_event_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{1,9})?Z$",
+      "description": "Earliest event @timestamp within the segment."
+    },
+    "last_event_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{1,9})?Z$",
+      "description": "Latest event @timestamp within the segment."
+    },
+    "finalized_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{1,9})?Z$",
+      "description": "Timestamp when the segment was finalized and fsynced to disk."
+    },
+    "writer_instance_id": {
+      "type": "string",
+      "description": "Identifier of the ingestion archive writer process that produced this segment."
+    },
+    "journal_commit_range": {
+      "type": "object",
+      "required": ["segment_id", "start_offset", "end_offset"],
+      "additionalProperties": false,
+      "properties": {
+        "segment_id": {
+          "type": "string",
+          "description": "Journal WAL segment identifier."
+        },
+        "start_offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Starting journal byte offset for records in this archive segment."
+        },
+        "end_offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Ending journal byte offset for records in this archive segment."
+        }
+      }
+    }
+  }
+}
