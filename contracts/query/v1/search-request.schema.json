@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/query/v1/search-request.schema.json",
+  "title": "SkyraQuerySearchRequestV1",
+  "description": "Request envelope for POST /query/v1/logs/search.",
+  "type": "object",
+  "required": ["time_range"],
+  "additionalProperties": false,
+  "properties": {
+    "time_range": {
+      "type": "object",
+      "required": ["start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$",
+          "description": "Inclusive start timestamp in strict RFC 3339 UTC."
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$",
+          "description": "Exclusive end timestamp in strict RFC 3339 UTC."
+        }
+      }
+    },
+    "projects": {
+      "type": "array",
+      "description": "Optional list of project IDs to search. Must be a subset of the authenticated principal's allowed projects.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_-]{1,64}$"
+      },
+      "maxItems": 20
+    },
+    "environments": {
+      "type": "array",
+      "description": "Optional environment filters.",
+      "items": {
+        "type": "string",
+        "enum": ["production", "staging", "development", "test", "local"]
+      },
+      "maxItems": 5
+    },
+    "services": {
+      "type": "array",
+      "description": "Optional service name filters.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_.-]{1,64}$"
+      },
+      "maxItems": 20
+    },
+    "levels": {
+      "type": "array",
+      "description": "Optional log severity levels to include.",
+      "items": {
+        "type": "string",
+        "enum": ["trace", "debug", "info", "warn", "error", "fatal"]
+      },
+      "maxItems": 6
+    },
+    "query_text": {
+      "type": "string",
+      "maxLength": 512,
+      "description": "Case-insensitive substring search across the message field."
+    },
+    "trace_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "description": "W3C 32-character hexadecimal trace ID."
+    },
+    "event_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "RFC 4122 UUIDv4 event identifier."
+    },
+    "filters": {
+      "type": "array",
+      "description": "Structured field predicate filters.",
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "required": ["field", "operator"],
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "type": "string",
+            "pattern": "^[@a-z0-9_.]+$",
+            "maxLength": 64,
+            "description": "Allowlisted canonical field path (e.g., 'event.action', 'error.type', '@timestamp')."
+          },
+          "operator": {
+            "type": "string",
+            "enum": ["eq", "neq", "in", "not_in", "contains", "exists", "gt", "gte", "lt", "lte"],
+            "description": "Filter operator."
+          },
+          "value": {
+            "description": "Filter value (scalar or array depending on operator)."
+          }
+        }
+      }
+    },
+    "sort": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "type": "string",
+          "enum": ["@timestamp"],
+          "default": "@timestamp"
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["asc", "desc"],
+          "default": "desc"
+        }
+      }
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500,
+      "default": 50,
+      "description": "Maximum number of events to return per page."
+    },
+    "cursor": {
+      "type": "string",
+      "maxLength": 1024,
+      "description": "Opaque pagination cursor from a previous search response."
+    }
+  }
+}

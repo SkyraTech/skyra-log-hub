@@ -127,3 +127,12 @@ Pilot services, privilege isolation, credential revocation, log rotation, ingest
 - Verify no raw diagnostic events in PostgreSQL. Test DuckDB sandbox/no arbitrary files, path traversal, disallowed SQL, cross-project result/cache isolation, token expiry/revocation, Jarvis report writes and stale/partial indicators.
 - Search is secondary but must benchmark field discovery, text filters and cursor paging. Tantivy remains conditional on measured query failure, not a mandatory MVP component.
 - Provisional goals for discussion only: warm cached report p95 <500ms backend, typical recent report p95 <2s, typical targeted search p95 <3s, all on a defined dataset/hardware; measurements required before commitment.
+
+- **Phase 2 Final Acceptance Quality Gates (LOGHUB-ING-006):**
+  1. *End-to-End Pipeline Traceability*: Verified full progression of canonical events from producer SDK to local spool, shipper batch, gateway validation, WAL fsync, PostgreSQL receipt, central JSONL archive, and segment manifest with 100% data integrity and stable event IDs.
+  2. *Strict 7-Day Bounded Deduplication*: Deduplication memory verified across exact millisecond boundaries; concurrent submissions serialized via in-flight mutex; deterministic synthetic legacy batch IDs proven.
+  3. *Shipper Durability Across 10 Failure Windows*: Checkpoints advance only upon verified durable receipt; corrupt lines in finalized segments quarantined without stalling valid adjacent records.
+  4. *WAL Compaction Safeguards*: Premature WAL deletion strictly blocked until segment is fully archived in PostgreSQL, manifest is written, checkpoint is persisted, and receipts are retained.
+  5. *Single-Active-Writer Topology Certified*: Exclusive journal directory ownership enforced via `.journal.owner`; second writer fails closed; stale dead-PID locks safely recovered.
+  6. *Reconciled Monorepo Test Baseline*: 462 unique automated test cases passing across 10 packages (384 TypeScript + 78 Python), plus 1 real headless browser CDP E2E suite and 2 isolated package consumer runners. Zero failing tests.
+

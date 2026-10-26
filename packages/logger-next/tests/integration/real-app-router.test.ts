@@ -1,6 +1,6 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn, type ChildProcess } from 'node:child_process';
+import { spawn, execFileSync, type ChildProcess } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -36,6 +36,11 @@ describe('Real Next.js App Router Integration (Production Build)', () => {
     const nextEntry = fileURLToPath(import.meta.resolve('next'));
     const nextBin = path.resolve(path.dirname(nextEntry), '../bin/next');
     const cmd = process.execPath;
+
+    if (!fs.existsSync(path.join(fixtureDir, '.next', 'BUILD_ID'))) {
+      execFileSync(cmd, [nextBin, 'build', fixtureDir], { stdio: 'pipe' });
+    }
+
     const args = [nextBin, 'start', '-p', String(PORT), '-H', '127.0.0.1'];
 
     let serverLogs = '';

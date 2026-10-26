@@ -25,6 +25,11 @@ Each ADR is a *proposal* until the owner approves it. Record context, alternativ
 | ADR-014 | Tenant-Isolated File-First Archive Segments and Manifests | Proposed |
 | ADR-015 | Authoritative Durable Idempotency and Journal-Reconstructible Replay State | Proposed |
 | ADR-016 | Atomic All-or-Nothing Batch Ingestion Semantics | Proposed |
+| ADR-017 | Query Service Boundary & Workload Isolation | Proposed |
+| ADR-018 | DuckDB Analytical Query Acceleration & Derived Parquet Lifecycle | Proposed |
+| ADR-019 | Tenant-Safe Metadata-Driven Query Planning & Filesystem Containment | Proposed |
+| ADR-020 | Keyset Cursor Pagination & Eventual Consistency Watermark | Proposed |
+| ADR-021 | Multi-Tenant Resource Governance & Query Scheduling | Proposed |
 
 ## ADR-001 — Monorepo and repo boundaries
 **Context:** All operational apps, SDKs, UI and MCP must be coordinated and documented. Existing Skyra Platform focuses on Web Components and cannot own Python/server runtime distribution cleanly. **Decision:** Keep all LogHub-related code under renamed `skyra-loghub`; continue consuming Skyra Platform packages and authoritative service contracts by version. **Consequence:** Multi-language CI orchestration required; publish SDKs independently. **Alternative:** separate `skyra-logging` repo (less toolchain coupling, more coordination).
@@ -138,4 +143,75 @@ Identity provider, exact design token palette, regulatory retention requirements
 - **Data-Loss Assumptions:** Entire batches containing invalid events are quarantined by the shipper; client applications are alerted to schema bugs immediately.
 - **Implementation Dependencies:** `LOGHUB-ING-002` (Validation Pipe), `contracts/ingestion/v1/openapi.yaml`.
 - **Unresolved Risks:** A single invalid log event in a batch of 500 will cause all 500 events to be rejected until the shipper quarantines the offending record.
+
+
+## ADR-017 — Query Service Boundary & Workload Isolation (new proposal, 2026-10-25)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** The Phase 2 Ingestion Gateway (`apps/ingestion-gateway`) is a single-active-writer service responsible for durable WAL writes and immutable JSONL archival. Hosting analytical queries inside the ingestion gateway risks memory bloat, CPU starvation, and process crashes that could degrade ingestion durability.
+- **Previous Proposal:** Single unified NestJS application handling both ingestion and search/query.
+- **Corrected MVP Decision:** Implement a dedicated query service application (`apps/query-service`) deployed as an isolated process/container. The Query Service maintains strictly read-only access to archive storage and read-only access to PostgreSQL archive metadata (`archive_segments`). Ingestion and query run on independent resource budgets.
+- **Alternatives Rejected:**
+  - *Unified Ingestion + Query Process:* Rejected due to the risk of analytical queries causing OOM crashes or thread starvation in the ingestion journal writer.
+  - *Database-only querying (storing logs in PostgreSQL):* Rejected to maintain file-first architecture and avoid database scaling limits.
+- **Security Impact:** Prevents query vulnerabilities (e.g. DuckDB memory exhaustion) from compromising ingestion uptime. Strict separation of machine ingestion tokens and user query tokens.
+- **Data-Loss Assumptions:** RPO = 0 preserved for ingestion regardless of query load.
+- **Implementation Dependencies:** `LOGHUB-QUERY-001`, `LOGHUB-QUERY-002`.
+- **Unresolved Risks:** Requires deploying and monitoring two separate services.
+
+
+## ADR-018 — DuckDB Analytical Query Acceleration & Derived Parquet Lifecycle (new proposal, 2026-10-25)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Canonical JSONL archive is immutable and authoritative. However, scanning gigabytes of compressed or uncompressed JSONL for ad-hoc search and multi-bucket aggregations incurs high deserialization overhead.
+- **Previous Proposal:** Elasticsearch/OpenSearch cluster or direct Elasticsearch ingestion.
+- **Corrected MVP Decision:** Adopt DuckDB as an in-memory, embedded vectorized execution engine scanning canonical JSONL directly for near-real-time segments, combined with an asynchronous background converter generating ZSTD-compressed Apache Parquet for closed segments. Canonical JSONL remains the permanent source of truth; Parquet is derived and 100% reproducible.
+- **Alternatives Rejected:**
+  - *Elasticsearch / OpenSearch cluster:* Rejected due to operational complexity, heavy memory footprint (JVM heap), and violation of the lightweight file-first mandate.
+  - *Direct SQLite querying:* Rejected due to lack of vectorized columnar execution and poor JSON/Parquet scanning throughput.
+- **Security Impact:** DuckDB runs in-memory with `enable_external_access = false`, blocking network calls and extension loading.
+- **Data-Loss Assumptions:** Loss or corruption of Parquet files incurs zero data loss, as files can be regenerated from JSONL.
+- **Implementation Dependencies:** `@duckdb/node-api`, `LOGHUB-QUERY-003`, `LOGHUB-QUERY-006`.
+- **Unresolved Risks:** Feasibility spike verified `@duckdb/node-api` works on Node 24; long-term multi-worker memory management must be monitored.
+
+
+## ADR-019 — Tenant-Safe Metadata-Driven Query Planning & Filesystem Containment (new proposal, 2026-10-25)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** An analytical engine scanning files on disk is vulnerable to Local File Inclusion (LFI), path traversal (`../../`), and cross-tenant data leaks if client-provided paths are used.
+- **Previous Proposal:** Client specifies file paths or filesystem glob patterns directly in search queries.
+- **Corrected MVP Decision:** Filesystem scanning is entirely driven by trusted server-side metadata. The Query Planner consults PostgreSQL `archive_segments` for candidate segments matching tenant, project, and time filters. File paths are synthesized strictly within `ARCHIVE_ROOT`, verified against symlink escapes via `realpath`, and passed as parameterized arrays to DuckDB. Client-provided `tenant_id` is ignored in favor of the authenticated JWT principal.
+- **Alternatives Rejected:**
+  - *Recursive filesystem crawling on query request:* Rejected due to catastrophic I/O amplification and path traversal risks.
+  - *Client-supplied archive glob patterns:* Rejected as an unacceptable LFI vulnerability.
+- **Security Impact:** Guarantees absolute tenant and project boundary isolation. Prevents arbitrary file reads.
+- **Data-Loss Assumptions:** None.
+- **Implementation Dependencies:** `LOGHUB-QUERY-002`, `apps/ingestion-gateway/prisma/schema.prisma`.
+- **Unresolved Risks:** Corrupted metadata in PostgreSQL could cause segments to be temporarily skipped until catalog reconciliation runs.
+
+
+## ADR-020 — Keyset Cursor Pagination & Eventual Consistency Watermark (new proposal, 2026-10-25)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Traditional `OFFSET / LIMIT` pagination suffers from $O(N)$ performance degradation and record shifting when new log segments rotate during pagination. Furthermore, clients need transparency regarding when newly ingested logs become queryable.
+- **Previous Proposal:** Traditional SQL offset pagination with undefined freshness semantics.
+- **Corrected MVP Decision:** Enforce keyset pagination using a deterministic composite sort key: `(@timestamp, event.id)`. Cursors are opaque, tamper-proof, base64url-encoded JSON payloads authenticated with HMAC-SHA256, binding the cursor to query filters and caller scope. The query engine queries finalized archive segments only, reporting `archive_watermark` and freshness lag in response metadata.
+- **Alternatives Rejected:**
+  - *SQL OFFSET / LIMIT pagination:* Rejected due to $O(N)$ scan cost and unstable page results during active ingestion.
+  - *Active WAL querying:* Rejected due to write contention, file lock conflicts, and dirty read hazards on unfinalized frames.
+- **Security Impact:** Cryptographic cursor binding prevents cursor forgery, parameter swapping, and privilege escalation.
+- **Data-Loss Assumptions:** None. Newly acknowledged events appear in search once their segment rotates and closes (5s to 60s lag).
+- **Implementation Dependencies:** `LOGHUB-QUERY-004`.
+- **Unresolved Risks:** Heavy log skew across services with unsynchronized clocks requires tie-breaking by `event.id`.
+
+
+## ADR-021 — Multi-Tenant Resource Governance & Query Scheduling (new proposal, 2026-10-25)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Analytical queries can monopolize CPU, exhaust memory, and cause Denial of Service across tenants if unconstrained.
+- **Previous Proposal:** Unbounded synchronous query execution with default web server timeouts.
+- **Corrected MVP Decision:** Implement multi-tiered resource governance: hard ceilings on time ranges (30 days), page sizes (500), scanned segments (2,000), memory per query (`max_memory = '256MB'`), and query duration (30 seconds). A Deficit Round-Robin (DRR) fair scheduler prevents a single tenant from starving concurrent workers. Exceeded limits terminate DuckDB execution via `connection.interrupt()` and return RFC 7807 problem details (`429` or `504`).
+- **Alternatives Rejected:**
+  - *Unbounded query execution:* Rejected due to trivial DoS vulnerability and memory exhaustion.
+  - *First-Come-First-Served (FIFO) queuing:* Rejected because one heavy tenant could block all other tenants indefinitely.
+- **Security Impact:** Prevents computational Denial of Service and noisy-neighbor resource starvation.
+- **Data-Loss Assumptions:** None.
+- **Implementation Dependencies:** `LOGHUB-QUERY-006`, `LOGHUB-QUERY-007`.
+- **Unresolved Risks:** Memory limits enforced by DuckDB must be complemented by container cgroups to guard against native driver memory overhead.
+
 

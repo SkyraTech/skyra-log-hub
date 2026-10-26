@@ -96,11 +96,23 @@ Phase 2 replaces the legacy LH-201..205 placeholder tasks with a strictly gated,
   - Optional Valkey read-through caching for sub-millisecond duplicate checks.
   - Automated failure test harness reproducing all 12 failure scenarios (simulating power cuts, mid-record crashes, and Valkey outages).
 
-### Task LOGHUB-ING-005: Local Shipper & Cross-SDK E2E
+### Task LOGHUB-ING-005: Local Shipper & Cross-SDK E2E (COMPLETED)
 - **Goal:** Implement client-side log spool shipping, checkpoint tracking, and durable acknowledgement receipt processing.
 - **Dependencies:** `LOGHUB-ING-004`.
 - **Key Deliverables:**
-  - Shipper daemon tailing active and rotated `.jsonl` files from `logger-node` and `logger-python`.
+  - Standalone shipper daemon (`apps/log-shipper`) following spools for `logger-node` and `logger-python`.
   - Watermark tracking: advancing read offsets and safely deleting rotated spools **only** after receiving `durably_accepted` receipts.
-  - Next.js serverless direct export adapter.
+  - Same-origin trusted backend proxy for Browser SDK telemetry.
   - Cross-SDK end-to-end verification without modifying `skyra-e2e-suite`.
+
+### Task LOGHUB-ING-006: Phase 2 Final Acceptance & Release Readiness Audit (COMPLETED)
+- **Goal:** Rigorous independent acceptance audit of the complete Phase 2 pipeline, multi-SDK physical delivery, 25-scenario failure matrix, and single-active-writer topology.
+- **Dependencies:** `LOGHUB-ING-005`.
+- **Key Deliverables:**
+  - Verified end-to-end data integrity from SDK event creation to central JSONL archive and manifests.
+  - Proved content-digest computation excludes transport timestamps and ensures deterministic replay deduplication.
+  - Audited shipper checkpoint durability across 10 failure windows and corrupt line quarantine.
+  - Validated WAL compaction deletion safeguards and single-writer `.journal.owner` mutual exclusion.
+  - Reconciled 462 unique automated test cases passing across the monorepo with 0 failures.
+  - Published Phase 2 Acceptance Specification (`docs/ingestion/11-PHASE2_ACCEPTANCE.md`) and Audit Report `SKYRA_LOGHUB_ING_006_PHASE2_ACCEPTANCE_REPORT.md`.
+- **Final Verdict:** PASS — Phase 2 Functional Acceptance. Phase 2 certified closed; unblocks `LOGHUB-QUERY-001`.

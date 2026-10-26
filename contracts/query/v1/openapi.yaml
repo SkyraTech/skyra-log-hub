@@ -1,0 +1,235 @@
+openapi: 3.1.0
+info:
+  title: Skyra LogHub Query Service API
+  description: >-
+    Production Search, Analytical Aggregations, and Log Explorer API for Skyra LogHub.
+    Backed by immutable central JSONL archives and accelerated columnar Parquet formats via DuckDB.
+  version: 1.0.0
+  contact:
+    name: Skyra Platform Architecture Team
+    url: https://github.com/skyra-tech/skyra-log-hub
+
+servers:
+  - url: http://127.0.0.1:3100
+    description: Local Development Query Service
+  - url: https://logs-query.skyra.internal
+    description: Internal Production Query Gateway
+
+paths:
+  /query/v1/logs/search:
+    post:
+      summary: Search Log Events
+      description: >-
+        Executes a bounded, server-filtered search across authorized archive segments.
+        Supports structured predicates, text search, time boundaries, and keyset cursor pagination.
+      operationId: searchLogs
+      security:
+        - QueryBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './search-request.schema.json'
+      responses:
+        '200':
+          description: Search executed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: './search-response.schema.json'
+        '400':
+          description: Malformed JSON or invalid search parameters.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+        '401':
+          description: Missing or invalid authentication token.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+        '403':
+          description: Forbidden - User lacks access to one or more requested projects.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+        '422':
+          description: Invalid cursor or unsupported filter field/operator.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+        '429':
+          description: Query rate limit or per-tenant concurrency limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+        '503':
+          description: Query service or storage backend not ready.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+
+  /query/v1/logs/{eventId}:
+    get:
+      summary: Retrieve Single Log Event by ID
+      description: Retrieves a specific canonical log event by RFC 4122 UUIDv4, strictly scoped to authorized projects.
+      operationId: getLogEventById
+      security:
+        - QueryBearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          description: RFC 4122 UUIDv4 event identifier.
+          schema:
+            type: string
+            pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+        - name: projectId
+          in: query
+          required: true
+          description: Required project identifier scoping the event lookup.
+          schema:
+            type: string
+            pattern: '^[a-z0-9_-]{1,64}$'
+        - name: date
+          in: query
+          required: false
+          description: Optional UTC date partition hint (YYYY-MM-DD) to accelerate lookup.
+          schema:
+            type: string
+            pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+      responses:
+        '200':
+          description: Event found.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Canonical log event payload conforming to log-event.schema.json.
+        '401':
+          description: Missing or invalid credentials.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+        '403':
+          description: Access denied for requested project.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+        '404':
+          description: Event not found within authorized project scope.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+
+  /query/v1/logs/aggregate:
+    post:
+      summary: Compute Analytical Aggregations
+      description: Computes bounded date histograms, term frequencies, or cardinality metrics across log archives.
+      operationId: aggregateLogs
+      security:
+        - QueryBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './aggregate-request.schema.json'
+      responses:
+        '200':
+          description: Aggregation executed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: './aggregate-response.schema.json'
+        '400':
+          description: Invalid aggregation parameters.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+        '403':
+          description: Unauthorized project scope.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+        '503':
+          description: Storage backend unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+
+  /query/v1/logs/facets:
+    post:
+      summary: Retrieve Filter Facet Values
+      description: Returns distinct values and hit counts for key categorical fields to populate UI dropdowns.
+      operationId: getLogFacets
+      security:
+        - QueryBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './facets-request.schema.json'
+      responses:
+        '200':
+          description: Facets computed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: './facets-response.schema.json'
+        '400':
+          description: Invalid facet request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: './error.schema.json'
+
+  /health/live:
+    get:
+      summary: Query Service Process Liveness
+      description: Returns 200 OK if Node/Fastify event loop is responsive.
+      operationId: getQueryLiveHealth
+      responses:
+        '200':
+          description: Query service process is alive.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /health/ready:
+    get:
+      summary: Query Service Readiness Probe
+      description: Returns 200 OK if database metadata catalog and archive storage mounts are accessible.
+      operationId: getQueryReadyHealth
+      responses:
+        '200':
+          description: Service is ready to execute queries.
+        '503':
+          description: Storage or database catalog unavailable.
+
+components:
+  securitySchemes:
+    QueryBearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Scoped user session or developer query token.

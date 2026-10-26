@@ -468,7 +468,7 @@ describe('Authoritative Idempotency & 12-Scenario Failure Recovery Suite (ADR-01
   it('Scenario 12: Recovery after archive finalization -> watermark offset skips already-archived frames', async () => {
     const batchId = crypto.randomUUID();
     const batch = createNormalizedBatch(batchId, [createTestEvent()]);
-    const dateStr = new Date().toISOString().slice(0, 10);
+    const dateStr = ((batch.events[0] as any)['@timestamp'] as string)?.slice(0, 10) || new Date().toISOString().slice(0, 10);
 
     // Ingest batch through full pipeline (appended to WAL and Archive)
     const res = await ingestionService.admitAndIngestBatch(batch, defaultIdentity);

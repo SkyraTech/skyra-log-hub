@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/query/v1/cursor.schema.json",
+  "title": "SkyraQueryCursorV1",
+  "description": "Internal structure for signed, tamper-evident pagination cursors in Skyra LogHub Query Service.",
+  "type": "object",
+  "required": [
+    "cursor_version",
+    "timestamp",
+    "event_id",
+    "segment_id",
+    "record_offset",
+    "sort_direction",
+    "query_fingerprint",
+    "tenant_id",
+    "created_at",
+    "signature"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cursor_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Cursor format version."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$",
+      "description": "UTC timestamp of the last returned log event."
+    },
+    "event_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "RFC 4122 UUIDv4 of the last returned log event."
+    },
+    "segment_id": {
+      "type": "string",
+      "pattern": "^segment-[0-9]{4}\\.(jsonl|parquet)$",
+      "description": "Filename of the archive segment containing the tie-break record."
+    },
+    "record_offset": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Zero-indexed record offset inside the archive segment."
+    },
+    "sort_direction": {
+      "type": "string",
+      "enum": ["asc", "desc"],
+      "description": "Sorting direction bound to the query."
+    },
+    "query_fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 digest of normalized query parameters to prevent cursor reuse across differing queries."
+    },
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^[0-9a-zA-Z_-]{1,64}$",
+      "description": "Authorized tenant ID bound to the cursor."
+    },
+    "created_at": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Unix timestamp (milliseconds) when the cursor was issued, used for expiration checks."
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Server-side HMAC-SHA256 signature over the payload fields."
+    }
+  }
+}

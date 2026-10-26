@@ -75,7 +75,22 @@ Local synthetic → isolated staging with 2 demo services → private pilot with
   - Kubernetes/orchestrator ingress must bind routing strictly to `/health/ready`, preventing traffic routing to un-persisted gateways.
 - **Durability Prerequisite (Task ING-002 Gate)**:
   - During `LOGHUB-ING-002`, the gateway shell is implemented without the physical storage engine (`ING-003`). The gateway **must not** return false durable success acknowledgements. Ingestion routes return `503 STORAGE_NOT_READY` until `ING-003` mounts the WAL engine.
-- **Central Archive Volume Configuration**:
+- Central Archive Volume Configuration:
   - Local NVMe volumes formatted with XFS or ext4 using `noatime,nodiratime` mount options for optimal WAL write and fsync throughput.
   - Enterprise SSDs with hardware Power-Loss Protection (PLP) are required for RPO = 0 crash durability.
+
+## 14. Phase 2 Supported Deployment Topology & Operational Gates (LOGHUB-ING-006)
+- **Single-Active-Writer Invariant**:
+  - The MVP configuration requires **one active gateway writer per journal/archive storage domain**.
+  - Enforced via `.journal.owner` file with atomic creation (`O_CREAT | O_EXCL`).
+  - Active owner conflict blocks readiness (`/health/ready` returns 503). Stale locks from dead PIDs are automatically cleaned upon verified process termination.
+  - Multi-host active-active write clustering to the same NFS/SMB volume is explicitly **not supported** for Phase 2 MVP.
+- **Service Dependency & Startup Order**:
+  1. PostgreSQL database running with migration `20261024000000_init_metadata` applied.
+  2. Ingestion gateway (`apps/ingestion-gateway`) starts and acquires exclusive `.journal.owner` lease.
+  3. Log shippers (`apps/log-shipper`) discover local SDK spools and begin delivery.
+  4. Applications and proxies submit logs.
+- **Graceful Shutdown**:
+  - Ingestion gateway flushes in-memory WAL buffers, executes synchronous `fsync()`, releases `.journal.owner`, closes PostgreSQL pools, and drains connections within 10 seconds.
+
 

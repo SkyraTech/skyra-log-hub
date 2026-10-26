@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/query/v1/search-response.schema.json",
+  "title": "SkyraQuerySearchResponseV1",
+  "description": "Response envelope for POST /query/v1/logs/search.",
+  "type": "object",
+  "required": ["events", "pagination", "statistics", "scope"],
+  "additionalProperties": false,
+  "properties": {
+    "events": {
+      "type": "array",
+      "description": "List of matching canonical log events.",
+      "items": {
+        "type": "object"
+      }
+    },
+    "pagination": {
+      "type": "object",
+      "required": ["has_more", "next_cursor", "total_returned"],
+      "additionalProperties": false,
+      "properties": {
+        "has_more": {
+          "type": "boolean",
+          "description": "True if additional matching records exist beyond this page."
+        },
+        "next_cursor": {
+          "type": ["string", "null"],
+          "description": "Opaque cursor string for requesting the next page. Null when has_more is false."
+        },
+        "total_returned": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of events returned in this response."
+        }
+      }
+    },
+    "statistics": {
+      "type": "object",
+      "required": ["scanned_bytes", "scanned_segments", "execution_time_ms", "archive_watermark"],
+      "additionalProperties": false,
+      "properties": {
+        "scanned_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total bytes read from archive segments during query execution."
+        },
+        "scanned_segments": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of archive segment files queried."
+        },
+        "execution_time_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total query planning and execution duration in milliseconds."
+        },
+        "archive_watermark": {
+          "type": "string",
+          "format": "date-time",
+          "description": "UTC timestamp of the latest finalized archive segment visible to this query."
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": ["tenant_id", "searched_projects"],
+      "additionalProperties": false,
+      "properties": {
+        "tenant_id": {
+          "type": "string",
+          "description": "Authorized tenant ID scoped to this query."
+        },
+        "searched_projects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Effective list of projects searched."
+        }
+      }
+    }
+  }
+}

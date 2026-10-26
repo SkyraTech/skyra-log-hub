@@ -43,16 +43,26 @@
 | LOGHUB-DB-001 | Existing PostgreSQL Server Connection & Isolated Database Provisioning | DONE | User authorization | Dedicated role `skyra_loghub_user` & database `skyra_loghub_dev` created on localhost:5432; read-only verification passed; existing Bachina Labs databases untouched; report `SKYRA_LOGHUB_DATABASE_SETUP_REPORT.md` |
 | LOGHUB-DB-002 | Prisma Migration Deployment, Live PostgreSQL Integration & Final Durability Acceptance | DONE (PASS) | LOGHUB-DB-001, User authorization | Initial migration `20261024000000_init_metadata` deployed to `skyra_loghub_dev`; 7 metadata tables verified; all 21 live PostgreSQL test scenarios passed (100 in gateway); 408 total unique automated tests passing across monorepo; report `SKYRA_LOGHUB_DB_002_ACCEPTANCE_REPORT.md` |
 | LOGHUB-ING-004 | Idempotency & Replay Hardening (concurrency locking, optional Valkey cache, 7-day retention pruner, multi-process ownership, compaction safeguards, 20-scenario failure tests) | DONE (PASS) | LOGHUB-DB-002 | Concurrency mutex (`DeduplicationLockService`), single-writer ownership (`JournalOwnershipManager`), non-authoritative read-through cache (`IReceiptCache`), 7-day retention pruner, WAL compaction safeguards, 120 gateway tests passing (428 total workspace tests passing), report `SKYRA_LOGHUB_ING_004_IMPLEMENTATION_REPORT.md` |
-| LOGHUB-ING-005 | Local Shipper & Cross-SDK E2E (filelog follower, receipt verification before spool deletion, cross-SDK integration) | READY | LOGHUB-ING-004 | Shipper daemon, cross-SDK E2E integration verification |
+| LOGHUB-ING-005 | Local Shipper & Cross-SDK E2E (spool discovery, checkpoint manager, corrupt quarantine, cross-SDK integration) | DONE (PASS) | LOGHUB-ING-004 | Standalone shipper daemon (`apps/log-shipper`), Node/Python/Browser E2E delivery, NestJS/Angular/React adapters, 21 automated shipper tests passing, report `SKYRA_LOGHUB_ING_005_IMPLEMENTATION_REPORT.md` |
+| LOGHUB-ING-006 | Phase 2 Final Integration, Data Integrity & Release Readiness Audit | DONE (PASS) | LOGHUB-ING-005 | Complete Phase 2 independent audit; 462 unique automated tests passing (384 TS + 78 Python); Real Edge CDP browser E2E passing; isolated consumer packages passing; 25-scenario failure matrix verified; single-active-writer topology certified; deliverable `docs/ingestion/11-PHASE2_ACCEPTANCE.md` and report `SKYRA_LOGHUB_ING_006_PHASE2_ACCEPTANCE_REPORT.md` |
 
-## Phase 3 — Identity and search foundation
-| ID | Task | Dependencies | Evidence / acceptance |
-|---|---|---|---|
-| LH-301 | OIDC login/MFA/session enforcement | LH-201, LH-002 | Negative auth tests, logout/session revoke |
-| LH-302 | Role/project memberships | LH-301 | Explicit cross-project deny tests |
-| LH-303 | Token issue/list/revoke/rotate/expiry | LH-302 | Hashed verifier only, once-visible secret, immediate revoke tests |
-| LH-304 | Query service AST, cost controls and field discovery | LH-204, LH-302 | Unauthorized raw file or query-engine access impossible; timeouts and bounded results |
-| LH-305 | Distributed throttles and audit trails | LH-303, LH-304 | Per identity/IP/token limits and auditable sensitive actions |
+## Phase 3 — Identity, Search & Analytical Query Foundation
+| ID | Task | Status | Dependencies | Evidence / acceptance |
+|---|---|---|---|---|
+| LOGHUB-QUERY-001 | Phase 3 — Query Architecture, Search API Contracts & Analytical Storage Design | DONE (PASS) | LOGHUB-ING-006 | `contracts/query/v1/*`, `tests/contracts/query-contracts.test.ts`, `docs/query/01-10`, ADR-017–021, DuckDB feasibility spike, report `SKYRA_LOGHUB_QUERY_001_ARCHITECTURE_REPORT.md` |
+| LOGHUB-ARCH-001 | Enterprise Architecture, Clean Code, Project Structure & Engineering Quality Standards | DONE (PASS) | LOGHUB-QUERY-001 | `docs/architecture/01-10`, `docs/README.md`, DuckDB parameterization & safe literal escaping verified, report `SKYRA_LOGHUB_ARCH_001_QUALITY_STANDARDS_REPORT.md` |
+| LOGHUB-QUERY-002 | Query Service Foundation & Secure Archive Discovery | DONE (PASS) | LOGHUB-ARCH-001 | `apps/query-service` application, read-only Prisma catalog access, `ArchiveDiscoveryService`, `DiscoveryValidationPipe`, `CorrelationIdMiddleware`, `AuditLoggingInterceptor`, path traversal & symlink defense, JWT/test verification, 56 automated tests passing (29 unit, 16 integration, 11 security/architecture), report `SKYRA_LOGHUB_QUERY_002_IMPLEMENTATION_REPORT.md` |
+| LOGHUB-QUERY-003 | DuckDB-Backed JSONL Querying & Structured Filters | READY | LOGHUB-QUERY-002 | `@duckdb/node-api` integration, filter AST compiler, parameterization, in-memory execution |
+| LOGHUB-QUERY-004 | Search API, Keyset Cursor Pagination & Validation | NOT_STARTED | LOGHUB-QUERY-003 | `POST /query/v1/logs/search`, `GET /query/v1/logs/{eventId}`, HMAC-SHA256 cursor codec |
+| LOGHUB-QUERY-005 | Aggregations, Facets & Bounded Analytical Execution | NOT_STARTED | LOGHUB-QUERY-004 | `POST /query/v1/logs/aggregate`, `POST /query/v1/logs/facets`, date histograms, terms buckets |
+| LOGHUB-QUERY-006 | Derived Parquet Conversion, Manifests, Catalog & Query Parity | NOT_STARTED | LOGHUB-QUERY-005 | Background conversion worker, ZSTD Parquet generation, `parquet_segments` migration proposal, query parity tests |
+| LOGHUB-QUERY-007 | Query Performance, Authorization, Corruption & Recovery Hardening | NOT_STARTED | LOGHUB-QUERY-006 | Fair-share queue scheduler, timeout interrupt, `query_audit_logs` migration proposal, fault injection |
+| LOGHUB-QUERY-008 | Phase 3 Final Functional Acceptance | NOT_STARTED | LOGHUB-QUERY-007 | Full 30-scenario test matrix verification (`QTEST-01`–`30`), E2E ingestion-to-search certification |
+| LH-301 | OIDC login/MFA/session enforcement | NOT_STARTED | LH-201, LH-002 | Negative auth tests, logout/session revoke |
+| LH-302 | Role/project memberships | NOT_STARTED | LH-301 | Explicit cross-project deny tests |
+| LH-303 | Token issue/list/revoke/rotate/expiry | NOT_STARTED | LH-302 | Hashed verifier only, once-visible secret, immediate revoke tests |
+| LH-304 | Query service AST, cost controls and field discovery | SUPERSEDED | LOGHUB-QUERY-001–007 | Superseded by LOGHUB-QUERY-001 through 007 |
+| LH-305 | Distributed throttles and audit trails | NOT_STARTED | LH-303, LH-304 | Per identity/IP/token limits and auditable sensitive actions |
 
 ## Phase 4 — Angular Log Explorer
 | ID | Task | Dependencies | Evidence / acceptance |

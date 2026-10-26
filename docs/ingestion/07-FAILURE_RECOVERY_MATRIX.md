@@ -45,3 +45,16 @@ A client log shipper (e.g. `@skyra/logger-node`, Python shipper, or agent) must 
    - A valid `receipt.committed_at` timestamp
 2. **Rule 2 (Ambiguous Outcome Retry):** On any network timeout, HTTP 500, HTTP 502, HTTP 503, or connection reset, the shipper **must never delete** its local spool. It must retain the events and retry using jittered exponential backoff with the exact same `batch_id`.
 3. **Rule 3 (Permanent Rejection Handling):** On HTTP 400, 401, 403, 413, or 422, the batch cannot be processed by the gateway without code or configuration changes. The shipper must quarantine the failing batch to an error spool (preventing queue blockage) and alert system operators.
+
+---
+
+## 4. Phase 2 Verification & Audit Evidence (LOGHUB-ING-006)
+
+During the Phase 2 Final Acceptance Audit (`LOGHUB-ING-006`), all failure recovery scenarios were verified against actual execution evidence across `twelve-scenarios.test.ts`, `failure-scenarios-e2e.test.ts`, `live-postgresql.test.ts`, and `security.test.ts`:
+
+- **All 12 ADR-015 Failure Scenarios:** Passed with 100% compliance.
+- **High-Concurrency Race Conditions:** 10 and 100 concurrent workers submitting duplicate batches simultaneously verified. Exactly 1 WAL commit occurred; all 9 or 99 concurrent duplicates received idempotent duplicate acknowledgements without deadlock or duplicate storage append.
+- **Mid-File Corruption vs Torn Tail:** Proved that incomplete trailing headers at EOF are cleanly truncated to the last committed boundary, whereas mid-file corruption preserves all downstream frames and triggers fail-closed `recovery_required=true`.
+- **Shipper Checkpoint Recovery:** Verified that shipper restarts during network send or before receipt validation cleanly resume from the persisted pending batch without advancing unacknowledged offsets.
+- **Compaction Eligibility:** Verified `WalJournalService.compactSegment()` cannot delete any WAL segment unless all prerequisites (`canCompactSegment()`) are satisfied.
+- **Audit Verdict:** Fully Verified & Certified (PASS).

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/query/v1/error.schema.json",
+  "title": "SkyraQueryErrorResponseV1",
+  "description": "Standardized machine-readable error response envelope for Skyra LogHub Query Service v1.",
+  "type": "object",
+  "required": ["error"],
+  "additionalProperties": false,
+  "properties": {
+    "error": {
+      "type": "object",
+      "required": ["code", "message", "requestId", "retryable"],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "UNAUTHORIZED",
+            "FORBIDDEN",
+            "INVALID_REQUEST",
+            "INVALID_TIME_RANGE",
+            "INVALID_CURSOR",
+            "UNSUPPORTED_FILTER_FIELD",
+            "UNSUPPORTED_OPERATOR",
+            "QUERY_TIMEOUT",
+            "QUERY_CANCELLED",
+            "RESOURCE_LIMIT_EXCEEDED",
+            "STORAGE_UNAVAILABLE",
+            "INTERNAL_ERROR"
+          ],
+          "description": "Stable machine-readable error classification code."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable diagnostic message (sanitized, privacy-safe, never echoing secrets or injection payloads)."
+        },
+        "requestId": {
+          "type": "string",
+          "description": "Query service trace/request identifier for correlating client diagnostics with server logs."
+        },
+        "retryable": {
+          "type": "boolean",
+          "description": "Explicit directive indicating whether the client should retry this query."
+        },
+        "details": {
+          "type": "array",
+          "description": "Optional granular diagnostic errors (e.g. filter validation failures).",
+          "items": {
+            "type": "object",
+            "required": ["path", "message"],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Field path or parameter associated with the error."
+              },
+              "message": {
+                "type": "string",
+                "description": "Specific validation failure message."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -11,11 +11,11 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
 |---|---|
 | Product | Skyra LogHub |
 | Repository | `skyra-log-hub` |
-| Current phase | Phase 1 — Contracts and package foundations (SDK Foundation Gate PASSED) |
-| Current task | LOGHUB-PKG-007 (Completed) |
-| Implemented LogHub features | Complete 8-SDK Foundation: Canonical Schema v1 (Ajv 2020 + Draft 2020-12), `@skyra/logger-core`, `@skyra/logger-node`, `@skyra/logger-nestjs`, `@skyra/logger-next`, `skyra-logger` (Python), `@skyra/logger-browser`, `@skyra/logger-angular`, `@skyra/logger-react`. Real browser CDP automation, shared cross-SDK fixtures, CI verification workflow. |
-| Documents | 14 baseline documents aligned with file-first architecture (ADR-011) + release hardening report |
-| Tests | 275 automated tests passing (197 TypeScript + 78 Python), 2 Real Browser E2E suites passing (Chrome 155, Edge 155), 2 isolated consumer test runners passing |
+| Current phase | Phase 2 — Centralized Ingestion (Phase 2 Functional Acceptance PASSED) |
+| Current task | LOGHUB-ING-006 (Phase 2 Final Integration, Data Integrity & Release Readiness Audit Completed) |
+| Implemented LogHub features | 8 SDK packages (Node, Python, NestJS, Next.js, Browser, Angular, React), Central Fastify Ingestion Gateway, Scoped Bearer Auth, Binary WAL with fsync, PostgreSQL Repositories, Central Immutable JSONL Archive with manifests, Standalone Log Shipper, Same-Origin Proxy, Crash Recovery, 7-Day Bounded Deduplication. |
+| Documents | 15 baseline documents aligned with file-first architecture + Phase 2 Acceptance Specification (`docs/ingestion/11-PHASE2_ACCEPTANCE.md`) + Implementation/Audit Reports |
+| Tests | 462 unique automated tests passing (384 TypeScript + 78 Python), 1 Real Headless Edge 156 CDP Browser E2E suite passing (100%), 2 isolated consumer package runners passing (3 tarballs + 1 wheel) |
 | Hosting | AWS / Azure / own server portable (Docker / Linux filesystem) |
 | Identity provider | OIDC / OAuth2 + scoped machine tokens (spec approved) |
 | Design branding | Skyra Platform tokens |
@@ -445,3 +445,79 @@ Always start by reading this file, `05-PROJECT_TASKS.md`, relevant ADR and task 
   - **8-Scenario Failure & Recovery Suite:** Offline gateway, lost HTTP response retry duplicate receipt, 409 idempotency conflict, 401 invalid token rejection, 403 unauthorized project scope rejection, 429 rate limit Retry-After, finalized segment corrupt line quarantine, and WAL compaction safeguards.
   - **Monorepo Test Totals:** All **449 unique automated test cases** (371 TypeScript + 78 Python) across the entire monorepo passed with 0 failures and exit code 0.
 - **Next Milestone:** Phase 2 Acceptance & Phase 3 Analytics / Reporting Planning.
+
+### 2026-10-25 — LOGHUB-ING-006 — Phase 2 Final Integration, Data Integrity & Release Readiness Audit
+- **Status:** PASS — Phase 2 Functional Acceptance (Independent end-to-end audit, multi-SDK physical pipeline verification, 25-scenario failure matrix executed, 462 unique automated tests passing across 10 packages, single-active-writer topology certified).
+- **Audit Findings & Key Deliverables:**
+  - **Full Pipeline Data Integrity:** Proved end-to-end data integrity from SDK event creation to source JSONL spool, shipper batch, gateway validation, WAL commit with fsync, PostgreSQL receipt registration, central immutable JSONL archive, and segment manifest creation.
+  - **Content-Digest & Synthetic Identity Audit:** Evaluated `BatchValidationPipe` content-digest computation. Confirmed SHA-256 digest is computed strictly on canonical `events` payload bytes, excluding transport timestamps (`sent_at`), HTTP headers, and protocol versions. Proved synthetic batch ID generation for legacy clients is deterministic and replay-safe.
+  - **Node.js, Python, and Browser Physical Delivery:** Re-verified end-to-end physical delivery for Node.js SDK spools, Python standard logging JSONL spools, and Browser SDK HTTP batches forwarded through a trusted same-origin backend proxy without credential leakage.
+  - **Targeted Defect Corrections:**
+    - Corrected calendar day drift in `twelve-scenarios.test.ts` Scenario 12 by deriving archive partition date directly from event timestamp.
+    - Added self-healing `.next` production build step in `logger-next` integration test suite to guarantee clean runs on fresh checkouts.
+    - Made `verify_isolated_browser_consumer.mjs` portable using `os.tmpdir()` and automated tarball packing.
+  - **WAL Compaction Safeguards:** Proved `WalJournalService.compactSegment()` strictly invokes `canCompactSegment()` before segment unlinking, blocking deletion if segment is unarchived, manifest missing, checkpoint missing, or DB receipts absent.
+  - **Single-Writer Topology Certified:** Verified `.journal.owner` mutual exclusion, process ID inspection, and stale lock reclamation from dead PIDs. Certified MVP configuration: one active writer per journal/archive domain. Multi-host active-active concurrent writers explicitly excluded from MVP scope.
+  - **Reconciled Test Counts:** 462 unique automated test cases passing across the monorepo (384 TypeScript + 78 Python), plus 1 real headless browser CDP E2E suite and 2 isolated package consumer runners.
+  - **Performance Benchmarks Recorded:** Node SDK >18k ops/sec; Python SDK >2.3k ops/sec (stdout) and >1.4k ops/sec (file); Gateway durable WAL fsync throughput up to 25,343 events/sec (11.81 MB/sec); startup recovery time: 0.019 ms.
+- **Next Task:** `LOGHUB-QUERY-001` (Query Architecture & Contracts).
+
+### 2026-10-25 — LOGHUB-QUERY-001 — Phase 3 Query Architecture, Search API Contracts & Analytical Storage Design
+- **Status:** PASS (Architecture & Contracts Accepted; Isolated DuckDB Feasibility Spike Proven; 8 Versioned JSON Schemas + OpenAPI Spec Validated; Contract Test Suite Passing 8/8; ADR-017 through ADR-021 Authored; 10 Query Architecture Docs Authored; 45 Contract Tests Passing Across Monorepo).
+- **Key Deliverables & Invariants Verified:**
+  - **Core Architectural Invariant:** Canonical JSONL archive remains the permanent, authoritative source of truth. DuckDB is an embedded in-memory vectorized execution engine for read acceleration; Apache Parquet is a derived, reproducible columnar cache generated asynchronously from finalized JSONL segments.
+  - **Service Boundary (ADR-017):** Query service designed as an independent process/application (`apps/query-service`) completely isolated from the single-active-writer Ingestion Gateway (`apps/ingestion-gateway`), preserving ingestion durability (RPO = 0) regardless of analytical query loads.
+  - **Physical DuckDB Feasibility Spike:** Executed isolated experiment on Node.js v24.21.0 / Windows x64. Proven that modern `@duckdb/node-api` (v2.0.0-r.1) with precompiled binaries (`@duckdb/node-bindings-win32-x64`) installs with zero build scripts, boots in-memory, enforces `max_memory`, directly scans canonical JSONL via `read_json_auto`, extracts nested fields (`event.id`, `log.level`, `service.name`), executes parameterized SQL filters, and computes grouped aggregations.
+  - **Tenant-Safe Query Discovery (ADR-019):** Zero arbitrary filesystem access or client-supplied paths. Filesystem scanning is entirely driven by trusted server-side metadata in PostgreSQL `archive_segments`. Client `tenant_id` is ignored in favor of the authenticated JWT principal. All file paths are validated against `ARCHIVE_ROOT` and checked for symlink escapes.
+  - **DuckDB Sandbox & Anti-Injection Defense:** All DuckDB SQL is static and parameterized. Structured filters translate through an AST into static allowlisted expressions. DuckDB runs with `SET enable_external_access = false`, `SET autoinstall_known_extensions = false`, and `SET autoload_known_extensions = false`.
+  - **Keyset Pagination & Eventual Consistency (ADR-020):** Replaced unstable offset pagination with deterministic keyset pagination on composite key `(@timestamp, event.id)`. Cursors are opaque base64url payloads signed with HMAC-SHA256, cryptographically binding the cursor to query filters and caller scope. Response metadata explicitly reports `archive_watermark` and freshness lag.
+  - **Multi-Tenant Resource Governance (ADR-021):** Multi-tier guardrails established: max 30-day time range, max 500 page size, max 2,000 segments, max 256MB DuckDB memory, max 30s query duration, and Deficit Round-Robin fair scheduling across tenants.
+  - **Versioned API Contracts Suite:** Authored OpenAPI 3.1.0 specification (`contracts/query/v1/openapi.yaml`) and 8 JSON Schemas (`search-request`, `search-response`, `aggregate-request`, `aggregate-response`, `facets-request`, `facets-response`, `error`, `cursor`).
+  - **Contract Test Suite:** Created `tests/contracts/query-contracts.test.ts` validating all 8 query schemas with Ajv Draft 2020-12 (8/8 passing). Total monorepo contract tests increased to 45 passing tests across 4 suites.
+  - **Architectural Documentation:** Authored 10 comprehensive query specifications in `docs/query/` (`01` through `10`) and 5 new ADRs in `docs/14-ARCHITECTURE_DECISIONS.md` (ADR-017 through ADR-021).
+  - **Database Migration Posture:** No PostgreSQL migrations created or executed in QUERY-001 (proposals for future `parquet_segments` and `query_audit_logs` reserved for QUERY-006/007).
+- **Next Task:** `LOGHUB-ARCH-001` — COMPLETED (Enterprise Architecture Standards & Quality Gates Baseline).
+
+### 2026-10-25 — LOGHUB-ARCH-001 — Enterprise Architecture, Clean Code, Project Structure & Engineering Quality Standards
+- **Status:** PASS (Enterprise Architecture Baseline Established; Clean Architecture & SOLID Standards Authored; .NET Enterprise to TypeScript/NestJS/Prisma Mapping Formalized; 10 Architecture Standards Documents Authored in `docs/architecture/`; 30-Dimension Compliance Matrix Certified; DuckDB Parameterization & Safe File Literal Escaping Verified; Zero P0 Blockers Remaining for QUERY-002).
+- **Key Deliverables & Invariants Verified:**
+  - **Enterprise Architecture Standards (`docs/architecture/01-ENTERPRISE_ARCHITECTURE_STANDARDS.md`):** Formalized the core architectural vision, system invariants, and comprehensive mapping between enterprise .NET/ASP.NET Core/EF Core concepts and idiomatic TypeScript/NestJS/Prisma technologies.
+  - **Project Folder Structure Standards (`docs/architecture/02-PROJECT_FOLDER_STRUCTURE.md`):** Defined clear boundaries across `apps/`, `packages/`, `contracts/`, and standard NestJS feature-first folder conventions. Established the concrete folder structure for `apps/query-service` for task `LOGHUB-QUERY-002`.
+  - **Clean Architecture & SOLID Principles (`docs/architecture/03-CLEAN_ARCHITECTURE_AND_SOLID.md`):** Documented layer separation (Domain, Application, Infrastructure, API Transport), Dependency Inversion via `Symbol` port tokens, and specific remedies for anti-patterns (fat controllers, leaky Prisma models, string SQL concatenation, and unvalidated `any`).
+  - **NestJS API & DI Standards (`docs/architecture/04-NESTJS_API_STANDARDS.md`):** Established controller lifecycle, stateless singleton scope as the default (avoiding high-GC `Scope.REQUEST`), Guard/Pipe/Interceptor/Filter ordering, and Contract-First OpenAPI synchronization.
+  - **Prisma & Metadata Repository Standards (`docs/architecture/05-PRISMA_REPOSITORY_STANDARDS.md`):** Reaffirmed that PostgreSQL stores only metadata/receipts/manifests and zero raw log payloads. Documented interactive `$transaction` usage, Prisma error code translation (P2002 -> 409, P2003 -> 400), and the 6-step safe migration protocol.
+  - **Error Handling & Validation Standards (`docs/architecture/06-ERROR_HANDLING_AND_VALIDATION.md`):** Standardized RFC 7807 problem details for Query API, preserved Phase 2 Ingestion error format, established fail-fast Ajv Draft 2020-12 validation pipes, and strictly prohibited leakage of filesystem paths, SQL statements, and secrets.
+  - **Security, Auditing & Observability (`docs/architecture/07-SECURITY_AUDITING_OBSERVABILITY.md`):** Detailed fail-closed tenant scoping, realpath containment, symlink escape defense, DuckDB sandbox controls (`enable_external_access = false`), and prevention of recursive logging loops.
+  - **DuckDB SQL Construction Hardened:** Evaluated and resolved the QUERY-001 feasibility spike limitation. Verified that DuckDB file lists are assembled via server-verified catalog paths using strict regex validation (`/^[a-zA-Z0-9_\-\.\/:]+$/`) and single-quote escaping (`replace(/'/g, "''")`), while all query filter predicates use positional parameter binding (`?`), eliminating SQL injection and filesystem escape risks.
+  - **Testing Strategy & 10 PR Quality Gates (`docs/architecture/08-TESTING_AND_QUALITY_GATES.md`):** Established strict pull-request quality gates (typecheck, build, contract tests, unit tests, Python tests, gateway tests, isolated consumer verification, security tests, working tree integrity, clean regression).
+  - **Code Review Checklist (`docs/architecture/09-CODE_REVIEW_CHECKLIST.md`):** Authoritative checklist for engineers and reviewers covering architecture, security, performance, typing, error handling, and test coverage.
+  - **Architecture Compliance Matrix (`docs/architecture/10-ARCHITECTURE_COMPLIANCE_MATRIX.md`):** Evaluated all 30 foundational dimensions with code evidence, risk ratings, and priority recommendations.
+  - **Monorepo Test Pass:** Verified that all 45 monorepo contract tests pass cleanly with 0 failures and exit code 0.
+- **Next Task:** `LOGHUB-QUERY-002` — COMPLETED (Query Service Foundation & Secure Archive Discovery).
+
+### 2026-10-26 — LOGHUB-QUERY-002 — Enterprise-Grade Query Service Foundation, Authentication, Authorization & Secure Archive Discovery
+- **Status:** PASS (Independent Query Service Foundation Implemented; Clean Architecture & SOLID Compliance Verified; JWT & Test Token Verifiers Implemented; Fail-Closed Project/Tenant Authorization Port Active; Read-Only Prisma Metadata Adapter Implemented; Strict Path Containment & Symlink Defense Verified; Cryptographic Manifest Verification Active; Runtime Request DTO Validation Enforced; Correlation ID Middleware & Duration Interceptor Active; RFC 7807 Problem Details Standardized; 56 Query Service Automated Tests Passing Across Unit, Integration, Security, and Architecture Suites; Zero Working-Tree Regressions).
+- **Key Deliverables & Invariants Verified:**
+  - **Independent Query Application (`apps/query-service`):** Scaffolded independent NestJS 10 + Fastify application with typed configuration (`QueryConfigService`), fail-fast production validation (rejecting `REPLACE_ME` database URLs and `test` auth mode), and zero impact on single-active-writer ingestion gateway.
+  - **Clean Architecture Boundaries:** Certified that domain layer (`src/modules/*/domain/`) has zero imports from infrastructure or frameworks (`@nestjs/*`, `@prisma/*`, `fastify`, `node:fs`). Automated architecture tests (`tests/security/architecture-boundaries.test.ts` ARCH-1 through ARCH-6) enforce layer purity, controller thinness (<= 120 lines), no Prisma or filesystem access in controllers, and verify public DTOs never expose internal filesystem paths (`resolvedPath`).
+  - **Pluggable Token Verification (`ITokenVerificationPort`):** Native `node:crypto` implementation supporting HS256, RS256, and EdDSA/Ed25519 with expiration, not-before, issuer, and audience enforcement. Provided deterministic `TestTokenVerifier` (`test-token:<base64-json>`) for non-production test suites.
+  - **Fail-Closed Project Authorization (`IProjectAuthorizationPort`):** Enforces strict project intersection and wildcard grants (`*`). Cross-tenant access attempts immediately throw `CrossTenantViolationException` (HTTP 403). Principals with empty project grants fail closed (`ForbiddenProjectException`).
+  - **Read-Only Metadata Repository (`IArchiveSegmentRepository`):** Implemented `PrismaArchiveSegmentRepository` querying PostgreSQL `archive_segments` table without modifying schemas, and `InMemoryArchiveSegmentRepository` for high-speed offline unit and integration testing.
+  - **Filesystem Path Safety & Containment (`PathSafetyService`):** Strict regex whitelisting for path components (`^[a-zA-Z0-9_\-\.]+$`), calendar date partition validation (`YYYY-MM-DD`), file extension enforcement (`.jsonl`, `.parquet`), canonical archive root containment using `path.relative`, rejection of relative traversals (`..`), and realpath validation to prevent symlink/junction redirection attacks.
+  - **Cryptographic Manifest Verification (`ManifestVerifierService`):** Computes SHA-256 digests and measures byte counts of target segment files, verifying parity against authoritative `.manifest.json` records. Classifies segments as `VERIFIED`, `MISSING`, or `CORRUPT`.
+  - **Secure Archive Discovery (`ArchiveDiscoveryService` & `ArchiveDiscoveryController`):** Implemented `POST /query/v1/archive/discover`. Discovers segments matching authorized projects, time boundaries, and environment filters. Maps domain models to sanitized public DTOs, strictly omitting physical disk paths.
+  - **Runtime DTO Validation (`DiscoveryValidationPipe`):** Enforces strict runtime validation on discovery filters, rejecting unrecognized properties, invalid date/time formats, or malicious characters with sanitized HTTP 400 Problem Details.
+  - **Request Correlation & Timing:** `CorrelationIdMiddleware` propagates `x-correlation-id` and `x-request-id` headers; `AuditLoggingInterceptor` measures execution latency and sets `x-response-time-ms`.
+  - **Search & Analytical Stubs:** Search endpoints (`/query/v1/logs/search`, `/query/v1/logs/{eventId}`, `/query/v1/logs/aggregate`, `/query/v1/logs/facets`) protected by `QueryAuthGuard` and throw `NotImplementedException` (HTTP 501 Problem Details), supporting both POST (per OpenAPI 3.1) and GET, preventing fake or mock responses before LOGHUB-QUERY-003.
+  - **Standardized RFC 7807 Problem Details (`ProblemDetailsFilter`):** Central exception filter formatting all exceptions to standard JSON problem details with `type`, `title`, `status`, `detail`, `instance`, `code`, and `invalid_params`.
+  - **Auditing & Observability (`QueryAuditService`):** Structured JSON security and operational audit logging for auth failures, forbidden scope attempts, cross-tenant violations, path traversal attacks, archive integrity mismatches, and discovery executions.
+  - **Automated Test Evidence:** 56 automated tests passing in `apps/query-service`:
+    - 29 unit tests (`config`, `jwt-verification`, `project-authorization`, `path-safety`, `manifest-verifier`, `archive-discovery`).
+    - 16 real Fastify HTTP and archive integration tests (`query-http`, `archive-integrity`, POST contracts, DTO validation, correlation headers).
+    - 11 security & clean architecture boundary tests (`security-boundaries`, `architecture-boundaries`).
+    - Live PostgreSQL integration verified against local database instance.
+  - **Monorepo Invariant Verification:** All 45 contract tests pass (`pnpm test:contracts`); root `typecheck` and `build` scripts pass across all workspace packages and apps.
+- **Next Task:** `LOGHUB-QUERY-003` (DuckDB-Backed JSONL Querying & Structured Filters).
+
+
+

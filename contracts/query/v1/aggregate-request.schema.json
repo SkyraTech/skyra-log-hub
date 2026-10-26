@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/query/v1/aggregate-request.schema.json",
+  "title": "SkyraQueryAggregateRequestV1",
+  "description": "Request envelope for POST /query/v1/logs/aggregate.",
+  "type": "object",
+  "required": ["time_range", "aggregations"],
+  "additionalProperties": false,
+  "properties": {
+    "time_range": {
+      "type": "object",
+      "required": ["start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$"
+        }
+      }
+    },
+    "projects": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9_-]{1,64}$" },
+      "maxItems": 20
+    },
+    "environments": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["production", "staging", "development", "test", "local"] },
+      "maxItems": 5
+    },
+    "services": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,64}$" },
+      "maxItems": 20
+    },
+    "levels": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["trace", "debug", "info", "warn", "error", "fatal"] },
+      "maxItems": 6
+    },
+    "query_text": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "filters": {
+      "type": "array",
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "required": ["field", "operator"],
+        "additionalProperties": false,
+        "properties": {
+          "field": { "type": "string", "pattern": "^[a-z0-9_.]+$", "maxLength": 64 },
+          "operator": { "type": "string", "enum": ["eq", "neq", "in", "not_in", "contains", "exists", "gt", "gte", "lt", "lte"] },
+          "value": {}
+        }
+      }
+    },
+    "aggregations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "field"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+            "description": "Identifier key for this aggregation result in response."
+          },
+          "type": {
+            "type": "string",
+            "enum": ["date_histogram", "terms", "cardinality"],
+            "description": "Aggregation type."
+          },
+          "field": {
+            "type": "string",
+            "pattern": "^[@a-z0-9_.]+$",
+            "description": "Canonical field path to aggregate on."
+          },
+          "interval": {
+            "type": "string",
+            "enum": ["1m", "5m", "15m", "1h", "6h", "1d"],
+            "description": "Required for date_histogram aggregations."
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 10,
+            "description": "Maximum number of buckets to return for terms aggregations."
+          }
+        }
+      }
+    }
+  }
+}

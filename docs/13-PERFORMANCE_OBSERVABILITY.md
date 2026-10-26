@@ -180,5 +180,31 @@ Tested with Google Chrome 155 and Microsoft Edge 155 via CDP over native Node 24
 - In-page event execution, secret redaction, and mock HTTP batching completed in <800 ms total test duration.
 - 100% of delivered browser events strictly conformed to Canonical Schema v1 without client-side lag.
 
+### Phase 2 Final Acceptance Benchmarks (LOGHUB-ING-006)
+Tested on Windows 11 (AMD64, 12th Gen Intel Core i7-1255U, 12 cores, Node v24.21.0, Python 3.13.5):
+
+#### 1. Ingestion Gateway Durable WAL & fsync Performance
+| Tier | Batch Size | Durably Committed | Batches/sec | Throughput (events/sec) | Effective WAL MB/s | fsync p50 Latency | fsync p95 Latency | fsync p99 Latency |
+|---|---|---|---|---|---|---|---|---|
+| **Small Batches** | 10 events | 100/100 (1,000 evts) | 397 | **3,974/s** | 1.90 MB/s | 2.30 ms | 3.62 ms | 6.04 ms |
+| **Medium Batches** | 50 events | 50/50 (2,500 evts) | 283 | **14,167/s** | 6.63 MB/s | 3.16 ms | 4.38 ms | 5.79 ms |
+| **High-Density Batches** | 200 events | 20/20 (4,000 evts) | 127 | **25,343/s** | 11.81 MB/s | 6.88 ms | 10.17 ms | 10.60 ms |
+
+- **Startup Recovery Scan Duration:** **0.019 ms** for active WAL segment.
+
+#### 2. Producer SDK Performance
+- **Node.js SDK (`@skyra/logger-node`):**
+  - Small Info Events: 18,487 ops/sec (p50: 32.7 µs, p95: 77.4 µs)
+  - Typical Structured Events: 7,566 ops/sec (p50: 82.8 µs, p95: 152.3 µs)
+  - Errors with Fsync: 1,167 ops/sec (5,001 synchronous fsyncs executed)
+  - Burst with Backpressure: 8,879 ops/sec, zero memory leaks, bounded queue priority eviction.
+- **Python SDK (`skyra-logger`):**
+  - Stdout Throughput: 2,304 ops/sec (p50: 364.6 µs, p95: 812.3 µs)
+  - JSONL File Transport: 1,460.9 ops/sec (p50: 563.2 µs, p95: 1,190.4 µs)
+  - Errors with Fsync: 847.6 ops/sec (p50: 463.3 µs)
+  - Deep Redaction Engine: 20,147 ops/sec (p50: 44.7 µs)
+  - Multithreaded Burst (8 threads): 1,652 ops/sec.
+
+
 
 

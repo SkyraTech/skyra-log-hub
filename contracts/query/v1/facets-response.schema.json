@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/query/v1/facets-response.schema.json",
+  "title": "SkyraQueryFacetsResponseV1",
+  "description": "Response envelope for POST /query/v1/logs/facets.",
+  "type": "object",
+  "required": ["facets", "statistics", "scope"],
+  "additionalProperties": false,
+  "properties": {
+    "facets": {
+      "type": "object",
+      "description": "Map of requested facet field names to array of distinct values and frequencies.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["value", "count"],
+          "additionalProperties": false,
+          "properties": {
+            "value": { "type": "string" },
+            "count": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "statistics": {
+      "type": "object",
+      "required": ["scanned_bytes", "scanned_segments", "execution_time_ms", "archive_watermark"],
+      "additionalProperties": false,
+      "properties": {
+        "scanned_bytes": { "type": "integer", "minimum": 0 },
+        "scanned_segments": { "type": "integer", "minimum": 0 },
+        "execution_time_ms": { "type": "number", "minimum": 0 },
+        "archive_watermark": { "type": "string", "format": "date-time" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": ["tenant_id", "searched_projects"],
+      "additionalProperties": false,
+      "properties": {
+        "tenant_id": { "type": "string" },
+        "searched_projects": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

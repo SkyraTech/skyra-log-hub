@@ -1,18 +1,35 @@
 import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as os from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const scratchDir = path.resolve('C:/Users/jetti/.gemini/antigravity-ide/brain/bc9d70d4-f43f-4443-b872-4fa0f82d14e0/scratch/isolated-test');
+const scratchDir = path.join(os.tmpdir(), 'skyra-isolated-browser-consumer');
 if (fs.existsSync(scratchDir)) {
   fs.rmSync(scratchDir, { recursive: true, force: true });
 }
 fs.mkdirSync(scratchDir, { recursive: true });
 
 const repoRoot = path.resolve('.');
-const browserTgz = path.join(repoRoot, 'skyra-logger-browser-1.0.0.tgz');
-const angularTgz = path.join(repoRoot, 'skyra-logger-angular-1.0.0.tgz');
-const reactTgz = path.join(repoRoot, 'skyra-logger-react-1.0.0.tgz');
+let browserTgz = path.join(repoRoot, 'skyra-logger-browser-1.0.0.tgz');
+let angularTgz = path.join(repoRoot, 'skyra-logger-angular-1.0.0.tgz');
+let reactTgz = path.join(repoRoot, 'skyra-logger-react-1.0.0.tgz');
+
+if (!fs.existsSync(browserTgz)) {
+  execSync(`pnpm --filter @skyra/logger-browser pack --pack-destination "${scratchDir}"`, { stdio: 'ignore' });
+  const found = fs.readdirSync(scratchDir).find(f => f.startsWith('skyra-logger-browser') && f.endsWith('.tgz'));
+  if (found) browserTgz = path.join(scratchDir, found);
+}
+if (!fs.existsSync(angularTgz)) {
+  execSync(`pnpm --filter @skyra/logger-angular pack --pack-destination "${scratchDir}"`, { stdio: 'ignore' });
+  const found = fs.readdirSync(scratchDir).find(f => f.startsWith('skyra-logger-angular') && f.endsWith('.tgz'));
+  if (found) angularTgz = path.join(scratchDir, found);
+}
+if (!fs.existsSync(reactTgz)) {
+  execSync(`pnpm --filter @skyra/logger-react pack --pack-destination "${scratchDir}"`, { stdio: 'ignore' });
+  const found = fs.readdirSync(scratchDir).find(f => f.startsWith('skyra-logger-react') && f.endsWith('.tgz'));
+  if (found) reactTgz = path.join(scratchDir, found);
+}
 
 console.log('[Isolated Consumer] Verifying packed tarballs exist:');
 console.log(' - Browser:', browserTgz, fs.existsSync(browserTgz));
