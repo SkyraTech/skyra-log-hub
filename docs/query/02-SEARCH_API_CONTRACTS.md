@@ -295,8 +295,10 @@ Standard Error Codes:
 
 ---
 
-## 5. Implementation Status as of LOGHUB-QUERY-004
+## 5. Implementation Status as of LOGHUB-QUERY-005
 
-- **`POST /query/v1/logs/search`:** Fully implemented and operational. Validates requests against `search-request.schema.json` via `SearchValidationPipe`. Enforces P0-A pre-read tenant isolation before opening files. Implements P0-B 4-part composite keyset pagination `(@timestamp, event.id, segment_id, record_offset)` with HMAC-SHA256 signed cursors (`CursorCodecService`).
+- **`POST /query/v1/logs/search`:** Fully implemented and operational. Validates requests against `search-request.schema.json` via `SearchValidationPipe`. Enforces P0-A/P0-B pre-read tenant isolation before opening files. Implements 4-part composite keyset pagination `(@timestamp, event.id, segment_id, record_offset)` with HMAC-SHA256 signed cursors (`CursorCodecService`).
 - **`GET /query/v1/logs/{eventId}`:** Fully implemented and operational. Performs bounded point lookup scoped to authorized `projectId` query parameter. Validates UUIDv4 format via `EventLookupValidationPipe`.
-- **`POST /query/v1/logs/aggregate` & `POST /query/v1/logs/facets`:** Explicitly deferred until LOGHUB-QUERY-005. Both POST and GET routes return HTTP 501 Not Implemented RFC 7807 problem details to prevent fabricated analytical results.
+- **`POST /query/v1/logs/aggregate`:** Fully implemented and operational in LOGHUB-QUERY-005. Validates requests against `aggregate-request.schema.json` via `AggregateValidationPipe`. Implements date histograms (with UTC interval alignment for `1m`, `5m`, `15m`, `1h`, `6h`, `1d`), categorical terms (with `size` limit 1-50), and cardinality distinct counts. Enforces pre-read descriptor gate, DuckDB timeout interrupts, and returns RFC 7807 problem details on error.
+- **`POST /query/v1/logs/facets`:** Fully implemented and operational in LOGHUB-QUERY-005. Validates requests against `facets-request.schema.json` via `FacetsValidationPipe`. Discovers distinct values and frequencies for `service.name`, `log.level`, `event.action`, `environment`, and `error.type` while respecting active filters and caller authorization.
+- **`GET /query/v1/logs/aggregate` & `GET /query/v1/logs/facets`:** Explicitly rejected with HTTP 405 Method Not Allowed problem details.

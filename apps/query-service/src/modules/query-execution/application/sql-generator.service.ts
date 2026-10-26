@@ -52,7 +52,7 @@ export class SqlGeneratorService {
         json_extract_string(json, '$."@timestamp"') AS "@timestamp",
         json_extract_string(json, '$.event.id') AS "event.id",
         regexp_extract(filename, '([^/\\\\]+)$', 1) AS "segment_id",
-        CAST(row_number() OVER (PARTITION BY filename) - 1 AS BIGINT) AS "record_offset",
+        CAST(row_number() OVER (PARTITION BY filename ORDER BY json_extract_string(json, '$."@timestamp"'), json_extract_string(json, '$.event.id'), md5(json)) - 1 AS BIGINT) AS "record_offset",
         json
       FROM read_ndjson_objects([${fileParams.join(', ')}], filename=true)
     )`;
@@ -135,7 +135,7 @@ export class SqlGeneratorService {
     };
   }
 
-  private compileAstNode(
+  public compileAstNode(
     node: FilterAstNode,
     nextParam: (value: string | number | bigint) => string,
   ): string {

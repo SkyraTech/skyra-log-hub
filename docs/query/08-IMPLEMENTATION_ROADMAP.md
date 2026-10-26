@@ -86,13 +86,20 @@ LOGHUB-QUERY-008 (Phase 3 Final Acceptance & Certification)
 - **Verification:** 116 automated query-service tests passing across 19 suites (26 new tests), 0 failing, 0 skipped. Zero regressions in contracts (45) or ingestion gateway (120).
 
 ### LOGHUB-QUERY-005: Aggregations, Facets & Date Histograms
-- **Scope:**
-  - Implement `POST /query/v1/logs/aggregate` and `POST /query/v1/logs/facets`.
-  - Implement `date_histogram` bucket generator with configurable UTC intervals (`1m`, `5m`, `1h`, `1d`).
-  - Implement `terms` aggregation for high-performance categorical distribution.
-  - Integrate validation against `aggregate-request.schema.json` and `facets-request.schema.json`.
-- **Database Migrations:** None.
-- **Verification:** Aggregation correctness tests against known synthetic log batches.
+- **Status:** Complete (PASS).
+- **Scope & Deliverables:**
+  - Resolved carry-forward risks:
+    - **P0-A (Stable Physical Record Locator):** Replaced non-deterministic `row_number() OVER (PARTITION BY filename)` with deterministic multi-key ordering `CAST(row_number() OVER (PARTITION BY filename ORDER BY json_extract_string(json, '$."@timestamp"'), json_extract_string(json, '$.event.id'), md5(json)) - 1 AS BIGINT)` to prevent thread races across parallel workers.
+    - **P0-B (Trusted Archive Descriptor Provenance):** Verified and enforced pre-read security gate in `DuckDbLogQueryAdapter` validating tenant ownership, authorized project scoping, `VERIFIED` status, canonical root containment, absolute path existence, and exact file `byteSize` matching disk before DuckDB opens any files.
+  - Implemented `POST /query/v1/logs/aggregate` supporting `date_histogram` (intervals `1m`, `5m`, `15m`, `1h`, `6h`, `1d` with strict UTC bucket alignment via DuckDB `time_bucket`), `terms` (bounded counts with `size` 1-50), and `cardinality` (distinct counts via `count(DISTINCT ...)`).
+  - Implemented `POST /query/v1/logs/facets` discovering unique values and frequencies for `service.name`, `log.level`, `event.action`, `environment`, and `error.type`. Respects active filters and caller authorization.
+  - Implemented `AggregateValidationPipe` and `FacetsValidationPipe` enforcing JSON Schema Draft 2020-12, rejecting unknown properties (`additionalProperties: false`), non-UTC timestamps, inverted time ranges, ranges > 30 days, histogram buckets > 2000, and unallowlisted fields with RFC 7807 problem details.
+  - Hardened HTTP method enforcement with strict `405 Method Not Allowed` on `GET` for both `/query/v1/logs/aggregate` and `/query/v1/logs/facets`.
+  - Implemented analytical audit events (`AGGREGATION_REQUESTED`, `AGGREGATION_COMPLETED`, `FACETS_REQUESTED`, `FACETS_COMPLETED`, `ANALYTICS_REJECTED`, `ANALYTICS_TIMEOUT`).
+  - Implemented `AnalyticsSqlGeneratorService` compiling parameterized DuckDB SQL with row-level tenant and project isolation.
+  - Ultra-thin `AnalyticsController` (57 lines) adhering to Clean Architecture.
+- **Database Migrations:** None (0 schema changes).
+- **Verification:** 162 automated query-service tests passing across 24 suites (46 new tests), 0 failing, 0 skipped. Zero regressions in contracts (45) or ingestion gateway (120). Total active-suite tests: 327 passing.
 
 ### LOGHUB-QUERY-006: Derived Parquet Converter, Catalog & Query Parity
 - **Scope:**

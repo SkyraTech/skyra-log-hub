@@ -99,3 +99,13 @@ In production deployments:
   - CPU: Constrained to specific cores (e.g. `CPUShares=1024`, `CPUQuota=400%`).
   - Memory: Hard limit with cgroup OOM killer isolated to query workers (`MemoryMax=4G`).
 - **Filesystem Permissions:** The Query Service process runs under an unprivileged user (`skyra-query`) with **read-only** permissions to the archive directory (`/var/loghub/archive/` and `/var/loghub/derived-parquet/`), and read-write permissions strictly limited to its scratch directory (`/tmp/skyra-query-spill/`).
+
+---
+
+### 4.4 Analytical Aggregation & Facet Resource Controls (LOGHUB-QUERY-005)
+In LOGHUB-QUERY-005, analytical queries (`/query/v1/logs/aggregate` and `/query/v1/logs/facets`) share the centralized `QueryResourceGovernorService` and introduce analytical-specific guardrails:
+- **Histogram Bucket Budget (Max 2,000):** Before invoking DuckDB, `AggregateValidationPipe` computes the theoretical bucket count based on the interval (`1m`, `5m`, `15m`, `1h`, `6h`, `1d`). If the calculation exceeds 2,000 buckets, the query is rejected immediately with `400 Bad Request` (`HISTOGRAM_BUCKET_LIMIT_EXCEEDED`), preventing memory exhaustion during DuckDB aggregation.
+- **Terms Size Bounds (1 to 50):** Grouping terms aggregations enforce a hard ceiling of 50 groups, preventing unbounded cardinality explosions from open-ended string distributions.
+- **Dynamic Facets Scope Bounds:** Facet requests require an explicit list of target fields (`1 to 5` allowlisted fields). Facet results are bounded to top values per field.
+- **Fair-Share Slot Scheduling:** Analytical queries participate in the exact same deficit round-robin concurrency semaphore (max 4 concurrent, max 2 per tenant, max queue depth 16) as search queries, ensuring heavy analytical requests cannot starve interactive log search.
+- **True Interrupt Propagation:** If an analytical request client disconnects or exceeds execution timeout, `conn.interrupt()` immediately halts DuckDB aggregation execution.

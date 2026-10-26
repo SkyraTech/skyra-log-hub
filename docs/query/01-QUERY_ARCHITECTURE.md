@@ -90,8 +90,8 @@ The Query Service is decomposed into clean, single-responsibility modules:
 | **SqlGeneratorService** | Translates authorized query plans and filter ASTs into parameterized DuckDB SQL using `read_ndjson_objects([$1, ...])` with row-level tenant WHERE clauses and deterministic tie-breaker sorting. | SQL generation boundary |
 | **DuckDbEngine (Infrastructure)** | Manages in-memory DuckDB connection lifecycle (`DuckDbInstanceManager`), hardened with `autoinstall_known_extensions: false`, `autoload_known_extensions: false`, 256MB memory, and 2 threads. | Analytical execution boundary |
 | **QueryResourceGovernorService** | Enforces 4 concurrent execution slots, max 16 queue depth, tenant fairness, and native `conn.interrupt()` cancellation on timeout or abort signal. | Operational protection boundary |
-| **CursorManagerModule** | Generates and verifies HMAC-SHA256 signed pagination tokens bound to query fingerprints, timestamps, and tenant IDs (scheduled for QUERY-004). | Pagination security boundary |
-| **AggregationModule** | Translates date histogram, terms, and cardinality requests into optimized DuckDB GROUP BY queries with interval alignment (scheduled for QUERY-005). | Analytical computation boundary |
+| **CursorCodecService** | Generates and verifies HMAC-SHA256 signed pagination tokens bound to query fingerprints, timestamps, and tenant IDs (`src/modules/search/application/cursor-codec.service.ts`). | Pagination security boundary |
+| **AnalyticsModule** | Translates date histogram, terms, cardinality, and dynamic facet requests into optimized DuckDB GROUP BY queries with UTC interval alignment (`src/modules/analytics/` & `AnalyticsSqlGeneratorService`). | Analytical computation boundary |
 
 ---
 

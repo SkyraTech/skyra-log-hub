@@ -102,4 +102,20 @@ As of LOGHUB-QUERY-004, `apps/query-service` contains **116 automated tests acro
 | **Discovery** | `tests/unit/archive/archive-discovery.test.ts` | 4 | Time range filtering, project scoping, sanitized DTO mapping |
 | **Filter Compiler** | `tests/unit/query-execution/filter-compiler.test.ts` | 3 | AST compilation, type validation, comparison operators |
 | **Resource Governor** | `tests/unit/query-execution/query-resource-governor.test.ts` | 2 | Concurrency limits, bounded queue, per-tenant fair scheduling |
-| **Total** | **19 Suites** | **116** | **100% Pass Rate (0 Failed, 0 Skipped)** |
+| **Aggregate Validation** | `tests/unit/analytics/aggregate-validation-pipe.test.ts` | 11 | Schema validation, time interval bounds, histogram bucket ceilings, field allowlists |
+| **Facets Validation** | `tests/unit/analytics/facets-validation-pipe.test.ts` | 10 | Schema validation, allowed facet fields, duplicate detection, bad ranges |
+| **Analytics SQL Generator**| `tests/unit/analytics/analytics-sql-generator.test.ts` | 5 | Date histogram `time_bucket`, terms group-by, cardinality, facet SQL |
+| **Analytics API** | `tests/integration/analytics-api.test.ts` | 14 | E2E `POST /query/v1/logs/aggregate` & `facets`, date histograms, terms, filters, project scoping, 405 on GET |
+| **Analytics Security** | `tests/security/analytics-security.test.ts` | 6 | P0-A multi-thread stable locator, P0-B pre-read descriptor gate, tenant isolation, PERF-1 benchmark |
+| **Total** | **24 Suites** | **162** | **100% Pass Rate (0 Failed, 0 Skipped)** |
+
+---
+
+## 5. Analytical Verification & Benchmark Suite (LOGHUB-QUERY-005)
+
+LOGHUB-QUERY-005 added comprehensive end-to-end analytical testing and performance verification:
+1. **Histogram Bucket Math:** Exact UTC alignment using DuckDB `time_bucket` without local timezone drift.
+2. **Cardinality Ceilings:** Max 2,000 buckets enforced at preflight; terms aggregation size capped at 50.
+3. **P0-A Stable Record Locator:** Multi-threaded window partition ordering verified deterministically across parallel DuckDB workers with identical timestamps and duplicate event IDs.
+4. **P0-B Descriptor Provenance:** Verified that unauthorized foreign tenant segments are rejected at the pre-read boundary before DuckDB opens any files.
+5. **PERF-1 Direct JSONL Benchmark:** Verified 5,000 raw JSONL event aggregation executed in ~30ms with 100% accurate bucket counts and zero cross-tenant contamination.

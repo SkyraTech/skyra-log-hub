@@ -13,7 +13,13 @@ export type QueryAuditEventType =
   | 'QUERY_EXECUTED'
   | 'SEARCH_EXECUTED'
   | 'EVENT_LOOKUP'
-  | 'CURSOR_TAMPERED';
+  | 'CURSOR_TAMPERED'
+  | 'AGGREGATION_REQUESTED'
+  | 'AGGREGATION_COMPLETED'
+  | 'FACETS_REQUESTED'
+  | 'FACETS_COMPLETED'
+  | 'ANALYTICS_REJECTED'
+  | 'ANALYTICS_TIMEOUT';
 
 export interface QueryAuditEvent {
   eventType: QueryAuditEventType;

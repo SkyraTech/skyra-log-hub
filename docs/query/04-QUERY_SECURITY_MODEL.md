@@ -148,3 +148,36 @@ Pagination state is protected using HMAC-SHA256 authenticated opaque base64url c
 - **Scope & Tenant Binding:** The authenticated `tenant_id` and authorized `projects` are permanently bound to the cursor. Cross-tenant or cross-project replay is rejected.
 - **Constant-Time Verification:** Signature comparison uses `crypto.timingSafeEqual` to eliminate timing side-channel attacks.
 - **Fail-Closed Secrets:** In production, missing or default signing secrets (`REPLACE_ME_...`) cause immediate application startup failure.
+
+---
+
+## 9. Analytical Aggregation & Facet Security (LOGHUB-QUERY-005)
+
+### 9.1 Allowlisted Grouping & Field Verification
+To eliminate SQL injection, schema poisoning, or high-cardinality exploitation via arbitrary JSON paths:
+- Dynamic group-by and facet fields are restricted strictly to a server-owned allowlist (`service.name`, `log.level`, `event.action`, `environment`, `error.type`, `@timestamp`).
+- Any attempt to aggregate or facet over arbitrary client-supplied field paths, nested arrays, or raw JSON structures fails at the validation pipe with RFC 7807 `400 Bad Request`.
+- Field identifiers are resolved exclusively via the canonical field catalog (`CANONICAL_FIELD_CATALOG`). Client values are parameterized.
+
+### 9.2 Bounded Cardinality & Time Budget Ceilings
+To prevent memory exhaustion and Denial-of-Service attacks via high-cardinality groupings:
+- **Histogram Buckets:** Aggregations with `date_histogram` calculate theoretical bucket counts before query compilation:
+  $$\text{bucketCount} = \left\lfloor \frac{\text{endTime} - \text{startTime}}{\text{intervalSeconds}} \right\rfloor$$
+  If $\text{bucketCount} > 2000$, the request is rejected with `400 Bad Request` (`HISTOGRAM_BUCKET_LIMIT_EXCEEDED`).
+- **Terms Size:** Terms aggregation `size` is bounded between 1 and 50. Client requests exceeding 50 are rejected.
+- **Time Range Budget:** Query intervals are strictly limited to $\le 30$ days (`TIME_RANGE_EXCEEDED`).
+- **HTTP Method Hardening:** Both `/query/v1/logs/aggregate` and `/query/v1/logs/facets` reject `GET` requests with `405 Method Not Allowed`, preventing cache poisoning, proxy leakage, and accidental parameter logging.
+
+### 9.3 Physical Record Locator Invariant (LOGHUB-QUERY-005 P0-A)
+In DuckDB multi-threaded worker configurations, parallel threads scan JSONL chunks concurrently. An unconstrained window function `row_number() OVER (PARTITION BY filename)` produces non-deterministic ordinals due to worker arrival races.
+To ensure physically stable, deterministic record locators across arbitrary worker counts, queries, and restarts, the engine enforces deterministic tie-breaking inside the partition:
+```sql
+CAST(row_number() OVER (
+  PARTITION BY filename 
+  ORDER BY 
+    json_extract_string(json, '$."@timestamp"'), 
+    json_extract_string(json, '$.event.id'), 
+    md5(json)
+) - 1 AS BIGINT) AS record_offset
+```
+This guarantees identical locator offsets regardless of DuckDB thread allocation or query execution plan changes.

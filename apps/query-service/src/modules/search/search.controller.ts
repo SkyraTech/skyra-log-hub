@@ -47,33 +47,6 @@ export class SearchController {
     );
   }
 
-  @Post('aggregate')
-  public aggregateLogsPost(): never {
-    throw new NotImplementedException(
-      'Analytical log aggregation is scheduled for implementation in task LOGHUB-QUERY-005.',
-    );
-  }
-
-  @Get('aggregate')
-  public aggregateLogsGet(): never {
-    throw new NotImplementedException(
-      'Analytical log aggregation is scheduled for implementation in task LOGHUB-QUERY-005.',
-    );
-  }
-
-  @Post('facets')
-  public getFacetsPost(): never {
-    throw new NotImplementedException(
-      'Faceted log attribute discovery is scheduled for implementation in task LOGHUB-QUERY-005.',
-    );
-  }
-
-  @Get('facets')
-  public getFacetsGet(): never {
-    throw new NotImplementedException(
-      'Faceted log attribute discovery is scheduled for implementation in task LOGHUB-QUERY-005.',
-    );
-  }
 
   @Get(':eventId')
   @HttpCode(HttpStatus.OK)

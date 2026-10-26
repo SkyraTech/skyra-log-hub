@@ -5,6 +5,7 @@ import { AuditModule } from '../audit/audit.module.js';
 import { LOG_QUERY_EXECUTION_PORT } from './domain/query-execution.port.js';
 import { FilterCompilerService } from './application/filter-compiler.service.js';
 import { SqlGeneratorService } from './application/sql-generator.service.js';
+import { AnalyticsSqlGeneratorService } from './application/analytics-sql-generator.service.js';
 import { QueryPlannerService } from './application/query-planner.service.js';
 import { DuckDbInstanceManager } from './infrastructure/duckdb/duckdb-instance.manager.js';
 import { QueryResourceGovernorService } from './infrastructure/duckdb/query-resource-governor.service.js';
@@ -15,6 +16,7 @@ import { DuckDbLogQueryAdapter } from './infrastructure/duckdb/duckdb-query-adap
   providers: [
     FilterCompilerService,
     SqlGeneratorService,
+    AnalyticsSqlGeneratorService,
     QueryPlannerService,
     DuckDbInstanceManager,
     QueryResourceGovernorService,
@@ -30,6 +32,7 @@ import { DuckDbLogQueryAdapter } from './infrastructure/duckdb/duckdb-query-adap
     QueryPlannerService,
     FilterCompilerService,
     SqlGeneratorService,
+    AnalyticsSqlGeneratorService,
     DuckDbInstanceManager,
     QueryResourceGovernorService,
   ],

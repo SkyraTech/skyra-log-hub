@@ -557,7 +557,27 @@ Always start by reading this file, `05-PROJECT_TASKS.md`, relevant ADR and task 
     - 9 integration tests in `search-api.test.ts` (authorized search, structured filters, keyset cursor traversal, unauthorized cross-tenant, tampered cursor, event lookup, non-existent event, unauthorized project event, deferred endpoints 501).
     - 6 unit tests in `sql-generator.test.ts` (including SGS-5 verifying 4-part composite locator keyset SQL generation).
     - 85 existing tests covering DuckDB execution, archive discovery, path safety, manifest verification, JWT verification, and Clean Architecture boundaries.
-- **Next Task:** `LOGHUB-QUERY-005` (Aggregations, Facets & Date Histograms).
+- **Next Task:** `LOGHUB-QUERY-005` — COMPLETED (Secure Aggregations, Dynamic Facets & Bounded Analytical Query Execution).
+
+### 2026-10-26 — LOGHUB-QUERY-005 — Secure Aggregations, Dynamic Facets & Bounded Analytical Query Execution
+- **Status:** PASS (Analytical Aggregations API `POST /query/v1/logs/aggregate` and Dynamic Facet Discovery `POST /query/v1/logs/facets` Fully Operational; P0-A Physical Record Locator Corrected with Inner Window Function Ordering; P0-B Pre-Read Descriptor Provenance Verified; Date Histograms Supporting 1m, 5m, 15m, 1h, 6h, 1d with Exact UTC Bucket Alignment; Categorical Terms Aggregations with Explicit Sizing; Cardinality Aggregations for Distinct Counts; Dynamic Facets Across `service.name`, `log.level`, `event.action`, `environment`, and `error.type` with Active Filter Support; Strict Ajv Schema Runtime Validation Enforced; Centralized RFC 7807 Exception Mapping; Resource Budgets Active with Slot Concurrency, Queue Limits, and Timeout Interrupts via `conn.interrupt()`; 162 Query Service Tests Passing Across 24 Suites; Zero Regressions in Monorepo Contracts (45/45) or Ingestion Gateway (120/120); Zero Unapproved DB Migrations).
+- **Key Deliverables & Invariants Verified:**
+  - **P0-A Physical Record Locator Resolution:** Corrected DuckDB window function in `SqlGeneratorService` from `row_number() OVER (PARTITION BY filename) - 1` to `row_number() OVER (PARTITION BY filename ORDER BY json_extract_string(json, '$."@timestamp"'), json_extract_string(json, '$.event.id'), md5(json)) - 1`. Eliminates non-deterministic block arrival races across multi-threaded scans (>2 threads), ensuring physically stable, reproducible record ordering across Query Service restarts and file scans.
+  - **P0-B Pre-Read Descriptor Provenance Gate:** Reinforced the mandatory pre-read security gate in `DuckDbLogQueryAdapter` asserting descriptor `tenantId === plan.tenantId`, authorized project intersection, `VERIFIED` status, and matching physical file size before DuckDB is invoked. Foreign or forged descriptors fail closed with `CrossTenantViolationException` or `ForbiddenProjectException`. Tests prove unauthorized archive files are never opened or touched.
+  - **Analytical Aggregation API (`POST /query/v1/logs/aggregate`):** Implemented contract-compliant grouped analytics supporting `date_histogram` (with strict UTC bucket alignment for `1m`, `5m`, `15m`, `1h`, `6h`, `1d`), categorical `terms` (bounded counts with explicit `size` limits), and distinct count `cardinality` aggregations conforming to `contracts/query/v1/aggregate-request.schema.json` and `aggregate-response.schema.json`.
+  - **Dynamic Facet Discovery API (`POST /query/v1/logs/facets`):** Authoritative, scoped discovery of distinct values and frequencies for `service.name`, `log.level`, `event.action`, `environment`, and `error.type` conforming to `contracts/query/v1/facets-request.schema.json` and `facets-response.schema.json`. Fully respects active filters and project boundaries.
+  - **Strict Validation Pipes (`AggregateValidationPipe`, `FacetsValidationPipe`):** Runtime validation enforcing schema conformance, rejecting unknown properties (`additionalProperties: false`), non-UTC timestamps, invalid boundaries (`end <= start`), excessive time ranges (>30 days), excessive histogram buckets (>2000), and unallowlisted fields.
+  - **Analytical SQL Generator (`AnalyticsSqlGeneratorService`):** Translates query plans to parameterized DuckDB SQL. Binds all dynamic values, applies double defense-in-depth row filtering (`$.skyra.tenant_id = $tenantId`, `$.skyra.project_id IN (...)`), uses DuckDB `time_bucket(INTERVAL ..., CAST(ts AS TIMESTAMP))` for UTC boundary truncation, and limits terms and facet cardinality.
+  - **Observability & Audit Telemetry:** Added analytical audit events (`AGGREGATION_REQUESTED`, `AGGREGATION_COMPLETED`, `FACETS_REQUESTED`, `FACETS_COMPLETED`, `ANALYTICS_REJECTED`, `ANALYTICS_TIMEOUT`) tracking duration, scanned bytes, segment counts, and outcomes without logging raw SQL, filesystem paths, or credentials.
+  - **Comprehensive Automated Test Evidence:** 162 automated tests passing in `apps/query-service` (24 suites, 0 failed, 0 skipped):
+    - 11 unit tests in `aggregate-validation-pipe.test.ts`.
+    - 10 unit tests in `facets-validation-pipe.test.ts`.
+    - 5 unit tests in `analytics-sql-generator.test.ts`.
+    - 14 integration tests in `analytics-api.test.ts`.
+    - 6 security & invariant tests in `analytics-security.test.ts`.
+    - 116 existing tests covering DuckDB execution, keyset pagination, archive discovery, path safety, manifest verification, JWT verification, and Clean Architecture boundaries.
+  - **Monorepo Invariant Verification:** All 45 contract tests pass (`pnpm test:contracts`); all 120 ingestion gateway tests pass (`apps/ingestion-gateway`); 327 active suite tests 100% PASS with 0 regressions.
+- **Next Task:** `LOGHUB-QUERY-006` (Derived Parquet Conversion, Manifests, Catalog & Query Parity).
 
 
 

@@ -233,4 +233,174 @@ export class QueryPlannerService {
 
     return plan;
   }
+
+  public async planAggregation(
+    principal: QueryPrincipal,
+    request: import('../../analytics/api/dto/aggregate-request.dto.js').AggregateRequestDto,
+    correlationId?: string,
+  ): Promise<import('../../analytics/domain/aggregation.model.js').AuthorizedAggregationPlan> {
+    const queryId = crypto.randomUUID();
+    const startTime = new Date(request.time_range.start);
+    const endTime = new Date(request.time_range.end);
+
+    const diffDays = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays > this.config.maxTimeRangeDays) {
+      throw new TimeRangeExceededException(this.config.maxTimeRangeDays);
+    }
+
+    const scope = await this.authPort.resolveAuthorizedProjects(principal, request.projects);
+
+    const discoveryFilter: DiscoverSegmentsFilter = {
+      projects: scope.effectiveProjects,
+      environments: request.environments,
+      services: request.services,
+      startTime,
+      endTime,
+      limit: this.config.maxSegmentsPerQuery + 1,
+    };
+
+    const discovery = await this.discoveryService.discoverSegments(
+      principal,
+      discoveryFilter,
+      correlationId,
+    );
+
+    const verifiedDescriptors = discovery.segments.filter((s) => s.integrityStatus === 'VERIFIED');
+
+    if (verifiedDescriptors.length > this.config.maxSegmentsPerQuery) {
+      throw new QueryBudgetExceededException(
+        `Aggregation requires ${verifiedDescriptors.length} segments, exceeding the maximum budget limit of ${this.config.maxSegmentsPerQuery} segments. Narrow your time range or project filter.`,
+      );
+    }
+
+    const totalScannedBytes = verifiedDescriptors.reduce((acc, seg) => acc + seg.byteSize, 0);
+    if (totalScannedBytes > this.config.maxScannedBytesPerQuery) {
+      throw new QueryBudgetExceededException(
+        `Estimated scanned archive size of ${totalScannedBytes} bytes exceeds the resource budget ceiling of ${this.config.maxScannedBytesPerQuery} bytes.`,
+      );
+    }
+
+    const combinedFilters: RawFilterInput[] = [];
+
+    if (request.services && request.services.length > 0) {
+      combinedFilters.push({
+        field: 'service.name',
+        operator: 'in',
+        value: [...request.services],
+      });
+    }
+
+    if (request.levels && request.levels.length > 0) {
+      combinedFilters.push({
+        field: 'log.level',
+        operator: 'in',
+        value: [...request.levels],
+      });
+    }
+
+    if (request.query_text && request.query_text.trim().length > 0) {
+      combinedFilters.push({
+        field: 'message',
+        operator: 'contains',
+        value: request.query_text.trim(),
+      });
+    }
+
+    if (request.filters && request.filters.length > 0) {
+      combinedFilters.push(...request.filters);
+    }
+
+    const compiledFilter = this.filterCompiler.compileFilters(combinedFilters);
+
+    return {
+      queryId,
+      tenantId: scope.tenantId,
+      authorizedProjects: scope.effectiveProjects,
+      environmentScopes: request.environments,
+      descriptors: verifiedDescriptors,
+      timeInterval: {
+        startInclusive: startTime.toISOString(),
+        endExclusive: endTime.toISOString(),
+      },
+      filter: compiledFilter,
+      aggregations: request.aggregations.map((a) => ({
+        name: a.name,
+        type: a.type,
+        field: a.field,
+        interval: a.interval as any,
+        size: a.size ?? 10,
+      })),
+      resourceBudget: {
+        maxSegments: this.config.maxSegmentsPerQuery,
+        maxScannedBytes: this.config.maxScannedBytesPerQuery,
+        timeoutMs: this.config.queryTimeoutMs,
+        memoryBudgetMb: this.config.duckDbMaxMemoryMb,
+      },
+    };
+  }
+
+  public async planFacets(
+    principal: QueryPrincipal,
+    request: import('../../analytics/api/dto/facets-request.dto.js').FacetsRequestDto,
+    correlationId?: string,
+  ): Promise<import('../../analytics/domain/facet.model.js').AuthorizedFacetsPlan> {
+    const queryId = crypto.randomUUID();
+    const startTime = new Date(request.time_range.start);
+    const endTime = new Date(request.time_range.end);
+
+    const diffDays = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays > this.config.maxTimeRangeDays) {
+      throw new TimeRangeExceededException(this.config.maxTimeRangeDays);
+    }
+
+    const scope = await this.authPort.resolveAuthorizedProjects(principal, request.projects);
+
+    const discoveryFilter: DiscoverSegmentsFilter = {
+      projects: scope.effectiveProjects,
+      environments: request.environments,
+      startTime,
+      endTime,
+      limit: this.config.maxSegmentsPerQuery + 1,
+    };
+
+    const discovery = await this.discoveryService.discoverSegments(
+      principal,
+      discoveryFilter,
+      correlationId,
+    );
+
+    const verifiedDescriptors = discovery.segments.filter((s) => s.integrityStatus === 'VERIFIED');
+
+    if (verifiedDescriptors.length > this.config.maxSegmentsPerQuery) {
+      throw new QueryBudgetExceededException(
+        `Facets query requires ${verifiedDescriptors.length} segments, exceeding the maximum budget limit of ${this.config.maxSegmentsPerQuery} segments. Narrow your time range or project filter.`,
+      );
+    }
+
+    const totalScannedBytes = verifiedDescriptors.reduce((acc, seg) => acc + seg.byteSize, 0);
+    if (totalScannedBytes > this.config.maxScannedBytesPerQuery) {
+      throw new QueryBudgetExceededException(
+        `Estimated scanned archive size of ${totalScannedBytes} bytes exceeds the resource budget ceiling of ${this.config.maxScannedBytesPerQuery} bytes.`,
+      );
+    }
+
+    return {
+      queryId,
+      tenantId: scope.tenantId,
+      authorizedProjects: scope.effectiveProjects,
+      environmentScopes: request.environments,
+      descriptors: verifiedDescriptors,
+      timeInterval: {
+        startInclusive: startTime.toISOString(),
+        endExclusive: endTime.toISOString(),
+      },
+      facetFields: request.facet_fields,
+      resourceBudget: {
+        maxSegments: this.config.maxSegmentsPerQuery,
+        maxScannedBytes: this.config.maxScannedBytesPerQuery,
+        timeoutMs: this.config.queryTimeoutMs,
+        memoryBudgetMb: this.config.duckDbMaxMemoryMb,
+      },
+    };
+  }
 }
