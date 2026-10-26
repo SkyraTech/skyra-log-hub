@@ -8,7 +8,9 @@ export type QueryAuditEventType =
   | 'CROSS_TENANT_REJECTED'
   | 'PATH_TRAVERSAL_ATTEMPT'
   | 'ARCHIVE_INTEGRITY_VIOLATION'
-  | 'DISCOVERY_COMPLETED';
+  | 'DISCOVERY_COMPLETED'
+  | 'QUERY_PLAN_CONSTRUCTED'
+  | 'QUERY_EXECUTED';
 
 export interface QueryAuditEvent {
   eventType: QueryAuditEventType;

@@ -32,6 +32,10 @@ export class QueryConfigService {
     const queryTimeoutMs = Number.parseInt(process.env['QUERY_TIMEOUT_MS'] ?? '30000', 10);
     const maxSegmentsPerQuery = Number.parseInt(process.env['MAX_SEGMENTS_PER_QUERY'] ?? '500', 10);
     const maxTimeRangeDays = Number.parseInt(process.env['MAX_TIME_RANGE_DAYS'] ?? '30', 10);
+    const maxScannedBytesPerQuery = Number.parseInt(process.env['MAX_SCANNED_BYTES_PER_QUERY'] ?? '524288000', 10); // 500MB
+    const duckDbMaxMemoryMb = Number.parseInt(process.env['DUCKDB_MAX_MEMORY_MB'] ?? '256', 10);
+    const duckDbThreads = Number.parseInt(process.env['DUCKDB_THREADS'] ?? '2', 10);
+    const maxRowsPerQuery = Number.parseInt(process.env['MAX_ROWS_PER_QUERY'] ?? '500', 10);
     const enableAuditLogging = process.env['ENABLE_AUDIT_LOGGING'] !== 'false';
     const rawCors = process.env['CORS_ORIGINS'] ?? '*';
     const corsOrigins = rawCors.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
@@ -50,6 +54,10 @@ export class QueryConfigService {
       queryTimeoutMs: isNaN(queryTimeoutMs) ? 30000 : queryTimeoutMs,
       maxSegmentsPerQuery: isNaN(maxSegmentsPerQuery) ? 500 : maxSegmentsPerQuery,
       maxTimeRangeDays: isNaN(maxTimeRangeDays) ? 30 : maxTimeRangeDays,
+      maxScannedBytesPerQuery: isNaN(maxScannedBytesPerQuery) ? 524288000 : maxScannedBytesPerQuery,
+      duckDbMaxMemoryMb: isNaN(duckDbMaxMemoryMb) ? 256 : duckDbMaxMemoryMb,
+      duckDbThreads: isNaN(duckDbThreads) ? 2 : duckDbThreads,
+      maxRowsPerQuery: isNaN(maxRowsPerQuery) ? 500 : maxRowsPerQuery,
       enableAuditLogging,
       corsOrigins: corsOrigins.length > 0 ? corsOrigins : ['*'],
       ...envOverride,
@@ -122,6 +130,22 @@ export class QueryConfigService {
 
   public get maxTimeRangeDays(): number {
     return this.config.maxTimeRangeDays;
+  }
+
+  public get maxScannedBytesPerQuery(): number {
+    return this.config.maxScannedBytesPerQuery;
+  }
+
+  public get duckDbMaxMemoryMb(): number {
+    return this.config.duckDbMaxMemoryMb;
+  }
+
+  public get duckDbThreads(): number {
+    return this.config.duckDbThreads;
+  }
+
+  public get maxRowsPerQuery(): number {
+    return this.config.maxRowsPerQuery;
   }
 
   public get enableAuditLogging(): boolean {

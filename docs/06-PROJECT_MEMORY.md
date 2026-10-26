@@ -517,7 +517,29 @@ Always start by reading this file, `05-PROJECT_TASKS.md`, relevant ADR and task 
     - 11 security & clean architecture boundary tests (`security-boundaries`, `architecture-boundaries`).
     - Live PostgreSQL integration verified against local database instance.
   - **Monorepo Invariant Verification:** All 45 contract tests pass (`pnpm test:contracts`); root `typecheck` and `build` scripts pass across all workspace packages and apps.
-- **Next Task:** `LOGHUB-QUERY-003` (DuckDB-Backed JSONL Querying & Structured Filters).
+- **Next Task:** `LOGHUB-QUERY-003` — COMPLETED (Secure DuckDB JSONL Query Execution, Structured Filtering & Resource Governance).
+
+### 2026-10-26 — LOGHUB-QUERY-003 — Secure DuckDB JSONL Query Execution, Structured Filtering & Resource Governance
+- **Status:** PASS (DuckDB Analytical Execution Layer Implemented; `@duckdb/node-api` Installed & Hardened; Clean Architecture Execution Port & Adapter Active; Parameterized SQL Generation with Double Defense-in-Depth Row-Level Tenant Isolation; Canonical ECS Field Allowlist Mapping Enforced; Structured Filter AST Compiler with Input Bounding; Query Resource Governor Active with Concurrency Ceilings, Queue Depth Limits, and Per-Tenant Fairness; True Interrupt Cancellation via `conn.interrupt()`; 90 Query Service Tests Passing (34 New); Zero Regressions Across Ingestion Gateway & Monorepo Contracts; Zero Unapproved DB Migrations).
+- **Key Deliverables & Invariants Verified:**
+  - **DuckDB Runtime Integration (`@duckdb/node-api` v2.0.0-r.1):** Installed modern DuckDB Node API and integrated in-memory analytical instance with hardened security flags: `autoinstall_known_extensions: 'false'`, `autoload_known_extensions: 'false'`, `max_memory: 256MB`, and bounded threads (2).
+  - **Clean Architecture Query Execution Port & Adapter:** Established domain port `ILogQueryExecutionPort` (`LOG_QUERY_EXECUTION_PORT`) and infrastructure adapter `DuckDbLogQueryAdapter`. Domain layer has zero framework/DuckDB dependencies, verified by Clean Architecture boundary tests (ARCH-1 through ARCH-6).
+  - **Secure Archive Access & Containment:** Analytical engine accepts only verified absolute paths from `TrustedArchiveSegmentDescriptor` objects, pre-verified through `PathSafetyService` (containment, realpath, no `..`, canonical naming) and `ManifestVerifierService` (SHA-256 and byte-size verification against authoritative `manifest.json`). Zero client-supplied file paths or globs.
+  - **Canonical ECS Field Mapping (`docs/query/10-CANONICAL_FIELD_MAPPING.md`):** Complete allowlist catalog resolving canonical ECS paths (`@timestamp`, `event.id`, `event.action`, `log.level`, `service.name`, `message`, `error.type`, `http.response.status_code`, etc.) and client aliases (`timestamp`, `event_id`, `action`, `level`, `service`, `status_code`). Arbitrary or unmapped fields are rejected with HTTP 400 Problem Details.
+  - **Structured Filter Compiler (`FilterCompilerService`):** Compiles client filters into typed ASTs (`binary`, `in`, `contains`, `exists`, `logical`). Enforces type safety (numeric validation, ISO8601 timestamps), operator compatibility, bounded array sizes (<= 100 items), bounded string lengths (<= 512 chars), and filter count ceiling (<= 15 filters).
+  - **Safe Parameterized SQL Generator (`SqlGeneratorService`):** Generates static DuckDB SQL using `read_ndjson_objects([$1, $2, ...])` and bound prepared statement parameters. Dynamic filter values and paths are never concatenated into SQL strings. Enforces double defense-in-depth row-level `skyra.tenant_id = $tenantId` and `skyra.project_id IN ($projects)`.
+  - **Deterministic Result Ordering:** Employs composite ORDER BY `json_extract_string(json, '$."@timestamp"') DESC, json_extract_string(json, '$.event.id') DESC`, providing a deterministic tie-breaker for keyset cursor pagination in QUERY-004.
+  - **Query Resource Governance (`QueryResourceGovernorService`):** Concurrency ceiling (max 4 concurrent queries), bounded queue (max 16), per-tenant fairness (max 2 active slots per tenant).
+  - **True Query Cancellation & Timeout:** Client abort signal or timeout budget fires registered interrupt handler calling `conn.interrupt()`, stopping in-flight DuckDB worker execution immediately and throwing `QueryCancelledException` or `QueryTimeoutException`.
+  - **Zero Regressions & Comprehensive Test Evidence:**
+    - 90 tests passing in `apps/query-service` (56 baseline + 34 new tests across unit, integration, and security suites).
+    - 10 real DuckDB execution tests (`duckdb-execution.test.ts`): single/multi segment scans, zero segments, Unicode preservation, missing optional fields, numeric comparisons, limit bounds, timeout interrupt, `AbortSignal` interrupt, concurrent execution.
+    - 4 real archive integration tests (`real-archive-query.test.ts`): real Phase 2 folder structure (`{tenant}/{project}/{environment}/{service}/{date}/segment-0000.jsonl` and `manifest.json`), planner, adapter, immutability check.
+    - 6 security & isolation tests (`query-isolation.test.ts`): SQL injection payload neutralisation, tenant isolation, cross-project injection rejection, oversized intervals, DuckDB extension load blocking.
+    - 45 monorepo contract tests passing (`tests/contracts/**/*.test.ts`).
+    - 120 ingestion gateway tests passing (`apps/ingestion-gateway`).
+    - 6 Clean Architecture boundary tests passing (`architecture-boundaries.test.ts`).
+- **Next Task:** `LOGHUB-QUERY-004` (Search API, Keyset Cursor Pagination & Contract Integration).
 
 
 

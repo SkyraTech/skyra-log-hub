@@ -35,6 +35,7 @@ describe('Ingestion Gateway Security Hardening Tests', () => {
     archiveDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skyra-security-arch-'));
     process.env['WAL_DIRECTORY'] = walDir;
     process.env['ARCHIVE_ROOT'] = archiveDir;
+    process.env['DATABASE_URL'] = 'postgresql://REPLACE_ME@127.0.0.1:5432/REPLACE_ME';
 
     const adapter = new FastifyAdapter({
       bodyLimit: 5 * 1024 * 1024,

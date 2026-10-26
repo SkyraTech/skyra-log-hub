@@ -90,19 +90,30 @@ To prevent Local File Inclusion (LFI) and path traversal attacks (`../../etc/pas
 - **Parameterized File Lists:** The list of candidate archive files is passed directly into DuckDB's `read_json_auto($1::VARCHAR[])` as a typed array parameter.
 - **Strict Filter AST Translation:** Structured filters from the client (`{ field: "service.name", operator: "eq", value: "auth" }`) are parsed into an Abstract Syntax Tree (AST). Only allowlisted canonical field paths and validated comparison operators are mapped to predefined DuckDB SQL expressions. Client strings are bound strictly as parameters.
 
-### 5.2 DuckDB Runtime Sandbox Settings
-Upon creating an in-memory DuckDB connection, the Query Service applies strict security settings:
-```sql
--- Disable arbitrary external file loading and extension installation
-SET enable_external_access = false;
-SET autoinstall_known_extensions = false;
-SET autoload_known_extensions = false;
+### 5.2 DuckDB Runtime Sandbox Settings & Least-Privilege Isolation (LOGHUB-QUERY-003)
 
--- Constrain memory and execution threads
-SET max_memory = '256MB';
-SET threads = 2;
-```
-Setting `enable_external_access = false` disables network I/O, HTTP/S3 remote file access, and extension downloads within DuckDB, restricting the engine exclusively to local files explicitly provided by the server.
+Empirical runtime verification during task LOGHUB-QUERY-003 confirmed that setting DuckDB's global `enable_external_access = false` completely blocks all file system access, including local JSONL file scans via `read_ndjson_objects` / `read_json_auto`, raising:
+`Permission Error: Cannot access file "..." - file system operations are disabled by configuration`.
+
+Because embedded DuckDB requires local filesystem access to scan authorized server archive segments, the Query Service enforces a verified **least-privilege runtime security profile**:
+
+1. **Extension Installation & Loading Blocked:**
+   - `autoinstall_known_extensions: 'false'`
+   - `autoload_known_extensions: 'false'`
+   DuckDB is strictly prohibited from dynamically downloading or auto-loading unverified community or remote extensions from the internet or local directories.
+2. **Resource Constraints:**
+   - `max_memory: '256MB'` (configurable via `DUCKDB_MAX_MEMORY_MB`)
+   - `threads: '2'` (configurable via `DUCKDB_THREADS`)
+3. **Application-Level Containment Gate (P0):**
+   - File paths are NEVER supplied by clients.
+   - All file paths originate exclusively from PostgreSQL catalog metadata (`archive_segments`).
+   - Prior to execution, `PathSafetyService` verifies canonical archive root containment, validates regex character allowlists, and enforces `fs.realpathSync` to eliminate symlink and junction redirection attacks.
+   - `ManifestVerifierService` computes SHA-256 digests and byte counts against authoritative manifests to guarantee files have not been tampered with or corrupted on disk.
+4. **Row-Level Double Defense-in-Depth:**
+   - Generated SQL injects parameterized row-level WHERE clauses: `json_extract_string(json, '$.skyra.tenant_id') = $P_tenant` and `json_extract_string(json, '$.skyra.project_id') IN ($P_projects)`.
+   - Even in the event of an internal metadata anomaly, DuckDB row filtering eliminates cross-tenant or cross-project data leakage.
+5. **Architectural Isolation Boundary:**
+   - Application-level path validation and parameter binding provide strict logical and filesystem containment. For multi-tenant hosting environments requiring full kernel-level blast-radius isolation, the Query Service can be deployed within read-only container volumes or OS-level sandboxes (e.g., Linux namespaces / seccomp).
 
 ---
 

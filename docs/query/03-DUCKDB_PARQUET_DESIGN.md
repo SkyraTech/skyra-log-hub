@@ -39,32 +39,32 @@ The Query Service initializes DuckDB in **in-memory mode** (`:memory:`):
 
 ## 3. Direct JSONL Scanning Strategy
 
-### 3.1 Function Invocation
-DuckDB scans JSONL segments using:
+### 3.1 Function Invocation & Verified Implementation (LOGHUB-QUERY-003)
+
+In task LOGHUB-QUERY-003, comprehensive integration testing revealed that using `read_json_auto` without explicit table binding can trigger `Binder Error: Referenced table "error" not found!` when querying optional ECS object hierarchies (such as `error` or `http`) across segments where those objects are completely absent.
+
+To provide robust, zero-binder-error querying across all valid ECS canonical variations, the Query Service implements `read_ndjson_objects([$1, $2, ...])` combined with `json_extract_string`:
+
 ```sql
 SELECT 
-  "@timestamp" AS event_time,
-  "event"."id" AS event_id,
-  "log"."level" AS log_level,
-  "message" AS message,
-  "service"."name" AS service_name,
-  "skyra"."tenant_id" AS tenant_id,
-  "skyra"."project_id" AS project_id
-FROM read_json_auto(
-  $1::VARCHAR[],
-  format='newline_delimited',
-  ignore_errors=false,
-  maximum_object_size=16777216
-)
-WHERE "skyra"."tenant_id" = $2
-  AND "skyra"."project_id" = ANY($3::VARCHAR[])
-  AND "@timestamp" >= $4::TIMESTAMP
-  AND "@timestamp" < $5::TIMESTAMP
+  json_extract_string(json, '$."@timestamp"') AS "@timestamp",
+  json_extract_string(json, '$.event.id') AS "event.id",
+  json
+FROM read_ndjson_objects([$1, $2, ...])
+WHERE json_extract_string(json, '$.skyra.tenant_id') = $P_tenant
+  AND json_extract_string(json, '$.skyra.project_id') IN ($P_projects)
+  AND json_extract_string(json, '$."@timestamp"') >= $P_start
+  AND json_extract_string(json, '$."@timestamp"') < $P_end
+  -- Filter AST predicates
+ORDER BY json_extract_string(json, '$."@timestamp"') DESC, json_extract_string(json, '$.event.id') DESC
+LIMIT $P_limit;
 ```
 
-### 3.2 Schema Projection & Optimization
-- DuckDB's `read_json_auto` automatically detects the schema of canonical JSONL. For deterministic performance, the Query Service supplies explicit column definitions (`columns={...}`) for top-level canonical fields (`@timestamp`, `event`, `log`, `message`, `service`, `trace`, `skyra`).
-- By declaring explicit column projections, DuckDB bypasses parsing JSON keys not referenced in the query, reducing deserialization CPU by up to 60%.
+### 3.2 Security & Parity Advantages
+1. **Zero Binder Errors on Optional Fields:** Missing optional objects (`error`, `http`, `user`, `labels`) evaluate cleanly to `NULL` rather than aborting query execution with DuckDB schema binder errors.
+2. **Byte-for-Byte Canonical Preservation:** The `json` column retains the exact original ingested and archived JSON string, ensuring zero timestamp drift or timezone conversion anomalies.
+3. **Double Defense-in-Depth:** In addition to strict pre-query segment authorization via `ArchiveDiscoveryService`, row-level predicates enforce `tenant_id` and `project_id` matching directly inside DuckDB.
+4. **Deterministic Tie-Breaker Ordering:** The composite sorting `(@timestamp DESC, event.id DESC)` ensures stable pagination ordering for task QUERY-004.
 
 ---
 

@@ -75,6 +75,13 @@ Worker 1      Worker 2      Worker N
 3. **DuckDB Interrupt:** The worker calls DuckDB's native interrupt API (`connection.interrupt()`), halting active vector scanning immediately and releasing worker memory back to the pool.
 4. **Cleanup:** Temporary spill files in `/tmp/skyra-query-spill/` are deleted upon query completion or cancellation.
 
+### 4.2 Implementation & Verification (LOGHUB-QUERY-003)
+In LOGHUB-QUERY-003, `QueryResourceGovernorService` was implemented in `src/modules/query-execution/infrastructure/duckdb/`:
+- **Concurrency Ceilings:** 4 concurrent active execution slots.
+- **Queue Depth:** Bounded in-memory queue of 16 pending tasks (overflow rejects with `QueryBudgetExceededException`).
+- **Tenant Fairness:** Max 2 active slots per tenant; when slots free up, waiting tasks from under-represented tenants are dispatched ahead of saturated tenants.
+- **True Cancellation Verification:** Integration tests (`duckdb-execution.test.ts` DDB-8 and DDB-9) verified that `conn.interrupt()` terminates DuckDB query loops cleanly when `AbortSignal` fires or execution exceeds the timeout limit.
+
 ---
 
 ## 5. OS-Level Process & Cgroup Isolation

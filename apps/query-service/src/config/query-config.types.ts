@@ -14,6 +14,10 @@ export interface QueryServiceConfig {
   queryTimeoutMs: number;
   maxSegmentsPerQuery: number;
   maxTimeRangeDays: number;
+  maxScannedBytesPerQuery: number;
+  duckDbMaxMemoryMb: number;
+  duckDbThreads: number;
+  maxRowsPerQuery: number;
   enableAuditLogging: boolean;
   corsOrigins: string[];
 }

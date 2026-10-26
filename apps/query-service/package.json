@@ -14,14 +14,15 @@
     "prisma:generate": "prisma generate"
   },
   "dependencies": {
+    "@duckdb/node-api": "^2.0.0-r.1",
     "@fastify/cors": "^9.0.1",
     "@nestjs/common": "^10.4.15",
     "@nestjs/core": "^10.4.15",
     "@nestjs/platform-fastify": "^10.4.15",
     "@prisma/client": "^5.22.0",
     "@skyra/logger-core": "workspace:*",
-    "@skyra/logger-node": "workspace:*",
     "@skyra/logger-nestjs": "workspace:*",
+    "@skyra/logger-node": "workspace:*",
     "fastify": "^4.28.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"

@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { ArchiveDiscoveryModule } from './modules/archive-discovery/archive-discovery.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { SearchModule } from './modules/search/search.module.js';
+import { QueryExecutionModule } from './modules/query-execution/query-execution.module.js';
 import { ProblemDetailsFilter } from './common/filters/problem-details.filter.js';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
 import { AuditLoggingInterceptor } from './common/interceptors/audit-logging.interceptor.js';
@@ -20,6 +21,7 @@ import { AuditLoggingInterceptor } from './common/interceptors/audit-logging.int
     ArchiveDiscoveryModule,
     HealthModule,
     SearchModule,
+    QueryExecutionModule,
   ],
   providers: [
     {

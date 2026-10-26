@@ -46,18 +46,27 @@ LOGHUB-QUERY-008 (Phase 3 Final Acceptance & Certification)
 - **Deliverables:** `contracts/query/v1/*`, `tests/contracts/query-contracts.test.ts`, `docs/query/*`.
 
 ### LOGHUB-QUERY-002: Query Service Foundation & Secure Archive Discovery
+- **Status:** Complete (PASS).
 - **Scope:**
   - Initialize `apps/query-service` with NestJS/Fastify.
   - Implement Pluggable Query Authentication Guard (`QueryAuthGuard`) and mock test principal.
   - Connect to read-only PostgreSQL metadata repository (`PrismaService`).
   - Implement `ArchiveDiscoveryService`: tenant/project scoping, date range filtering, path traversal defense, and symlink validation against `archive_segments`.
 - **Database Migrations:** None (reuses existing Phase 2 `archive_segments` table).
-- **Verification:** Discovery unit and integration tests across synthetic segment trees.
+- **Verification:** 56 automated tests passing across unit, integration, and security suites.
 
 ### LOGHUB-QUERY-003: DuckDB Execution & Structured Filters
+- **Status:** Complete (PASS).
 - **Scope:**
-  - Install `@duckdb/node-api` dependency in `apps/query-service`.
-  - Implement `DuckDbPoolService`: manages in-memory DuckDB connections with `max_memory` and `enable_external_access = false`.
+  - Install `@duckdb/node-api` dependency in `apps/query-service` with in-memory execution.
+  - Implement `DuckDbInstanceManager`: manages in-memory DuckDB connections with `max_memory: 256MB`, `threads: 2`, `autoinstall_known_extensions: false`, `autoload_known_extensions: false`.
+  - Implement Clean Architecture query execution port `ILogQueryExecutionPort` and adapter `DuckDbLogQueryAdapter`.
+  - Implement `FilterCompilerService`: compiles and bounds structured filters (`eq`, `in`, `contains`, `exists`, `gt`, `gte`, `lt`, `lte`) against canonical ECS allowlist (`docs/query/10-CANONICAL_FIELD_MAPPING.md`).
+  - Implement `SqlGeneratorService`: parameterized SQL generation using `read_ndjson_objects([$1, $2, ...])` and bound prepared statements with deterministic tie-breaking (`@timestamp DESC, event.id DESC`).
+  - Implement `QueryResourceGovernorService`: concurrency ceilings (4 slots), queue depth limits (16), tenant fairness, and true cancellation via `conn.interrupt()`.
+  - Implement `QueryPlannerService`: validates authorized project scope, discovers verified segments, enforces segment/byte limits, and constructs immutable `AuthorizedLogQueryPlan`.
+- **Database Migrations:** None (0 schema changes).
+- **Verification:** 90 automated query-service tests passing (34 new tests), 0 regressions.
   - Implement `FilterCompiler`: compiles allowlisted structured filter DSL into parameterized DuckDB SQL.
   - Implement full-text search translation over `message` using DuckDB string predicates.
 - **Database Migrations:** None.

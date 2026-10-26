@@ -116,3 +116,43 @@ export class NotImplementedException extends QueryDomainException {
     super(detail);
   }
 }
+
+export class QueryBudgetExceededException extends QueryDomainException {
+  public readonly status = 400;
+  public readonly code = 'QUERY_BUDGET_EXCEEDED';
+  public readonly title = 'Query Resource Budget Exceeded';
+
+  constructor(detail = 'Query exceeds resource governance budget.') {
+    super(detail);
+  }
+}
+
+export class QueryTimeoutException extends QueryDomainException {
+  public readonly status = 504;
+  public readonly code = 'QUERY_TIMEOUT';
+  public readonly title = 'Query Execution Timeout';
+
+  constructor(detail = 'Analytical query exceeded maximum allotted execution duration.') {
+    super(detail);
+  }
+}
+
+export class QueryCancelledException extends QueryDomainException {
+  public readonly status = 400;
+  public readonly code = 'QUERY_CANCELLED';
+  public readonly title = 'Query Execution Cancelled';
+
+  constructor(detail = 'Analytical query was cancelled by client abort signal.') {
+    super(detail);
+  }
+}
+
+export class DuckDbUnavailableException extends QueryDomainException {
+  public readonly status = 503;
+  public readonly code = 'ANALYTICAL_ENGINE_UNAVAILABLE';
+  public readonly title = 'Analytical Query Engine Unavailable';
+
+  constructor(detail = 'DuckDB execution engine is currently unreachable or disconnected.') {
+    super(detail);
+  }
+}

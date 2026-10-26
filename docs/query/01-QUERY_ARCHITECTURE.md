@@ -83,13 +83,15 @@ The Query Service is decomposed into clean, single-responsibility modules:
 
 | Module | Responsibility | Trust Boundary |
 |---|---|---|
-| **QueryAuthModule** | Validates user/developer Bearer tokens, resolves tenant membership, queries PostgreSQL for allowed projects and environments. | Edge authentication boundary |
+| **QueryAuthModule** | Validates user/developer Bearer tokens, resolves tenant membership, queries PostgreSQL for allowed projects and environments (`ProjectAuthorizationService`). | Edge authentication boundary |
 | **ArchiveDiscoveryModule** | Queries PostgreSQL `archive_segments` catalog, matches requested time ranges, verifies `.manifest.json` integrity, generates safe server-owned file lists. | Storage discovery boundary |
-| **QueryPlannerModule** | Parses AST filters, validates fields against `CANONICAL_FIELD_ALLOWLIST`, maps operators, computes query fingerprints, handles cursor decoding. | Logical planning boundary |
-| **DuckDbEngineModule** | Manages DuckDB connection pools, configures `max_memory` and `threads`, executes parameterized SQL against selected file lists, manages timeouts and cancellations. | Analytical execution boundary |
-| **AggregationModule** | Translates date histogram, terms, and cardinality requests into optimized DuckDB GROUP BY queries with interval alignment. | Analytical computation boundary |
-| **CursorManagerModule** | Generates and verifies HMAC-SHA256 signed pagination tokens bound to query fingerprints, timestamps, and tenant IDs. | Pagination security boundary |
-| **ResourceGovernorModule** | Enforces per-tenant query concurrency, global queue depth, max execution time, and scanned byte thresholds. | Operational protection boundary |
+| **QueryExecutionModule** | Orchestrates query planning, filter compilation, SQL generation, resource governance, and analytical execution (`ILogQueryExecutionPort`). | Application execution boundary |
+| **FilterCompilerService** | Validates structured client filters against `CANONICAL_FIELD_CATALOG`, validates types and operator compatibility, bounds string lengths (<= 512) and array sizes (<= 100), and emits typed AST. | Validation & parsing boundary |
+| **SqlGeneratorService** | Translates authorized query plans and filter ASTs into parameterized DuckDB SQL using `read_ndjson_objects([$1, ...])` with row-level tenant WHERE clauses and deterministic tie-breaker sorting. | SQL generation boundary |
+| **DuckDbEngine (Infrastructure)** | Manages in-memory DuckDB connection lifecycle (`DuckDbInstanceManager`), hardened with `autoinstall_known_extensions: false`, `autoload_known_extensions: false`, 256MB memory, and 2 threads. | Analytical execution boundary |
+| **QueryResourceGovernorService** | Enforces 4 concurrent execution slots, max 16 queue depth, tenant fairness, and native `conn.interrupt()` cancellation on timeout or abort signal. | Operational protection boundary |
+| **CursorManagerModule** | Generates and verifies HMAC-SHA256 signed pagination tokens bound to query fingerprints, timestamps, and tenant IDs (scheduled for QUERY-004). | Pagination security boundary |
+| **AggregationModule** | Translates date histogram, terms, and cardinality requests into optimized DuckDB GROUP BY queries with interval alignment (scheduled for QUERY-005). | Analytical computation boundary |
 
 ---
 
