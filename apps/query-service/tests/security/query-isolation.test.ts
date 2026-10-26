@@ -173,7 +173,7 @@ describe('Query Security & Tenant Isolation Tests (LOGHUB-QUERY-003 / P0)', () =
     }
   });
 
-  it('SEC-2: Tenant A query must NEVER return Tenant B events even when descriptors from Tenant B are maliciously injected', async () => {
+  it('SEC-2: Tenant A query must REJECT Tenant B descriptors BEFORE opening files (Pre-read Tenant Isolation / P0-A)', async () => {
     // Maliciously inject Tenant B's segment descriptor into Tenant A's query plan
     const descA = makeDescriptor(tenantAFile, 'seg-a', tenantA, 'finance');
     const descB = makeDescriptor(tenantBFile, 'seg-b', tenantB, 'finance');
@@ -198,17 +198,18 @@ describe('Query Security & Tenant Isolation Tests (LOGHUB-QUERY-003 / P0)', () =
       },
     };
 
-    const result = await adapter.execute(plan);
-
-    // Verify all returned events belong strictly to Tenant A
-    assert.equal(result.events.length, 2);
-    for (const event of result.events) {
-      assert.equal(event.skyra.tenant_id, tenantA);
-      assert.notEqual(event.message, 'Tenant B Top Secret Healthcare Record');
-    }
+    // Pre-read gate MUST reject before DuckDB opens or executes any file
+    await assert.rejects(
+      async () => adapter.execute(plan),
+      (err: unknown) => {
+        assert.ok(err instanceof CrossTenantViolationException);
+        assert.ok((err as CrossTenantViolationException).message.includes('Pre-read isolation violation'));
+        return true;
+      },
+    );
   });
 
-  it('SEC-3: Cross-project descriptor injection is blocked by project-level row containment', async () => {
+  it('SEC-3: Cross-project descriptor injection is REJECTED before execution (Pre-read Project Isolation / P0-A)', async () => {
     const descA = makeDescriptor(tenantAFile, 'seg-a', tenantA, 'finance');
 
     const plan: AuthorizedLogQueryPlan = {
@@ -231,9 +232,15 @@ describe('Query Security & Tenant Isolation Tests (LOGHUB-QUERY-003 / P0)', () =
       },
     };
 
-    const result = await adapter.execute(plan);
-    // Since row contains project_id = 'finance', it is filtered out
-    assert.equal(result.events.length, 0);
+    // Pre-read gate MUST reject before DuckDB opens or executes any file
+    await assert.rejects(
+      async () => adapter.execute(plan),
+      (err: unknown) => {
+        assert.ok(err instanceof ForbiddenProjectException);
+        assert.ok((err as ForbiddenProjectException).message.includes('Pre-read isolation violation'));
+        return true;
+      },
+    );
   });
 
   it('SEC-4: Query planner rejects unauthorized project requests fail-closed', async () => {

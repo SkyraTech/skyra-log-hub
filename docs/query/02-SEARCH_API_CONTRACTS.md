@@ -292,3 +292,11 @@ Standard Error Codes:
 - `TIME_RANGE_TOO_LARGE` (400): Requested interval exceeds configured maximum (e.g. 30 days).
 - `RESOURCE_EXHAUSTED` (429): Concurrent query queue saturated or memory budget exceeded.
 - `QUERY_TIMEOUT` (504): Query cancelled after exceeding deadline.
+
+---
+
+## 5. Implementation Status as of LOGHUB-QUERY-004
+
+- **`POST /query/v1/logs/search`:** Fully implemented and operational. Validates requests against `search-request.schema.json` via `SearchValidationPipe`. Enforces P0-A pre-read tenant isolation before opening files. Implements P0-B 4-part composite keyset pagination `(@timestamp, event.id, segment_id, record_offset)` with HMAC-SHA256 signed cursors (`CursorCodecService`).
+- **`GET /query/v1/logs/{eventId}`:** Fully implemented and operational. Performs bounded point lookup scoped to authorized `projectId` query parameter. Validates UUIDv4 format via `EventLookupValidationPipe`.
+- **`POST /query/v1/logs/aggregate` & `POST /query/v1/logs/facets`:** Explicitly deferred until LOGHUB-QUERY-005. Both POST and GET routes return HTTP 501 Not Implemented RFC 7807 problem details to prevent fabricated analytical results.

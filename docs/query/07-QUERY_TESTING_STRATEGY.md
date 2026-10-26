@@ -74,3 +74,32 @@ To ensure tests are completely reproducible without external database dependenci
 1. **In-Memory PostgreSQL Fixture:** Integration tests utilize an ephemeral PostgreSQL instance or mock repository matching Prisma schemas.
 2. **Synthetic Archive Segments:** Test suites generate synthetic JSONL and Parquet segments in a temporary test directory (`/tmp/skyra-test-archive-<uuid>`) using Phase 1 ECS canonical schemas.
 3. **No External Network Dependencies:** All tests run strictly offline.
+
+---
+
+## 4. Query Service Test Suite Inventory (LOGHUB-QUERY-004 Verified)
+
+As of LOGHUB-QUERY-004, `apps/query-service` contains **116 automated tests across 19 suites** (100% passing, 0 failing, 0 skipped):
+
+| Category | Suite File | Tests | Focus Area |
+| :--- | :--- | :--- | :--- |
+| **Search API** | `tests/integration/search-api.test.ts` | 9 | `POST /query/v1/logs/search`, keyset pagination, tenant isolation, `GET /query/v1/logs/:eventId`, 501 stubs |
+| **Cursor Codec** | `tests/unit/search/cursor-codec.test.ts` | 7 | HMAC-SHA256 signing, constant-time verification, tampering, expiration, query fingerprinting |
+| **Validation** | `tests/unit/search/search-validation-pipe.test.ts` | 9 | Schema Draft 2020-12 validation, unknown fields, bad UTC, malicious injection payloads |
+| **SQL Generator** | `tests/unit/query-execution/sql-generator.test.ts` | 6 | 4-part composite locator ordering, window functions, keyset SQL, parameters |
+| **DuckDB Execution** | `tests/integration/duckdb-execution.test.ts` | 10 | DuckDB scans, limits, cancellation interrupts, timeouts, resource controls |
+| **Archive Integration**| `tests/integration/real-archive-query.test.ts` | 4 | Real Phase 2 archive folder structure, catalog matching, manifest verification |
+| **Query Isolation** | `tests/security/query-isolation.test.ts` | 6 | SQL injection defense, pre-read tenant isolation, foreign descriptor rejection |
+| **Architecture** | `tests/security/architecture-boundaries.test.ts` | 6 | Clean Architecture boundaries, controller thinness (<=120 lines), no raw SQL |
+| **Security** | `tests/security/security-boundaries.test.ts` | 5 | Bearer token validation, cross-tenant rejection, path traversal rejection |
+| **HTTP & Contracts** | `tests/integration/query-http.test.ts` | 14 | Discovery endpoints, correlation headers, RFC 7807 problem details, HTTP error mapping |
+| **Archive Integrity** | `tests/integration/archive-integrity.test.ts` | 1 | SHA-256 manifest mismatch detection and corruption rejection |
+| **Config** | `tests/unit/config/query-config.test.ts` | 5 | Fail-fast config validation, secret validation, defaults |
+| **Auth** | `tests/unit/auth/jwt-verification.test.ts` | 7 | HS256/RS256/EdDSA JWT verification, expired tokens, invalid signatures |
+| **Authorization** | `tests/unit/auth/project-authorization.test.ts` | 7 | Project intersection, wildcard access, empty grant rejection |
+| **Path Safety** | `tests/unit/archive/path-safety.test.ts` | 7 | Traversal defense, date regex validation, canonical root containment |
+| **Manifest** | `tests/unit/archive/manifest-verifier.test.ts` | 4 | SHA-256 verification against JSON manifests, byte count checks |
+| **Discovery** | `tests/unit/archive/archive-discovery.test.ts` | 4 | Time range filtering, project scoping, sanitized DTO mapping |
+| **Filter Compiler** | `tests/unit/query-execution/filter-compiler.test.ts` | 3 | AST compilation, type validation, comparison operators |
+| **Resource Governor** | `tests/unit/query-execution/query-resource-governor.test.ts` | 2 | Concurrency limits, bounded queue, per-tenant fair scheduling |
+| **Total** | **19 Suites** | **116** | **100% Pass Rate (0 Failed, 0 Skipped)** |

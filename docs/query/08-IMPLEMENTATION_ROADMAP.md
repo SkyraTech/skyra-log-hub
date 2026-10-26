@@ -73,13 +73,17 @@ LOGHUB-QUERY-008 (Phase 3 Final Acceptance & Certification)
 - **Verification:** Unit tests for filter AST generation and SQL injection defense.
 
 ### LOGHUB-QUERY-004: Search API, Keyset Cursor Pagination & Validation
-- **Scope:**
-  - Implement `POST /query/v1/logs/search` and `GET /query/v1/logs/{eventId}`.
-  - Implement `CursorCodecService`: HMAC-SHA256 signer and parser for keyset pagination cursors.
-  - Integrate request validation against `search-request.schema.json`.
-  - Wire search execution, keyset SQL clauses, and archive watermark calculation.
-- **Database Migrations:** None.
-- **Verification:** Pagination stability tests, cursor tampering rejection tests.
+- **Status:** Complete (PASS).
+- **Scope & Deliverables:**
+  - Implemented `POST /query/v1/logs/search` and `GET /query/v1/logs/{eventId}` in `SearchController`.
+  - Resolved QUERY-003 acceptance issues: P0-A Pre-Read Tenant Isolation Gate, P0-B 4-Part Composite Keyset Pagination `(@timestamp, event.id, segment_id, record_offset)`, and P0-C Test-Count Reconciliation.
+  - Implemented `CursorCodecService`: HMAC-SHA256 authenticated opaque base64url cursor with constant-time `crypto.timingSafeEqual`, query fingerprinting, tenant binding, and key rotation support.
+  - Implemented `SearchValidationPipe` enforcing `contracts/query/v1/search-request.schema.json` via Ajv (Draft 2020-12).
+  - Implemented `EventLookupValidationPipe` validating UUIDv4 and project scoping.
+  - Kept deferred endpoints (`aggregate`, `facets`) strictly returning HTTP 501 Problem Details.
+  - Thin controller (86 lines) adhering to Clean Architecture with zero direct Prisma/SQL dependencies.
+- **Database Migrations:** None (0 schema changes).
+- **Verification:** 116 automated query-service tests passing across 19 suites (26 new tests), 0 failing, 0 skipped. Zero regressions in contracts (45) or ingestion gateway (120).
 
 ### LOGHUB-QUERY-005: Aggregations, Facets & Date Histograms
 - **Scope:**

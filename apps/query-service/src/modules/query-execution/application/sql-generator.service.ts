@@ -33,7 +33,7 @@ export class SqlGeneratorService {
     // 1. Source tables (files)
     if (plan.descriptors.length === 0) {
       return {
-        sql: 'SELECT CAST(NULL AS VARCHAR) AS "@timestamp", CAST(NULL AS VARCHAR) AS "event.id", CAST(NULL AS VARCHAR) AS json WHERE 1 = 0',
+        sql: 'SELECT CAST(NULL AS VARCHAR) AS "@timestamp", CAST(NULL AS VARCHAR) AS "event.id", CAST(NULL AS VARCHAR) AS "segment_id", CAST(NULL AS BIGINT) AS "record_offset", CAST(NULL AS VARCHAR) AS json WHERE 1 = 0',
         parameters: [],
         fileCount: 0,
         limit: 0,
@@ -47,7 +47,15 @@ export class SqlGeneratorService {
       fileParams.push(nextParam(normalizedPath));
     }
 
-    const fromClause = `read_ndjson_objects([${fileParams.join(', ')}])`;
+    const fromClause = `(
+      SELECT
+        json_extract_string(json, '$."@timestamp"') AS "@timestamp",
+        json_extract_string(json, '$.event.id') AS "event.id",
+        regexp_extract(filename, '([^/\\\\]+)$', 1) AS "segment_id",
+        CAST(row_number() OVER (PARTITION BY filename) - 1 AS BIGINT) AS "record_offset",
+        json
+      FROM read_ndjson_objects([${fileParams.join(', ')}], filename=true)
+    )`;
 
     // 2. WHERE clauses
     const whereClauses: string[] = [];
@@ -87,18 +95,37 @@ export class SqlGeneratorService {
       }
     }
 
+    // Keyset pagination continuation using full 4-part stable tuple
+    if (plan.cursorPosition) {
+      const cTs = nextParam(plan.cursorPosition.timestamp);
+      const cEid = nextParam(plan.cursorPosition.eventId);
+      const cSeg = nextParam(plan.cursorPosition.segmentId);
+      const cOffset = nextParam(BigInt(plan.cursorPosition.recordOffset));
+
+      if (plan.sort.direction === 'asc') {
+        whereClauses.push(
+          `("@timestamp" > ${cTs} OR ("@timestamp" = ${cTs} AND "event.id" > ${cEid}) OR ("@timestamp" = ${cTs} AND "event.id" = ${cEid} AND "segment_id" > ${cSeg}) OR ("@timestamp" = ${cTs} AND "event.id" = ${cEid} AND "segment_id" = ${cSeg} AND "record_offset" > ${cOffset}))`,
+        );
+      } else {
+        whereClauses.push(
+          `("@timestamp" < ${cTs} OR ("@timestamp" = ${cTs} AND "event.id" < ${cEid}) OR ("@timestamp" = ${cTs} AND "event.id" = ${cEid} AND "segment_id" < ${cSeg}) OR ("@timestamp" = ${cTs} AND "event.id" = ${cEid} AND "segment_id" = ${cSeg} AND "record_offset" < ${cOffset}))`,
+        );
+      }
+    }
+
     const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
-    // 3. ORDER BY with deterministic tie-breaker
+    // 3. ORDER BY with deterministic total ordering
     const direction = plan.sort.direction === 'asc' ? 'ASC' : 'DESC';
-    const orderByClause = `ORDER BY json_extract_string(json, '$."@timestamp"') ${direction}, json_extract_string(json, '$.event.id') ${direction}`;
+    const orderByClause = `ORDER BY "@timestamp" ${direction}, "event.id" ${direction}, "segment_id" ${direction}, "record_offset" ${direction}`;
 
     // 4. LIMIT
-    const effectiveLimit = Math.min(plan.limit, plan.resourceBudget.maxRows);
+    const baseLimit = plan.fetchExtraRow ? plan.limit + 1 : plan.limit;
+    const effectiveLimit = Math.min(baseLimit, plan.resourceBudget.maxRows + (plan.fetchExtraRow ? 1 : 0));
     const limitParam = nextParam(BigInt(effectiveLimit));
     const limitClause = `LIMIT ${limitParam}`;
 
-    const sql = `SELECT json_extract_string(json, '$."@timestamp"') AS "@timestamp", json_extract_string(json, '$.event.id') AS "event.id", json FROM ${fromClause} ${whereClause} ${orderByClause} ${limitClause}`;
+    const sql = `SELECT "@timestamp", "event.id", "segment_id", "record_offset", json FROM ${fromClause} AS raw_records ${whereClause} ${orderByClause} ${limitClause}`;
 
     return {
       sql,

@@ -10,7 +10,10 @@ export type QueryAuditEventType =
   | 'ARCHIVE_INTEGRITY_VIOLATION'
   | 'DISCOVERY_COMPLETED'
   | 'QUERY_PLAN_CONSTRUCTED'
-  | 'QUERY_EXECUTED';
+  | 'QUERY_EXECUTED'
+  | 'SEARCH_EXECUTED'
+  | 'EVENT_LOOKUP'
+  | 'CURSOR_TAMPERED';
 
 export interface QueryAuditEvent {
   eventType: QueryAuditEventType;

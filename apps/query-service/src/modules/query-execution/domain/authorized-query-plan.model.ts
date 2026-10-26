@@ -22,6 +22,13 @@ export const DEFAULT_QUERY_RESOURCE_BUDGET: QueryResourceBudget = {
   memoryBudgetMb: 256,
 };
 
+export interface StableCursorPosition {
+  readonly timestamp: string;
+  readonly eventId: string;
+  readonly segmentId: string;
+  readonly recordOffset: number;
+}
+
 export interface AuthorizedLogQueryPlan {
   readonly queryId: string;
   readonly tenantId: string;
@@ -36,6 +43,9 @@ export interface AuthorizedLogQueryPlan {
   readonly sort: QuerySortSpecification;
   readonly limit: number;
   readonly resourceBudget: QueryResourceBudget;
+  readonly cursorPosition?: StableCursorPosition;
+  readonly fetchExtraRow?: boolean;
   readonly correlationId?: string;
   readonly actorId?: string;
 }
+

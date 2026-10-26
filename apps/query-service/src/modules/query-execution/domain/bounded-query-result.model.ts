@@ -80,4 +80,12 @@ export interface BoundedLogQueryResult {
   };
   readonly truncated: boolean;
   readonly tieBreakerApplied: boolean;
+  readonly hasMore?: boolean;
+  readonly lastPosition?: {
+    readonly timestamp: string;
+    readonly eventId: string;
+    readonly segmentId: string;
+    readonly recordOffset: number;
+  };
 }
+

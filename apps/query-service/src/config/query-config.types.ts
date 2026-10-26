@@ -20,4 +20,7 @@ export interface QueryServiceConfig {
   maxRowsPerQuery: number;
   enableAuditLogging: boolean;
   corsOrigins: string[];
+  cursorSigningSecret: string;
+  cursorSigningKeyId: string;
+  cursorTtlMs: number;
 }

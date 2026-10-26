@@ -40,13 +40,14 @@ Traditional `OFFSET` / `LIMIT` pagination in distributed or file-based analytica
 - $O(N)$ execution cost: Scanning through 1,000,000 events to read page 1,000 requires parsing and discarding all 1,000,000 preceding events.
 - Duplicate and skipped records: If new segments are published while a user paginates, offsets shift, causing records to appear twice or vanish completely.
 
-### 2.2 Composite Deterministic Sort Key
-To guarantee 100% deterministic, non-shifting pagination, the Query Service orders results by a composite key:
-1. **Primary Sort Key:** `@timestamp` (`TIMESTAMP WITH TIME ZONE`).
-2. **Secondary Tie-Breaker:** `event.id` (UUIDv7 string).
-3. **Tertiary Tie-Breaker:** Segment internal record offset (integer).
+### 2.2 4-Part Composite Deterministic Sort Locator (LOGHUB-QUERY-004 P0-B)
+To guarantee 100% deterministic, non-shifting pagination even in the presence of identical timestamps or duplicate event IDs, the Query Service orders results by a 4-part composite locator tuple:
+1. **Primary Sort Key:** `@timestamp` (ISO 8601 UTC timestamp).
+2. **Secondary Tie-Breaker:** `event.id` (UUIDv4/UUIDv7 string).
+3. **Tertiary Tie-Breaker:** `segment_id` (Physical archive segment filename, extracted via DuckDB `regexp_extract(filename, '([^/\\\\]+)$', 1)`).
+4. **Quaternary Tie-Breaker:** `record_offset` (Physical 0-indexed line ordinal within the segment, derived via DuckDB window function `row_number() OVER (PARTITION BY filename) - 1`).
 
-Because `event.id` is generated using UUIDv7 (which is time-ordered and contains 74 bits of cryptographically strong randomness), the tuple `(@timestamp, event.id)` is globally unique across the entire platform.
+This 4-tuple `(@timestamp, event.id, segment_id, record_offset)` is strictly unique across all files, gateway restarts, and catalog scans.
 
 ---
 
@@ -59,37 +60,45 @@ Pagination cursors returned to the client are base64url-encoded, HMAC-SHA256 aut
 ```typescript
 export interface QueryCursorPayload {
   version: 1;
-  query_hash: string;       // SHA-256 of canonicalized query parameters (prevents reuse across different filters)
-  tenant_id: string;        // Tenant scope boundary
-  projects: string[];       // Project scope boundary
+  query_fingerprint: string;    // SHA-256 of canonicalized query parameters (binds filters)
+  tenant_id: string;            // Tenant scope boundary
+  authorized_projects: string[];// Project scope boundary
   sort_order: 'asc' | 'desc';
-  last_timestamp: string;   // ISO 8601 UTC timestamp of last item on current page
-  last_event_id: string;    // UUIDv7 of last item on current page
-  created_at: number;       // Unix epoch seconds
-  expires_at: number;       // Unix epoch seconds (TTL: 1 hour)
-  signature: string;        // HMAC-SHA256(payload_bytes, SERVER_CURSOR_SECRET)
+  position: {
+    timestamp: string;          // ISO 8601 UTC timestamp
+    event_id: string;           // Event ID
+    segment_id: string;         // Segment filename
+    record_offset: number;      // 0-indexed record ordinal within segment
+  };
+  created_at: number;           // Unix epoch ms
+  expires_at: number;           // Unix epoch ms (TTL: 24 hours)
+  key_id?: string;              // Signing key identifier for rotation
+  signature: string;            // HMAC-SHA256(payload_bytes, SERVER_CURSOR_SECRET)
 }
 ```
 
 ### 3.2 Security & Integrity Controls
-- **Tamper-Proof:** Any modification to `last_timestamp`, `tenant_id`, or `projects` invalidates the HMAC signature, causing the query to fail with `400 Bad Request` (`INVALID_CURSOR`).
-- **Filter Binding:** The cursor embeds `query_hash` computed over the normalized search filters. If a client attempts to use a cursor generated for `log.level = 'error'` on a subsequent query for `log.level = 'info'`, the server detects the mismatch and rejects the cursor.
-- **Tenant & Scope Binding:** If a principal attempts to replay a cursor belonging to another tenant or project, the server denies access.
-- **Bounded Expiration:** Cursors expire after 1 hour (`expires_at`), preventing stale cursor accumulation and ensuring users query fresh catalog states.
+- **Tamper-Proof:** Any modification to position tuple, tenant ID, or projects invalidates the HMAC signature, causing the query to fail with `400 Bad Request` (`INVALID_CURSOR`).
+- **Filter Binding:** The cursor embeds `query_fingerprint` computed over the normalized search filters. If a client attempts to use a cursor generated for `log.level = 'error'` on a subsequent query for `log.level = 'info'`, the server detects the mismatch and rejects the cursor (`CURSOR_QUERY_MISMATCH`).
+- **Tenant & Scope Binding:** If a principal attempts to replay a cursor belonging to another tenant or project, the server denies access (`CROSS_TENANT_CURSOR_REPLAY`).
+- **Bounded Expiration:** Cursors expire after 24 hours (`expires_at`), preventing stale cursor accumulation and ensuring users query fresh catalog states.
+- **Constant-Time Verification:** Signatures are compared using `crypto.timingSafeEqual` to avoid timing side channels.
 
 ---
 
 ## 4. Keyset SQL Execution Mechanics
 
-When a valid cursor is provided, the Query Planner translates `(last_timestamp, last_event_id)` into DuckDB inequality predicates:
+When a valid cursor is provided, the SQL generator translates the 4-part position tuple into DuckDB inequality predicates:
 
 ### For Descending Sort (`order = 'desc'`):
 ```sql
 WHERE (
   "@timestamp" < $last_timestamp
-  OR ("@timestamp" = $last_timestamp AND "event"."id" < $last_event_id)
+  OR ("@timestamp" = $last_timestamp AND "event.id" < $last_event_id)
+  OR ("@timestamp" = $last_timestamp AND "event.id" = $last_event_id AND "segment_id" < $last_segment_id)
+  OR ("@timestamp" = $last_timestamp AND "event.id" = $last_event_id AND "segment_id" = $last_segment_id AND "record_offset" < $last_record_offset)
 )
-ORDER BY "@timestamp" DESC, "event"."id" DESC
+ORDER BY "@timestamp" DESC, "event.id" DESC, "segment_id" DESC, "record_offset" DESC
 LIMIT $page_size + 1;
 ```
 
@@ -97,15 +106,17 @@ LIMIT $page_size + 1;
 ```sql
 WHERE (
   "@timestamp" > $last_timestamp
-  OR ("@timestamp" = $last_timestamp AND "event"."id" > $last_event_id)
+  OR ("@timestamp" = $last_timestamp AND "event.id" > $last_event_id)
+  OR ("@timestamp" = $last_timestamp AND "event.id" = $last_event_id AND "segment_id" > $last_segment_id)
+  OR ("@timestamp" = $last_timestamp AND "event.id" = $last_event_id AND "segment_id" = $last_segment_id AND "record_offset" > $last_record_offset)
 )
-ORDER BY "@timestamp" ASC, "event"."id" ASC
+ORDER BY "@timestamp" ASC, "event.id" ASC, "segment_id" ASC, "record_offset" ASC
 LIMIT $page_size + 1;
 ```
 
 ### Next Page Determination:
-The engine requests `page_size + 1` rows.
-- If $N + 1$ rows are returned: `has_more = true`, the $N$-th row supplies `(last_timestamp, last_event_id)` for the next cursor, and the $(N+1)$-th row is omitted from the response.
+The engine requests `page_size + 1` rows (`fetchExtraRow: true`).
+- If $N + 1$ rows are returned: `has_more = true`, the $N$-th row supplies `(timestamp, event_id, segment_id, record_offset)` for the next cursor, and the $(N+1)$-th row is trimmed from the response.
 - If $\le N$ rows are returned: `has_more = false`, and `next_cursor = null`.
 
 This approach provides $O(1)$ cursor advancement without scanning previous pages.

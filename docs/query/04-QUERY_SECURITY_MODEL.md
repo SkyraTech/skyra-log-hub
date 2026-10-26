@@ -124,3 +124,27 @@ Because embedded DuckDB requires local filesystem access to scan authorized serv
    - Matched event count, execution duration, scanned bytes.
    - Hash of query criteria (excluding sensitive parameter values where appropriate).
 2. **Field-Level Redaction:** Where canonical log events contain sensitive information (PII, authorization headers, passwords), SDKs in Phase 1 already applied canonical redaction. In Phase 3, the Query Service respects field masking configurations based on principal role (e.g. masking user emails for `viewer` roles while exposing them to `analyst` or `admin`).
+
+---
+
+## 7. Pre-Read Tenant Isolation Boundary (LOGHUB-QUERY-004 P0-A)
+
+SQL row-level filtering alone is insufficient to protect local filesystem access. In `DuckDbLogQueryAdapter`, an application-level security gate validates all `TrustedArchiveSegmentDescriptor` objects **before** any path is registered or DuckDB prepares any query plan:
+
+1. **Tenant Ownership Verification:** `descriptor.tenantId === plan.tenantId` is strictly asserted. Any foreign tenant descriptor immediately throws `CrossTenantViolationException` (HTTP 403).
+2. **Authorized Project Scoping:** `plan.authorizedProjects.includes(descriptor.projectId)` is strictly asserted. Any descriptor outside authorized project scope throws `ForbiddenProjectException` (HTTP 403).
+3. **Integrity Status Verification:** `descriptor.integrityStatus === 'VERIFIED'` is required. Corrupt or unverified segments are rejected before execution.
+4. **Physical Identity & Existence:** `path.isAbsolute(descriptor.resolvedPath)` and `fs.existsSync(descriptor.resolvedPath)` ensure the file exists at its verified physical location.
+5. **Byte Size Invariant:** `fs.statSync(descriptor.resolvedPath).size === descriptor.byteSize` ensures the file has not been replaced or appended to post-finalization.
+
+Unauthorized archive files are **never opened** by DuckDB, providing complete isolation before read.
+
+---
+
+## 8. Cryptographic Signed Cursor Security (LOGHUB-QUERY-004)
+
+Pagination state is protected using HMAC-SHA256 authenticated opaque base64url cursors:
+- **Canonical Query Fingerprinting:** The SHA-256 digest of canonicalized search parameters is embedded within the cursor payload. Any attempt to modify time ranges, projects, environments, log levels, search strings, or structured filters invalidates the cursor.
+- **Scope & Tenant Binding:** The authenticated `tenant_id` and authorized `projects` are permanently bound to the cursor. Cross-tenant or cross-project replay is rejected.
+- **Constant-Time Verification:** Signature comparison uses `crypto.timingSafeEqual` to eliminate timing side-channel attacks.
+- **Fail-Closed Secrets:** In production, missing or default signing secrets (`REPLACE_ME_...`) cause immediate application startup failure.

@@ -82,6 +82,13 @@ In LOGHUB-QUERY-003, `QueryResourceGovernorService` was implemented in `src/modu
 - **Tenant Fairness:** Max 2 active slots per tenant; when slots free up, waiting tasks from under-represented tenants are dispatched ahead of saturated tenants.
 - **True Cancellation Verification:** Integration tests (`duckdb-execution.test.ts` DDB-8 and DDB-9) verified that `conn.interrupt()` terminates DuckDB query loops cleanly when `AbortSignal` fires or execution exceeds the timeout limit.
 
+### 4.3 Search API Resource Controls (LOGHUB-QUERY-004)
+In LOGHUB-QUERY-004, additional resource governance controls were added across the HTTP API layer:
+- **Bounded Pagination Limits:** Default limit 50, ceiling 500 items per request, enforced by `SearchValidationPipe`.
+- **Lookahead Result Materialization:** The SQL engine requests exactly `limit + 1` rows (`fetchExtraRow: true`), determining `has_more` without running expensive second count queries or scanning entire segments.
+- **Input Bounding:** Structured filters are capped at 15 filters maximum, filter arrays capped at 100 items, and string lengths capped at 512 characters.
+- **Pre-Read Catalog Boundary:** Segments are resolved and filtered via PostgreSQL catalog indexes *before* DuckDB is invoked, guaranteeing only matching finalized segments are scanned.
+
 ---
 
 ## 5. OS-Level Process & Cgroup Isolation

@@ -40,6 +40,14 @@ export class QueryConfigService {
     const rawCors = process.env['CORS_ORIGINS'] ?? '*';
     const corsOrigins = rawCors.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
 
+    const cursorSigningSecret =
+      process.env['CURSOR_SIGNING_SECRET'] ??
+      (nodeEnv === 'production'
+        ? ''
+        : 'skyra-cursor-signing-secret-key-32chars-minimum-entropy');
+    const cursorSigningKeyId = process.env['CURSOR_SIGNING_KEY_ID'] ?? 'v1';
+    const cursorTtlMs = Number.parseInt(process.env['CURSOR_TTL_MS'] ?? '86400000', 10); // 24h
+
     this.config = {
       nodeEnv,
       port: isNaN(port) ? 3100 : port,
@@ -60,6 +68,9 @@ export class QueryConfigService {
       maxRowsPerQuery: isNaN(maxRowsPerQuery) ? 500 : maxRowsPerQuery,
       enableAuditLogging,
       corsOrigins: corsOrigins.length > 0 ? corsOrigins : ['*'],
+      cursorSigningSecret,
+      cursorSigningKeyId,
+      cursorTtlMs: isNaN(cursorTtlMs) ? 86400000 : cursorTtlMs,
       ...envOverride,
     };
 
@@ -73,6 +84,9 @@ export class QueryConfigService {
       }
       if (this.config.authMode === 'test') {
         throw new Error('Fatal Configuration Error: QUERY_AUTH_MODE cannot be "test" in production environment.');
+      }
+      if (!this.config.cursorSigningSecret || this.config.cursorSigningSecret.length < 32) {
+        throw new Error('Fatal Configuration Error: CURSOR_SIGNING_SECRET must be set to a high-entropy secret of at least 32 characters in production.');
       }
       if (!fs.existsSync(this.config.archiveRoot)) {
         this.logger.warn(`Archive root directory does not exist yet at: ${this.config.archiveRoot}. Will be created or expected on mount.`);
@@ -154,6 +168,18 @@ export class QueryConfigService {
 
   public get corsOrigins(): string[] {
     return this.config.corsOrigins;
+  }
+
+  public get cursorSigningSecret(): string {
+    return this.config.cursorSigningSecret;
+  }
+
+  public get cursorSigningKeyId(): string {
+    return this.config.cursorSigningKeyId;
+  }
+
+  public get cursorTtlMs(): number {
+    return this.config.cursorTtlMs;
   }
 
   public isProduction(): boolean {

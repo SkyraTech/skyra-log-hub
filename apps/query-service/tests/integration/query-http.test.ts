@@ -194,10 +194,9 @@ describe('Query Service Real Fastify HTTP Integration Tests (LOGHUB-QUERY-002)',
     const body = JSON.parse(res.body);
     assert.equal(body.status, 501);
     assert.equal(body.code, 'NOT_IMPLEMENTED');
-    assert.match(body.detail, /LOGHUB-QUERY-003/);
   });
 
-  it('GET /query/v1/logs/:eventId should return 501 Not Implemented', async () => {
+  it('GET /query/v1/logs/:eventId should return 400 Bad Request on invalid UUID', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/query/v1/logs/evt-12345',
@@ -206,10 +205,10 @@ describe('Query Service Real Fastify HTTP Integration Tests (LOGHUB-QUERY-002)',
       },
     });
 
-    assert.equal(res.statusCode, 501);
+    assert.equal(res.statusCode, 400);
     const body = JSON.parse(res.body);
-    assert.equal(body.status, 501);
-    assert.equal(body.code, 'NOT_IMPLEMENTED');
+    assert.equal(body.status, 400);
+    assert.equal(body.code, 'INVALID_ARGUMENT');
   });
 
   it('GET /query/v1/logs/aggregate should return 501 Not Implemented', async () => {
@@ -240,7 +239,7 @@ describe('Query Service Real Fastify HTTP Integration Tests (LOGHUB-QUERY-002)',
     assert.equal(body.code, 'NOT_IMPLEMENTED');
   });
 
-  it('POST /query/v1/logs/search should return 501 Not Implemented (OpenAPI POST contract)', async () => {
+  it('POST /query/v1/logs/search should reject malformed payload with 400 Bad Request', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/query/v1/logs/search',
@@ -252,9 +251,9 @@ describe('Query Service Real Fastify HTTP Integration Tests (LOGHUB-QUERY-002)',
       },
     });
 
-    assert.equal(res.statusCode, 501);
+    assert.equal(res.statusCode, 400);
     const body = JSON.parse(res.body);
-    assert.equal(body.code, 'NOT_IMPLEMENTED');
+    assert.equal(body.code, 'INVALID_ARGUMENT');
   });
 
   it('POST /query/v1/logs/aggregate should return 501 Not Implemented (OpenAPI POST contract)', async () => {

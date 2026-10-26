@@ -156,3 +156,64 @@ export class DuckDbUnavailableException extends QueryDomainException {
     super(detail);
   }
 }
+
+export class InvalidCursorException extends QueryDomainException {
+  public readonly status = 422;
+  public readonly code = 'INVALID_CURSOR';
+  public readonly title = 'Invalid Pagination Cursor';
+
+  constructor(detail = 'Pagination cursor is invalid, malformed, expired, or tampered.') {
+    super(detail);
+  }
+}
+
+export class CursorScopeMismatchException extends QueryDomainException {
+  public readonly status = 403;
+  public readonly code = 'FORBIDDEN';
+  public readonly title = 'Cursor Scope Mismatch';
+
+  constructor(detail = 'Pagination cursor tenant or scope does not match authenticated principal.') {
+    super(detail);
+  }
+}
+
+export class LogEventNotFoundException extends QueryDomainException {
+  public readonly status = 404;
+  public readonly code = 'NOT_FOUND';
+  public readonly title = 'Log Event Not Found';
+
+  constructor(detail = 'Referenced log event was not found within authorized project scope.') {
+    super(detail);
+  }
+}
+
+export class UnsupportedFilterFieldException extends QueryDomainException {
+  public readonly status = 422;
+  public readonly code = 'UNSUPPORTED_FILTER_FIELD';
+  public readonly title = 'Unsupported Filter Field';
+
+  constructor(detail: string) {
+    super(detail);
+  }
+}
+
+export class UnsupportedFilterOperatorException extends QueryDomainException {
+  public readonly status = 422;
+  public readonly code = 'UNSUPPORTED_OPERATOR';
+  public readonly title = 'Unsupported Filter Operator';
+
+  constructor(detail: string) {
+    super(detail);
+  }
+}
+
+export class AmbiguousLogEventException extends QueryDomainException {
+  public readonly status = 409;
+  public readonly code = 'AMBIGUOUS_EVENT_ID';
+  public readonly title = 'Ambiguous Event Identifier';
+
+  constructor(detail = 'Multiple distinct records match the specified event identifier without a date partition hint.') {
+    super(detail);
+  }
+}
+

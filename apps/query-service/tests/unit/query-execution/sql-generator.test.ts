@@ -51,8 +51,8 @@ describe('SqlGeneratorService Unit Tests (LOGHUB-QUERY-003)', () => {
 
     const generated = sqlGenerator.generate(plan);
 
-    assert.ok(generated.sql.includes('read_ndjson_objects([$1])'));
-    assert.ok(generated.sql.includes('ORDER BY json_extract_string(json, \'$\."@timestamp"\') DESC, json_extract_string(json, \'$.event.id\') DESC'));
+    assert.ok(generated.sql.includes('read_ndjson_objects([$1], filename=true)'));
+    assert.ok(generated.sql.includes('ORDER BY "@timestamp" DESC, "event.id" DESC, "segment_id" DESC, "record_offset" DESC'));
     assert.equal(generated.parameters.length, 6);
     // Normalized path
     assert.equal(generated.parameters[0], 'C:/data/archive/tenant-100/proj-alpha/production/order-api/2026-10-26/segment-0000.jsonl');
@@ -152,4 +152,42 @@ describe('SqlGeneratorService Unit Tests (LOGHUB-QUERY-003)', () => {
     assert.equal(generated.fileCount, 0);
     assert.ok(generated.sql.includes('WHERE 1 = 0'));
   });
+
+  it('SGS-5: should generate keyset continuation predicate and limit+1 for cursor pagination', () => {
+    const plan: AuthorizedLogQueryPlan = {
+      queryId: 'test-q-cursor',
+      tenantId: 'tenant-100',
+      authorizedProjects: ['proj-alpha'],
+      descriptors: [mockDescriptor],
+      timeInterval: {
+        startInclusive: '2026-10-26T00:00:00.000Z',
+        endExclusive: '2026-10-26T02:00:00.000Z',
+      },
+      sort: { field: '@timestamp', direction: 'desc' },
+      limit: 10,
+      cursorPosition: {
+        timestamp: '2026-10-26T01:30:00.000Z',
+        eventId: '00000000-0000-4000-8000-000000000042',
+        segmentId: 'segment-0000.jsonl',
+        recordOffset: 5,
+      },
+      fetchExtraRow: true,
+      resourceBudget: {
+        maxSegments: 500,
+        maxScannedBytes: 500000,
+        maxRows: 500,
+        timeoutMs: 30000,
+        memoryBudgetMb: 256,
+      },
+    };
+
+    const generated = sqlGenerator.generate(plan);
+    assert.ok(generated.sql.includes('"@timestamp" < $6 OR ("@timestamp" = $6 AND "event.id" < $7)'));
+    assert.equal(generated.parameters[5], '2026-10-26T01:30:00.000Z');
+    assert.equal(generated.parameters[6], '00000000-0000-4000-8000-000000000042');
+    assert.equal(generated.parameters[7], 'segment-0000.jsonl');
+    assert.equal(generated.parameters[8], 5n);
+    assert.equal(generated.parameters[9], 11n); // 10 + 1 for lookahead
+  });
 });
+

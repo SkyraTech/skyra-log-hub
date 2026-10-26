@@ -41,6 +41,13 @@ export interface PlanQueryRequest {
     readonly direction?: 'asc' | 'desc';
   };
   readonly limit?: number;
+  readonly cursorPosition?: {
+    readonly timestamp: string;
+    readonly eventId: string;
+    readonly segmentId: string;
+    readonly recordOffset: number;
+  };
+  readonly fetchExtraRow?: boolean;
 }
 
 @Injectable()
@@ -209,6 +216,8 @@ export class QueryPlannerService {
         timeoutMs: this.config.queryTimeoutMs,
         memoryBudgetMb: this.config.duckDbMaxMemoryMb,
       },
+      cursorPosition: request.cursorPosition,
+      fetchExtraRow: request.fetchExtraRow,
       correlationId,
       actorId: principal.sub,
     };

@@ -11,11 +11,11 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
 |---|---|
 | Product | Skyra LogHub |
 | Repository | `skyra-log-hub` |
-| Current phase | Phase 2 — Centralized Ingestion (Phase 2 Functional Acceptance PASSED) |
-| Current task | LOGHUB-ING-006 (Phase 2 Final Integration, Data Integrity & Release Readiness Audit Completed) |
-| Implemented LogHub features | 8 SDK packages (Node, Python, NestJS, Next.js, Browser, Angular, React), Central Fastify Ingestion Gateway, Scoped Bearer Auth, Binary WAL with fsync, PostgreSQL Repositories, Central Immutable JSONL Archive with manifests, Standalone Log Shipper, Same-Origin Proxy, Crash Recovery, 7-Day Bounded Deduplication. |
-| Documents | 15 baseline documents aligned with file-first architecture + Phase 2 Acceptance Specification (`docs/ingestion/11-PHASE2_ACCEPTANCE.md`) + Implementation/Audit Reports |
-| Tests | 462 unique automated tests passing (384 TypeScript + 78 Python), 1 Real Headless Edge 156 CDP Browser E2E suite passing (100%), 2 isolated consumer package runners passing (3 tarballs + 1 wheel) |
+| Current phase | Phase 3 — Search, Query & Analytics |
+| Current task | LOGHUB-QUERY-004 (Secure Search API, Deterministic Pagination & Enterprise API Integration Completed) |
+| Implemented LogHub features | 8 SDK packages (Node, Python, NestJS, Next.js, Browser, Angular, React), Central Fastify Ingestion Gateway, Scoped Bearer Auth, Binary WAL with fsync, PostgreSQL Repositories, Central Immutable JSONL Archive with manifests, Standalone Log Shipper, Same-Origin Proxy, Crash Recovery, 7-Day Bounded Deduplication, Query Service with DuckDB Analytical Execution, Pre-Read Isolation Security Gate, 4-Part Composite Keyset Pagination, HMAC-SHA256 Signed Cursors, Search API (`POST /query/v1/logs/search`), Event Point Lookup (`GET /query/v1/logs/:eventId`), and Resource Governance. |
+| Documents | 15 baseline documents + Phase 2 Acceptance + Phase 3 Query Specs (ADR-017 through ADR-021, docs/query/01-10) + Implementation/Audit Reports |
+| Tests | 116 Query Service tests (0 failed, 0 skipped), 45 Monorepo Contract tests, 120 Ingestion Gateway tests, 462 Phase 2 verification tests. All test suites 100% green. |
 | Hosting | AWS / Azure / own server portable (Docker / Linux filesystem) |
 | Identity provider | OIDC / OAuth2 + scoped machine tokens (spec approved) |
 | Design branding | Skyra Platform tokens |
@@ -539,7 +539,25 @@ Always start by reading this file, `05-PROJECT_TASKS.md`, relevant ADR and task 
     - 45 monorepo contract tests passing (`tests/contracts/**/*.test.ts`).
     - 120 ingestion gateway tests passing (`apps/ingestion-gateway`).
     - 6 Clean Architecture boundary tests passing (`architecture-boundaries.test.ts`).
-- **Next Task:** `LOGHUB-QUERY-004` (Search API, Keyset Cursor Pagination & Contract Integration).
+- **Next Task:** `LOGHUB-QUERY-004` — COMPLETED (Secure Search API, Deterministic Pagination & Enterprise API Integration).
+
+### 2026-10-26 — LOGHUB-QUERY-004 — Secure Search API, Deterministic Pagination & Enterprise API Integration
+- **Status:** PASS (Public Search API `POST /query/v1/logs/search` and Event Lookup `GET /query/v1/logs/:eventId` Operational; P0-A Pre-Read Tenant Isolation Enforced in DuckDbLogQueryAdapter Prior to File Access; P0-B 4-Part Composite Keyset Pagination Implemented with DuckDB Window Function Ordering; P0-C Test Count Discrepancy Fully Reconciled; HMAC-SHA256 Signed Cursors Active with Constant-Time MAC Verification and Scope Binding; Strict Ajv Schema Runtime Validation Enforced; Centralized RFC 7807 Exception Mapping; 116 Query Service Tests Passing Across 19 Suites; Zero Regressions in Monorepo Contracts (45/45) or Ingestion Gateway (120/120); Zero Unapproved DB Migrations).
+- **Key Deliverables & Invariants Verified:**
+  - **P0-A Pre-Read Tenant Isolation Boundary:** Verified that `DuckDbLogQueryAdapter` validates descriptor ownership (`tenantId === plan.tenantId`), authorized projects (`plan.authorizedProjects.includes(descriptor.projectId)`), verified integrity status (`VERIFIED`), canonical root containment, absolute path existence, and file byteSize *before* passing any path to DuckDB. Foreign descriptors immediately trigger `CrossTenantViolationException` or `ForbiddenProjectException`. Tests prove unauthorized archive files are never opened or touched.
+  - **P0-B 4-Part Composite Keyset Pagination:** Implemented stable total ordering across all files using DuckDB window function `row_number() OVER (PARTITION BY filename) - 1 AS record_offset` and `regexp_extract(filename, '([^/\\\\]+)$', 1) AS segment_id`. Stable tuple `(@timestamp, event.id, segment_id, record_offset)` guarantees non-shifting, restart-safe, $O(1)$ keyset continuation even when timestamps and event IDs are identical.
+  - **P0-C Test Count Reconciliation:** Resolved historical discrepancy between claimed 90 tests in QUERY-003 and 86 in the manual table. Real test-runner output verified: `query-http.test.ts` contained 14 tests (table incorrectly noted 7, +7), while `archive-integrity.test.ts` contained 1 test (table incorrectly noted 4, -3). Net: 86 + 7 - 3 = 90 tests. In QUERY-004, 26 new tests were added, bringing the total to 116 unique tests across 19 suites.
+  - **Signed Cursor Codec (`CursorCodecService`):** Opaque base64url HMAC-SHA256 authenticated cursor binding version, tenant ID, project scope, canonical query SHA-256 fingerprint, 4-part position tuple, sort direction, and 24-hour expiration. Evaluated using `crypto.timingSafeEqual` to prevent timing side-channels. Fail-closed production configuration validation for signing secrets.
+  - **Strict DTO & Schema Validation (`SearchValidationPipe`, `EventLookupValidationPipe`):** Runtime Ajv validation enforcing `contracts/query/v1/search-request.schema.json`. Unknown properties, non-UTC timestamps, invalid boundaries, unauthorized projects, unsupported operators, and malicious strings are rejected with RFC 7807 HTTP 400 Problem Details.
+  - **Single-Event Point Lookup (`GetLogEventUseCase`):** Bounded point lookup by UUIDv4 scoped to authorized project. Fastify static-first routing ensures static routes (`aggregate`, `facets`) remain registered cleanly ahead of parameter routes.
+  - **Enterprise Clean Architecture:** Preserved strict dependency direction (API -> Application -> Domain <- Infrastructure). Controller is 86 lines (<= 120 lines ceiling), free of raw SQL or Prisma references. Domain layer has zero framework/infrastructure dependencies.
+  - **Automated Test Evidence:** 116 tests passing in `apps/query-service` (19 suites, 0 failed, 0 skipped):
+    - 7 unit tests in `cursor-codec.test.ts` (creation, verification, tampering, expiration, tenant mismatch, query fingerprint mismatch, timingSafeEqual).
+    - 9 unit tests in `search-validation-pipe.test.ts` (valid payloads, unknown fields, bad UTC, invalid time range, empty body, SQL injection, script tags, invalid operators, excessive items).
+    - 9 integration tests in `search-api.test.ts` (authorized search, structured filters, keyset cursor traversal, unauthorized cross-tenant, tampered cursor, event lookup, non-existent event, unauthorized project event, deferred endpoints 501).
+    - 6 unit tests in `sql-generator.test.ts` (including SGS-5 verifying 4-part composite locator keyset SQL generation).
+    - 85 existing tests covering DuckDB execution, archive discovery, path safety, manifest verification, JWT verification, and Clean Architecture boundaries.
+- **Next Task:** `LOGHUB-QUERY-005` (Aggregations, Facets & Date Histograms).
 
 
 
