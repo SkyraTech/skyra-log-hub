@@ -10,6 +10,7 @@ import type { AuthorizedFacetsPlan, AllowedFacetField } from '../../analytics/do
 import { SqlGeneratorService } from './sql-generator.service.js';
 import { resolveCanonicalField } from '../domain/canonical-field.model.js';
 import { InvalidArgumentException } from '../../../common/errors/query.errors.js';
+import type { TrustedArchiveSegmentDescriptor } from '../../archive-discovery/domain/archive-segment-descriptor.model.js';
 
 export interface GeneratedAnalyticsSql {
   readonly sql: string;
@@ -41,15 +42,14 @@ export class AnalyticsSqlGeneratorService {
       return `$${paramIndex++}`;
     };
 
-    if (plan.descriptors.length === 0) {
+    const fromClause = this.buildFromClause(plan, nextParam);
+    if (!fromClause) {
       return {
         sql: 'SELECT 1 WHERE 1 = 0',
         parameters: [],
       };
     }
 
-    const fileParams = plan.descriptors.map((d) => nextParam(d.resolvedPath));
-    const fromClause = `read_ndjson_objects([${fileParams.join(', ')}])`;
     const whereClauses = this.buildBaseWhereClauses(plan, nextParam);
 
     switch (spec.type) {
@@ -81,15 +81,14 @@ export class AnalyticsSqlGeneratorService {
       return `$${paramIndex++}`;
     };
 
-    if (plan.descriptors.length === 0) {
+    const fromClause = this.buildFromClause(plan, nextParam);
+    if (!fromClause) {
       return {
         sql: 'SELECT 1 WHERE 1 = 0',
         parameters: [],
       };
     }
 
-    const fileParams = plan.descriptors.map((d) => nextParam(d.resolvedPath));
-    const fromClause = `read_ndjson_objects([${fileParams.join(', ')}])`;
     const whereClauses = this.buildBaseWhereClauses(plan, nextParam);
     const fieldExpr = this.resolveFieldExpression(field);
 
@@ -100,6 +99,35 @@ export class AnalyticsSqlGeneratorService {
     const sql = `SELECT ${fieldExpr} AS value, CAST(count(*) AS BIGINT) AS count FROM ${fromClause} ${fullWhere} GROUP BY value ORDER BY count DESC, value ASC LIMIT 50`;
 
     return { sql, parameters };
+  }
+
+  private buildFromClause(
+    plan: {
+      readonly descriptors: readonly TrustedArchiveSegmentDescriptor[];
+      readonly parquetDescriptors?: readonly (import('../../parquet-cache/domain/parquet-segment.model.js').TrustedParquetSegmentDescriptor)[];
+    },
+    nextParam: (val: string | number | bigint) => string,
+  ): string | null {
+    const hasJsonl = (plan.descriptors?.length ?? 0) > 0;
+    const hasParquet = (plan.parquetDescriptors?.length ?? 0) > 0;
+
+    if (!hasJsonl && !hasParquet) {
+      return null;
+    }
+
+    if (hasJsonl && !hasParquet) {
+      const fileParams = plan.descriptors.map((d) => nextParam(d.resolvedPath.replace(/\\/g, '/')));
+      return `read_ndjson_objects([${fileParams.join(', ')}])`;
+    }
+
+    if (!hasJsonl && hasParquet) {
+      const fileParams = plan.parquetDescriptors!.map((d) => nextParam(d.resolvedPath.replace(/\\/g, '/')));
+      return `read_parquet([${fileParams.join(', ')}])`;
+    }
+
+    const parquetParams = plan.parquetDescriptors!.map((d) => nextParam(d.resolvedPath.replace(/\\/g, '/')));
+    const jsonlParams = plan.descriptors.map((d) => nextParam(d.resolvedPath.replace(/\\/g, '/')));
+    return `(SELECT json FROM read_parquet([${parquetParams.join(', ')}]) UNION ALL SELECT json FROM read_ndjson_objects([${jsonlParams.join(', ')}]))`;
   }
 
   private buildDateHistogramQuery(

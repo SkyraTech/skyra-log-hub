@@ -22,7 +22,9 @@ import { SqlGeneratorService } from '../../application/sql-generator.service.js'
 import { AnalyticsSqlGeneratorService } from '../../application/analytics-sql-generator.service.js';
 import { QueryResourceGovernorService } from './query-resource-governor.service.js';
 import { QueryAuditService } from '../../../audit/query-audit.service.js';
+import { ParquetPathSafetyService } from '../../../parquet-cache/infrastructure/filesystem/parquet-path-safety.service.js';
 import type { TrustedArchiveSegmentDescriptor } from '../../../archive-discovery/domain/archive-segment-descriptor.model.js';
+import type { TrustedParquetSegmentDescriptor } from '../../../parquet-cache/domain/parquet-segment.model.js';
 import type { DuckDBPreparedStatement } from '@duckdb/node-api';
 import {
   DuckDbUnavailableException,
@@ -48,6 +50,7 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
   private readonly logger = new Logger(DuckDbLogQueryAdapter.name);
 
   private readonly analyticsSqlGenerator: AnalyticsSqlGeneratorService;
+  private readonly parquetPathSafety?: ParquetPathSafetyService;
 
   constructor(
     private readonly instanceManager: DuckDbInstanceManager,
@@ -55,9 +58,11 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
     private readonly resourceGovernor: QueryResourceGovernorService,
     private readonly audit: QueryAuditService,
     @Optional() analyticsSqlGenerator?: AnalyticsSqlGeneratorService,
+    @Optional() parquetPathSafety?: ParquetPathSafetyService,
   ) {
     this.analyticsSqlGenerator =
       analyticsSqlGenerator ?? new AnalyticsSqlGeneratorService(this.sqlGenerator);
+    this.parquetPathSafety = parquetPathSafety;
   }
 
   public async execute(
@@ -66,8 +71,10 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
   ): Promise<BoundedLogQueryResult> {
     const startTimeNs = process.hrtime.bigint();
 
+    const totalSegments = (plan.descriptors?.length ?? 0) + (plan.parquetDescriptors?.length ?? 0);
+
     // Fast-path for 0 eligible segments
-    if (plan.descriptors.length === 0) {
+    if (totalSegments === 0) {
       return {
         queryId: plan.queryId,
         events: [],
@@ -83,15 +90,28 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
     }
 
     // MANDATORY SECURITY GATE P0-A: Pre-Read Tenant & Filesystem Isolation
-    this.validateDescriptorProvenance(
-      plan.descriptors,
-      plan.tenantId,
-      plan.authorizedProjects,
-      plan.actorId,
-      plan.correlationId,
-    );
+    if (plan.descriptors && plan.descriptors.length > 0) {
+      this.validateDescriptorProvenance(
+        plan.descriptors,
+        plan.tenantId,
+        plan.authorizedProjects,
+        plan.actorId,
+        plan.correlationId,
+      );
+    }
+    if (plan.parquetDescriptors && plan.parquetDescriptors.length > 0) {
+      this.validateParquetDescriptorProvenance(
+        plan.parquetDescriptors,
+        plan.tenantId,
+        plan.authorizedProjects,
+        plan.actorId,
+        plan.correlationId,
+      );
+    }
 
-    const totalScannedBytes = plan.descriptors.reduce((acc, d) => acc + d.byteSize, 0);
+    const totalScannedBytes =
+      (plan.descriptors?.reduce((acc, d) => acc + d.byteSize, 0) ?? 0) +
+      (plan.parquetDescriptors?.reduce((acc, d) => acc + d.byteSize, 0) ?? 0);
 
     return this.resourceGovernor.schedule(
       plan.queryId,
@@ -197,7 +217,7 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
             queryId: plan.queryId,
             events,
             matchedCount: events.length,
-            scannedSegmentCount: plan.descriptors.length,
+            scannedSegmentCount: totalSegments,
             scannedBytes: totalScannedBytes,
             executionDurationMs: Math.round(durationMs),
             timeInterval: plan.timeInterval,
@@ -237,7 +257,9 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
   ): Promise<AggregationQueryResult> {
     const startTimeNs = process.hrtime.bigint();
 
-    if (plan.descriptors.length === 0) {
+    const totalSegments = (plan.descriptors?.length ?? 0) + (plan.parquetDescriptors?.length ?? 0);
+
+    if (totalSegments === 0) {
       const aggregations: Record<string, SingleAggregationResult> = {};
       for (const spec of plan.aggregations) {
         if (spec.type === 'date_histogram') {
@@ -260,19 +282,33 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
     }
 
     // MANDATORY SECURITY GATE P0-A: Pre-Read Tenant & Filesystem Isolation
-    this.validateDescriptorProvenance(
-      plan.descriptors,
-      plan.tenantId,
-      plan.authorizedProjects,
-      'analytics-actor',
-      plan.queryId,
-    );
+    if (plan.descriptors && plan.descriptors.length > 0) {
+      this.validateDescriptorProvenance(
+        plan.descriptors,
+        plan.tenantId,
+        plan.authorizedProjects,
+        'analytics-actor',
+        plan.queryId,
+      );
+    }
+    if (plan.parquetDescriptors && plan.parquetDescriptors.length > 0) {
+      this.validateParquetDescriptorProvenance(
+        plan.parquetDescriptors,
+        plan.tenantId,
+        plan.authorizedProjects,
+        'analytics-actor',
+        plan.queryId,
+      );
+    }
 
-    const totalScannedBytes = plan.descriptors.reduce((acc, d) => acc + d.byteSize, 0);
-    const latestDate = plan.descriptors
-      .map((d) => d.date)
-      .sort()
-      .pop() || new Date().toISOString();
+    const totalScannedBytes =
+      (plan.descriptors?.reduce((acc, d) => acc + d.byteSize, 0) ?? 0) +
+      (plan.parquetDescriptors?.reduce((acc, d) => acc + d.byteSize, 0) ?? 0);
+    const allDates = [
+      ...(plan.descriptors?.map((d) => d.date) ?? []),
+      ...(plan.parquetDescriptors?.map((d) => d.date) ?? []),
+    ];
+    const latestDate = allDates.sort().pop() || new Date().toISOString();
     const archiveWatermark = latestDate.includes('T') ? latestDate : `${latestDate}T23:59:59.999Z`;
 
     return this.resourceGovernor.schedule(
@@ -339,7 +375,7 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
           return {
             aggregations: results,
             scannedBytes: totalScannedBytes,
-            scannedSegments: plan.descriptors.length,
+            scannedSegments: totalSegments,
             executionTimeMs: Math.round(durationMs),
             archiveWatermark,
             tenantId: plan.tenantId,
@@ -374,7 +410,9 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
   ): Promise<FacetsQueryResult> {
     const startTimeNs = process.hrtime.bigint();
 
-    if (plan.descriptors.length === 0) {
+    const totalSegments = (plan.descriptors?.length ?? 0) + (plan.parquetDescriptors?.length ?? 0);
+
+    if (totalSegments === 0) {
       const facets: Record<string, FacetValueCount[]> = {};
       for (const f of plan.facetFields) {
         facets[f] = [];
@@ -391,19 +429,33 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
     }
 
     // MANDATORY SECURITY GATE P0-A: Pre-Read Tenant & Filesystem Isolation
-    this.validateDescriptorProvenance(
-      plan.descriptors,
-      plan.tenantId,
-      plan.authorizedProjects,
-      'facets-actor',
-      plan.queryId,
-    );
+    if (plan.descriptors && plan.descriptors.length > 0) {
+      this.validateDescriptorProvenance(
+        plan.descriptors,
+        plan.tenantId,
+        plan.authorizedProjects,
+        'facets-actor',
+        plan.queryId,
+      );
+    }
+    if (plan.parquetDescriptors && plan.parquetDescriptors.length > 0) {
+      this.validateParquetDescriptorProvenance(
+        plan.parquetDescriptors,
+        plan.tenantId,
+        plan.authorizedProjects,
+        'facets-actor',
+        plan.queryId,
+      );
+    }
 
-    const totalScannedBytes = plan.descriptors.reduce((acc, d) => acc + d.byteSize, 0);
-    const latestDate = plan.descriptors
-      .map((d) => d.date)
-      .sort()
-      .pop() || new Date().toISOString();
+    const totalScannedBytes =
+      (plan.descriptors?.reduce((acc, d) => acc + d.byteSize, 0) ?? 0) +
+      (plan.parquetDescriptors?.reduce((acc, d) => acc + d.byteSize, 0) ?? 0);
+    const allDates = [
+      ...(plan.descriptors?.map((d) => d.date) ?? []),
+      ...(plan.parquetDescriptors?.map((d) => d.date) ?? []),
+    ];
+    const latestDate = allDates.sort().pop() || new Date().toISOString();
     const archiveWatermark = latestDate.includes('T') ? latestDate : `${latestDate}T23:59:59.999Z`;
 
     return this.resourceGovernor.schedule(
@@ -449,7 +501,7 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
           return {
             facets: results,
             scannedBytes: totalScannedBytes,
-            scannedSegments: plan.descriptors.length,
+            scannedSegments: totalSegments,
             executionTimeMs: Math.round(durationMs),
             archiveWatermark,
             tenantId: plan.tenantId,
@@ -543,6 +595,81 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
         if (err instanceof ArchiveIntegrityException) throw err;
         throw new ArchiveIntegrityException(
           `Pre-read revalidation failed for "${descriptor.segmentFilename}": ${String(err)}`,
+        );
+      }
+    }
+  }
+
+  private validateParquetDescriptorProvenance(
+    descriptors: readonly TrustedParquetSegmentDescriptor[] | undefined,
+    tenantId: string,
+    authorizedProjects: readonly string[],
+    actorId?: string,
+    correlationId?: string,
+  ): void {
+    if (!descriptors || descriptors.length === 0) return;
+    for (const descriptor of descriptors) {
+      if (descriptor.tenantId !== tenantId) {
+        this.audit.recordSecurityEvent({
+          eventType: 'CROSS_TENANT_REJECTED',
+          principalId: actorId ?? 'system',
+          tenantId,
+          projects: authorizedProjects,
+          correlationId,
+          detail: `Pre-read security gate rejected foreign Parquet descriptor with tenant ${descriptor.tenantId}.`,
+        });
+        throw new CrossTenantViolationException(
+          `Pre-read isolation violation: Parquet segment descriptor belongs to tenant "${descriptor.tenantId}", which does not match caller tenant "${tenantId}".`,
+        );
+      }
+
+      if (!authorizedProjects.includes('*') && !authorizedProjects.includes(descriptor.projectId)) {
+        this.audit.recordSecurityEvent({
+          eventType: 'FORBIDDEN_SCOPE_REJECTED',
+          principalId: actorId ?? 'system',
+          tenantId,
+          projects: authorizedProjects,
+          correlationId,
+          detail: `Pre-read security gate rejected Parquet descriptor with unauthorized project ${descriptor.projectId}.`,
+        });
+        throw new ForbiddenProjectException(
+          `Pre-read isolation violation: Parquet segment descriptor belongs to project "${descriptor.projectId}", which is not in caller's authorized scope.`,
+        );
+      }
+
+      if (descriptor.integrityStatus !== 'VERIFIED') {
+        throw new ArchiveIntegrityException(
+          `Pre-read security gate rejected unverified Parquet descriptor "${descriptor.parquetFilename}" (status: ${descriptor.integrityStatus}).`,
+        );
+      }
+
+      if (!path.isAbsolute(descriptor.resolvedPath)) {
+        throw new PathTraversalException(
+          `Pre-read security gate rejected non-absolute Parquet path "${descriptor.resolvedPath}".`,
+        );
+      }
+
+      if (this.parquetPathSafety) {
+        this.parquetPathSafety.validateParquetFileContainment(descriptor.resolvedPath);
+      }
+
+      if (!fs.existsSync(descriptor.resolvedPath)) {
+        throw new ArchiveNotFoundException(
+          `Pre-read security gate: referenced Parquet file does not exist on disk: ${descriptor.resolvedPath}`,
+        );
+      }
+
+      try {
+        const stat = fs.statSync(descriptor.resolvedPath);
+        if (stat.size !== descriptor.byteSize) {
+          throw new ArchiveIntegrityException(
+            `Pre-read file identity mismatch for Parquet "${descriptor.parquetFilename}": expected ${descriptor.byteSize} bytes, found ${stat.size} bytes on disk.`,
+          );
+        }
+      } catch (err: unknown) {
+        if (err instanceof ArchiveIntegrityException) throw err;
+        throw new ArchiveIntegrityException(
+          `Pre-read revalidation failed for Parquet "${descriptor.parquetFilename}": ${String(err)}`,
         );
       }
     }

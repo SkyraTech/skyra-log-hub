@@ -1,4 +1,5 @@
 import type { TrustedArchiveSegmentDescriptor } from '../../archive-discovery/domain/archive-segment-descriptor.model.js';
+import type { TrustedParquetSegmentDescriptor } from '../../parquet-cache/domain/parquet-segment.model.js';
 import type { FilterAstNode } from './query-filter.model.js';
 
 export interface QuerySortSpecification {
@@ -35,6 +36,7 @@ export interface AuthorizedLogQueryPlan {
   readonly authorizedProjects: readonly string[];
   readonly environmentScopes?: readonly string[];
   readonly descriptors: readonly TrustedArchiveSegmentDescriptor[];
+  readonly parquetDescriptors?: readonly TrustedParquetSegmentDescriptor[];
   readonly timeInterval: {
     readonly startInclusive: string; // ISO 8601 UTC
     readonly endExclusive: string;   // ISO 8601 UTC

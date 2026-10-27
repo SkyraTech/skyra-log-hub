@@ -23,4 +23,9 @@ export interface QueryServiceConfig {
   cursorSigningSecret: string;
   cursorSigningKeyId: string;
   cursorTtlMs: number;
+  parquetCacheEnabled: boolean;
+  parquetCacheRoot: string;
+  parquetMaterializationEnabled: boolean;
+  parquetMaxWorkers: number;
+  parquetVerifyChecksums: boolean;
 }

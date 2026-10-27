@@ -31,7 +31,10 @@ export class SqlGeneratorService {
     };
 
     // 1. Source tables (files)
-    if (plan.descriptors.length === 0) {
+    const hasJsonl = (plan.descriptors?.length ?? 0) > 0;
+    const hasParquet = (plan.parquetDescriptors?.length ?? 0) > 0;
+
+    if (!hasJsonl && !hasParquet) {
       return {
         sql: 'SELECT CAST(NULL AS VARCHAR) AS "@timestamp", CAST(NULL AS VARCHAR) AS "event.id", CAST(NULL AS VARCHAR) AS "segment_id", CAST(NULL AS BIGINT) AS "record_offset", CAST(NULL AS VARCHAR) AS json WHERE 1 = 0',
         parameters: [],
@@ -40,22 +43,34 @@ export class SqlGeneratorService {
       };
     }
 
-    const fileParams: string[] = [];
-    for (const descriptor of plan.descriptors) {
-      // Normalize to forward slashes for cross-platform DuckDB safety
-      const normalizedPath = descriptor.resolvedPath.replace(/\\/g, '/');
-      fileParams.push(nextParam(normalizedPath));
+    const subqueries: string[] = [];
+
+    if (hasParquet) {
+      const parquetParams: string[] = [];
+      for (const d of plan.parquetDescriptors!) {
+        const norm = d.resolvedPath.replace(/\\/g, '/');
+        parquetParams.push(nextParam(norm));
+      }
+      subqueries.push(`SELECT "@timestamp", "event.id", "segment_id", "record_offset", json FROM read_parquet([${parquetParams.join(', ')}], filename=true)`);
     }
 
-    const fromClause = `(
-      SELECT
+    if (hasJsonl) {
+      const jsonlParams: string[] = [];
+      for (const descriptor of plan.descriptors) {
+        // Normalize to forward slashes for cross-platform DuckDB safety
+        const normalizedPath = descriptor.resolvedPath.replace(/\\/g, '/');
+        jsonlParams.push(nextParam(normalizedPath));
+      }
+      subqueries.push(`SELECT
         json_extract_string(json, '$."@timestamp"') AS "@timestamp",
         json_extract_string(json, '$.event.id') AS "event.id",
         regexp_extract(filename, '([^/\\\\]+)$', 1) AS "segment_id",
         CAST(row_number() OVER (PARTITION BY filename ORDER BY json_extract_string(json, '$."@timestamp"'), json_extract_string(json, '$.event.id'), md5(json)) - 1 AS BIGINT) AS "record_offset",
         json
-      FROM read_ndjson_objects([${fileParams.join(', ')}], filename=true)
-    )`;
+      FROM read_ndjson_objects([${jsonlParams.join(', ')}], filename=true)`);
+    }
+
+    const fromClause = `(${subqueries.join(' UNION ALL ')})`;
 
     // 2. WHERE clauses
     const whereClauses: string[] = [];
@@ -130,7 +145,7 @@ export class SqlGeneratorService {
     return {
       sql,
       parameters,
-      fileCount: plan.descriptors.length,
+      fileCount: (plan.descriptors?.length ?? 0) + (plan.parquetDescriptors?.length ?? 0),
       limit: effectiveLimit,
     };
   }

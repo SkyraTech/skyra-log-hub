@@ -2,7 +2,7 @@
 
 Enterprise Analytical Query & Search Service for Skyra LogHub.
 
-Established in **Task LOGHUB-QUERY-002**, extended in **Task LOGHUB-QUERY-003** (Secure DuckDB JSONL Query Execution), productionized in **Task LOGHUB-QUERY-004** (Secure Search API, Deterministic Keyset Pagination), and completed with analytical capabilities in **Task LOGHUB-QUERY-005** (Secure Aggregations, Dynamic Facets & Bounded Analytical Query Execution).
+Established in **Task LOGHUB-QUERY-002**, extended in **Task LOGHUB-QUERY-003** (Secure DuckDB JSONL Query Execution), productionized in **Task LOGHUB-QUERY-004** (Secure Search API, Deterministic Keyset Pagination), completed with analytical capabilities in **Task LOGHUB-QUERY-005** (Secure Aggregations, Dynamic Facets & Bounded Analytical Query Execution), and accelerated in **Task LOGHUB-QUERY-006** (Derived Parquet Materialization, Hybrid Query Planning, Cache Integrity & Performance Acceleration).
 
 ---
 
@@ -28,6 +28,9 @@ Built with **NestJS 10** and the high-performance **Fastify** HTTP adapter, it e
 - **JWT & Pluggable Authentication**: Verifies signed JWT tokens (HS256, RS256, EdDSA/Ed25519) and provides a deterministic test token verifier (`test-token:<base64-json>`) in non-production environments.
 - **Read-Only Metadata Repository**: Dual-mode storage adapter using either PostgreSQL via Prisma (`PrismaArchiveSegmentRepository`) or zero-dependency in-memory mock (`InMemoryArchiveSegmentRepository`).
 - **Cryptographic Manifest Verification**: Verifies SHA-256 digests and byte counts against authoritative archive manifests before query handoff (`ManifestVerifierService`).
+- **Derived Parquet Acceleration Layer**: High-performance optional, rebuildable analytical cache with ZSTD compression (`src/modules/parquet-cache/`), achieving 97.1% disk storage space savings over canonical JSONL while preserving exact canonical event fidelity.
+- **File-Backed Parquet Catalog**: Zero-database-migration catalog with SHA-256 source checksum drift detection, automatic cache invalidation, and idempotent atomic materialization via `.staging/`.
+- **Hybrid Query Planner**: Transparently selects between verified Parquet and canonical JSONL per segment with zero duplicate and zero omitted segments across search, aggregations, and facets.
 - **RFC 7807 Problem Details**: Centralized, standardized JSON error responses with `type`, `title`, `status`, `detail`, `instance`, `code`, and `invalid_params` fields (`ProblemDetailsFilter`).
 - **Audit Logging & Security Telemetry**: Structured audit logging for authentication, discovery, query planning, search execution, point lookups, aggregations, facets, and security violations (`QueryAuditService`).
 - **Liveness & Readiness Probes**: `/health/live` and `/health/ready` endpoints reporting subsystem health without leaking configuration secrets.
@@ -36,13 +39,16 @@ Built with **NestJS 10** and the high-performance **Fastify** HTTP adapter, it e
 
 ## 2. Invariants & Security Guarantees
 
-1. **Pre-Read Tenant & Scope Isolation (P0-A & P0-B)**: DuckDB NEVER opens or accesses a file belonging to an unauthorized tenant or project. Pre-read descriptor validation verifies ownership, scope, and integrity before SQL generation.
-2. **Stable Total Ordering**: Every query orders rows by `(@timestamp, event.id, segment.id, record_offset)`. No identical timestamps or event IDs can cause non-deterministic skips or repeats during keyset traversal.
-3. **Tamper-Resistant Cursors**: Pagination cursors are signed using a server-side HMAC-SHA256 secret. Altering position, tenant, or query parameters invalidates the cryptographic signature.
-4. **Physical Path Leakage Defense**: Public API responses NEVER expose internal server filepaths (`resolvedPath`) to API clients. Physical paths remain encapsulated inside internal domain descriptors.
-5. **Fail-Closed Authorization**: A principal with empty project memberships cannot access any data. If requested projects contain any project outside authorized membership, the entire request is rejected with HTTP 403 Forbidden.
-6. **Path Traversal Containment**: All segment paths must reside strictly within `ARCHIVE_ROOT`. Any relative traversal (`..`), illegal character sets, or non-canonical file extensions trigger an immediate HTTP 400/403 security error.
-7. **Least-Privilege DuckDB Runtime**: DuckDB instance runs in-memory with `autoinstall_known_extensions: 'false'`, `autoload_known_extensions: 'false'`, restricted memory budget (default 256MB), and bounded threads (default 2).
+1. **Immutable Canonical Source of Truth**: Immutable canonical JSONL remains the sole authoritative source of log-event data. Parquet is derived, disposable, rebuildable, and non-authoritative.
+2. **Pre-Read Tenant & Scope Isolation (P0-A & P0-B)**: DuckDB NEVER opens or accesses a file belonging to an unauthorized tenant or project. Pre-read descriptor validation verifies ownership, scope, root containment, and physical file identity before SQL generation for both JSONL and Parquet.
+3. **Cross-Format Stable Total Ordering**: Every query orders rows by `(@timestamp, event.id, segment_id, record_offset)`. Keyset pagination cursors continue seamlessly across physical format substitutions (JSONL -> Parquet -> Hybrid).
+4. **Tamper-Resistant Cursors**: Pagination cursors are signed using a server-side HMAC-SHA256 secret. Altering position, tenant, or query parameters invalidates the cryptographic signature.
+5. **Physical Path Leakage Defense**: Public API responses NEVER expose internal server filepaths (`resolvedPath`) to API clients. Physical paths remain encapsulated inside internal domain descriptors.
+6. **Fail-Closed Authorization**: A principal with empty project memberships cannot access any data. If requested projects contain any project outside authorized membership, the entire request is rejected with HTTP 403 Forbidden.
+7. **Path Traversal Containment**: All segment paths must reside strictly within `ARCHIVE_ROOT` or `PARQUET_CACHE_ROOT`. Any relative traversal (`..`), illegal character sets, or non-canonical file extensions trigger an immediate HTTP 400/403 security error.
+8. **Least-Privilege DuckDB Runtime**: DuckDB instance runs in-memory with `autoinstall_known_extensions: 'false'`, `autoload_known_extensions: 'false'`, restricted memory budget (default 256MB), and bounded threads (default 2).
+9. **Atomic Staging Publication**: Parquet files are written to unique `.staging/` directories and atomically published only after successful conversion and validation, preventing partially written files from ever becoming queryable.
+10. **Graceful Fallback on Corruption**: Missing, corrupt, or checksum-drifted Parquet files automatically trigger transparent fallback to canonical JSONL without query failure or partial data return.
 
 ---
 

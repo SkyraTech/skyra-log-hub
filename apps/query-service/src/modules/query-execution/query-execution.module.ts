@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ArchiveDiscoveryModule } from '../archive-discovery/archive-discovery.module.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { AuditModule } from '../audit/audit.module.js';
+import { ParquetCacheModule } from '../parquet-cache/parquet-cache.module.js';
 import { LOG_QUERY_EXECUTION_PORT } from './domain/query-execution.port.js';
 import { FilterCompilerService } from './application/filter-compiler.service.js';
 import { SqlGeneratorService } from './application/sql-generator.service.js';
@@ -12,7 +13,7 @@ import { QueryResourceGovernorService } from './infrastructure/duckdb/query-reso
 import { DuckDbLogQueryAdapter } from './infrastructure/duckdb/duckdb-query-adapter.js';
 
 @Module({
-  imports: [ArchiveDiscoveryModule, AuthModule, AuditModule],
+  imports: [ArchiveDiscoveryModule, AuthModule, AuditModule, forwardRef(() => ParquetCacheModule)],
   providers: [
     FilterCompilerService,
     SqlGeneratorService,

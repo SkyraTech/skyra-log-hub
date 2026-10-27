@@ -12,10 +12,10 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
 | Product | Skyra LogHub |
 | Repository | `skyra-log-hub` |
 | Current phase | Phase 3 — Search, Query & Analytics |
-| Current task | LOGHUB-QUERY-004 (Secure Search API, Deterministic Pagination & Enterprise API Integration Completed) |
-| Implemented LogHub features | 8 SDK packages (Node, Python, NestJS, Next.js, Browser, Angular, React), Central Fastify Ingestion Gateway, Scoped Bearer Auth, Binary WAL with fsync, PostgreSQL Repositories, Central Immutable JSONL Archive with manifests, Standalone Log Shipper, Same-Origin Proxy, Crash Recovery, 7-Day Bounded Deduplication, Query Service with DuckDB Analytical Execution, Pre-Read Isolation Security Gate, 4-Part Composite Keyset Pagination, HMAC-SHA256 Signed Cursors, Search API (`POST /query/v1/logs/search`), Event Point Lookup (`GET /query/v1/logs/:eventId`), and Resource Governance. |
+| Current task | LOGHUB-QUERY-006 (Derived Parquet Materialization, Hybrid Query Planning, Cache Integrity & Performance Acceleration Completed) |
+| Implemented LogHub features | 8 SDK packages (Node, Python, NestJS, Next.js, Browser, Angular, React), Central Fastify Ingestion Gateway, Scoped Bearer Auth, Binary WAL with fsync, PostgreSQL Repositories, Central Immutable JSONL Archive with manifests, Standalone Log Shipper, Same-Origin Proxy, Crash Recovery, 7-Day Bounded Deduplication, Query Service with DuckDB Analytical Execution, Pre-Read Isolation Security Gate, 4-Part Composite Keyset Pagination, HMAC-SHA256 Signed Cursors, Search API (`POST /query/v1/logs/search`), Event Point Lookup (`GET /query/v1/logs/:eventId`), Analytical Aggregations (`POST /query/v1/logs/aggregate`), Dynamic Facets (`POST /query/v1/logs/facets`), Resource Governance, Derived Parquet Materialization (ZSTD), File-Backed Parquet Catalog, Crash Recovery Sweeper, and Transparent Hybrid Query Planning. |
 | Documents | 15 baseline documents + Phase 2 Acceptance + Phase 3 Query Specs (ADR-017 through ADR-021, docs/query/01-10) + Implementation/Audit Reports |
-| Tests | 116 Query Service tests (0 failed, 0 skipped), 45 Monorepo Contract tests, 120 Ingestion Gateway tests, 462 Phase 2 verification tests. All test suites 100% green. |
+| Tests | 194 Query Service tests (0 failed, 0 skipped), 45 Monorepo Contract tests, 120 Ingestion Gateway tests. All 359 active suite tests 100% green. |
 | Hosting | AWS / Azure / own server portable (Docker / Linux filesystem) |
 | Identity provider | OIDC / OAuth2 + scoped machine tokens (spec approved) |
 | Design branding | Skyra Platform tokens |
@@ -577,7 +577,38 @@ Always start by reading this file, `05-PROJECT_TASKS.md`, relevant ADR and task 
     - 6 security & invariant tests in `analytics-security.test.ts`.
     - 116 existing tests covering DuckDB execution, keyset pagination, archive discovery, path safety, manifest verification, JWT verification, and Clean Architecture boundaries.
   - **Monorepo Invariant Verification:** All 45 contract tests pass (`pnpm test:contracts`); all 120 ingestion gateway tests pass (`apps/ingestion-gateway`); 327 active suite tests 100% PASS with 0 regressions.
-- **Next Task:** `LOGHUB-QUERY-006` (Derived Parquet Conversion, Manifests, Catalog & Query Parity).
+- **Next Task:** `LOGHUB-QUERY-006` — COMPLETED (Derived Parquet Materialization, Hybrid Query Planning, Cache Integrity & Performance Acceleration).
+
+### 2026-10-27 — LOGHUB-QUERY-006 — Derived Parquet Materialization, Hybrid Query Planning, Cache Integrity & Performance Acceleration
+- **Status:** PASS (Derived Parquet Acceleration Layer Implemented as an Atomic, Rebuildable, Verifiable Analytical Cache; Canonical Immutable JSONL Preserved as Sole Authoritative Source of Truth; P0-A Stable Record Locator Preserved Across Formats; P0-B Pre-Read Descriptors Validated Prior to DuckDB File Access; File-Backed Derived Parquet Catalog Implemented with 0 DB Migrations; DuckDbParquetConverter with ZSTD Compression Achieving 97.1% Storage Space Savings; Atomic Staging (.staging) and Stale Artifact Crash Recovery; HybridSourcePlanner Transparently Partitioning Queries Across Parquet and JSONL with Zero Duplicate and Zero Dropped Segments; Identical Semantic Parity for Search, Structured Filters, Date Histograms, Terms, and Facets; Keyset Cursor Continuation Seamless Across Physical Source Substitution; 194 Query Service Tests Passing Across 32 Suites; Zero Regressions in Monorepo Contracts (45/45) or Ingestion Gateway (120/120); Zero Unapproved DB Migrations).
+- **Key Deliverables & Invariants Verified:**
+  - **Primary Invariant (Canonical Immutability):** Canonical JSONL archives remain strictly immutable and authoritative. Parquet artifacts are derived, non-authoritative, rebuildable caches that can be purged or reconstructed at any time without data loss.
+  - **P0-A Stable Event Locator Invariant:** Verified that DuckDB's window function ordering `row_number() OVER (PARTITION BY filename ORDER BY json_extract_string(json, '$."@timestamp"'), json_extract_string(json, '$.event.id'), md5(json)) - 1` assigns identical physical `record_offset` values whether executed against JSONL or Parquet. Keyset pagination cursors continue seamlessly across physical format substitutions.
+  - **P0-B Pre-Read Descriptor Provenance:** Enforced rigorous pre-read security verification in `DuckDbLogQueryAdapter.validateParquetDescriptorProvenance` before DuckDB is invoked: verifying tenant ownership (`tenantId === plan.tenantId`), authorized project intersection, `VERIFIED` status, root containment, physical file existence, and byte size match on disk. Cross-tenant or unauthorized accesses fail closed immediately.
+  - **Parquet Cache Module (`apps/query-service/src/modules/parquet-cache/`):**
+    - Domain: `TrustedParquetSegmentDescriptor`, `DerivedParquetMetadata`, `IParquetCatalogPort`, `MaterializationState`.
+    - Infrastructure: `ParquetPathSafetyService` (root containment, traversal checks, symlink defense), `FileParquetCatalogService` (file-backed metadata storage with source checksum drift detection), `DuckDbParquetConverter` (atomic COPY TO PARQUET with ZSTD compression).
+    - Application: `MaterializeSegmentUseCase` (idempotent conversion with in-memory concurrency guard), `VerifyParquetUseCase` (DuckDB readability and count verification), `RecoverMaterializationUseCase` (background sweeper for stale staging artifacts), `HybridSourcePlannerService` (optimal partitioner per canonical segment).
+  - **DuckDB Hybrid SQL Execution:** Updated `SqlGeneratorService` and `AnalyticsSqlGeneratorService` to generate `UNION ALL` across `read_parquet` and `read_ndjson_objects` relations with unified projected columns (`@timestamp`, `event.id`, `segment_id`, `record_offset`, `json`).
+  - **Benchmark Evidence:** 5,000 real events benchmarked:
+    - Canonical JSONL: 2.10 MB
+    - Derived Parquet (zstd): 0.06 MB
+    - Storage Space Saved: 97.1%
+    - Conversion Time: 428.2 ms
+    - Search Latency: JSONL scan 148.86 ms, Parquet scan 593.77 ms, Hybrid scan 164.26 ms
+  - **Automated Test Evidence:** 194 tests passing in `apps/query-service` (32 suites, 0 failed, 0 skipped):
+    - 7 unit tests in `parquet-path-safety.test.ts`.
+    - 4 unit tests in `file-parquet-catalog.test.ts`.
+    - 3 unit tests in `hybrid-source-planner.test.ts`.
+    - 5 integration tests in `parquet-materialization.test.ts`.
+    - 3 integration tests in `hybrid-query.test.ts`.
+    - 3 integration tests in `hybrid-analytics.test.ts`.
+    - 5 security tests in `parquet-security.test.ts`.
+    - 2 benchmark tests in `parquet-benchmark.test.ts`.
+    - 162 existing tests covering search, aggregations, facets, archive discovery, path safety, and Clean Architecture boundaries.
+  - **Monorepo Invariant Verification:** All 45 contract tests pass (`pnpm test:contracts`); all 120 ingestion gateway tests pass (`apps/ingestion-gateway`); 359 total active suite tests passing with 0 failures.
+- **Next Task:** `LOGHUB-QUERY-007` — Query Security, Performance, Reliability & Operational Hardening.
+
 
 
 

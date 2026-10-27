@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Inject, Logger, Optional, forwardRef } from '@nestjs/common';
 import * as crypto from 'node:crypto';
 import type { QueryPrincipal } from '../../auth/domain/principal.model.js';
 import {
@@ -17,6 +17,9 @@ import type {
   AuthorizedLogQueryPlan,
   QuerySortSpecification,
 } from '../domain/authorized-query-plan.model.js';
+import type { TrustedParquetSegmentDescriptor } from '../../parquet-cache/domain/parquet-segment.model.js';
+import type { TrustedArchiveSegmentDescriptor } from '../../archive-discovery/domain/archive-segment-descriptor.model.js';
+import { HybridSourcePlannerService } from '../../parquet-cache/application/hybrid-source-planner.service.js';
 import {
   InvalidArgumentException,
   TimeRangeExceededException,
@@ -61,6 +64,9 @@ export class QueryPlannerService {
     private readonly filterCompiler: FilterCompilerService,
     private readonly config: QueryConfigService,
     private readonly audit: QueryAuditService,
+    @Optional()
+    @Inject(forwardRef(() => HybridSourcePlannerService))
+    private readonly hybridPlanner?: HybridSourcePlannerService,
   ) {}
 
   public async planQuery(
@@ -196,12 +202,27 @@ export class QueryPlannerService {
     }
     const limit = Math.min(requestedLimit, this.config.maxRowsPerQuery);
 
+    let finalDescriptors: readonly TrustedArchiveSegmentDescriptor[] = verifiedDescriptors;
+    let finalParquetDescriptors: readonly TrustedParquetSegmentDescriptor[] | undefined;
+
+    if (this.hybridPlanner) {
+      const planned = await this.hybridPlanner.planSources(
+        verifiedDescriptors,
+        scope.tenantId,
+        scope.effectiveProjects,
+        correlationId,
+      );
+      finalDescriptors = planned.canonicalDescriptors;
+      finalParquetDescriptors = planned.parquetDescriptors;
+    }
+
     const plan: AuthorizedLogQueryPlan = {
       queryId,
       tenantId: scope.tenantId,
       authorizedProjects: scope.effectiveProjects,
       environmentScopes: request.environments,
-      descriptors: verifiedDescriptors,
+      descriptors: finalDescriptors,
+      parquetDescriptors: finalParquetDescriptors,
       timeInterval: {
         startInclusive: startTime.toISOString(),
         endExclusive: endTime.toISOString(),
@@ -312,12 +333,27 @@ export class QueryPlannerService {
 
     const compiledFilter = this.filterCompiler.compileFilters(combinedFilters);
 
+    let finalDescriptors: readonly TrustedArchiveSegmentDescriptor[] = verifiedDescriptors;
+    let finalParquetDescriptors: readonly TrustedParquetSegmentDescriptor[] | undefined;
+
+    if (this.hybridPlanner) {
+      const planned = await this.hybridPlanner.planSources(
+        verifiedDescriptors,
+        scope.tenantId,
+        scope.effectiveProjects,
+        correlationId,
+      );
+      finalDescriptors = planned.canonicalDescriptors;
+      finalParquetDescriptors = planned.parquetDescriptors;
+    }
+
     return {
       queryId,
       tenantId: scope.tenantId,
       authorizedProjects: scope.effectiveProjects,
       environmentScopes: request.environments,
-      descriptors: verifiedDescriptors,
+      descriptors: finalDescriptors,
+      parquetDescriptors: finalParquetDescriptors,
       timeInterval: {
         startInclusive: startTime.toISOString(),
         endExclusive: endTime.toISOString(),
@@ -384,12 +420,27 @@ export class QueryPlannerService {
       );
     }
 
+    let finalDescriptors: readonly TrustedArchiveSegmentDescriptor[] = verifiedDescriptors;
+    let finalParquetDescriptors: readonly TrustedParquetSegmentDescriptor[] | undefined;
+
+    if (this.hybridPlanner) {
+      const planned = await this.hybridPlanner.planSources(
+        verifiedDescriptors,
+        scope.tenantId,
+        scope.effectiveProjects,
+        correlationId,
+      );
+      finalDescriptors = planned.canonicalDescriptors;
+      finalParquetDescriptors = planned.parquetDescriptors;
+    }
+
     return {
       queryId,
       tenantId: scope.tenantId,
       authorizedProjects: scope.effectiveProjects,
       environmentScopes: request.environments,
-      descriptors: verifiedDescriptors,
+      descriptors: finalDescriptors,
+      parquetDescriptors: finalParquetDescriptors,
       timeInterval: {
         startInclusive: startTime.toISOString(),
         endExclusive: endTime.toISOString(),

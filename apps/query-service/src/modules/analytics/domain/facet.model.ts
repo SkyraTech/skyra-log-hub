@@ -1,4 +1,5 @@
 import type { TrustedArchiveSegmentDescriptor } from '../../archive-discovery/domain/archive-segment-descriptor.model.js';
+import type { TrustedParquetSegmentDescriptor } from '../../parquet-cache/domain/parquet-segment.model.js';
 import type { FilterAstNode } from '../../query-execution/domain/query-filter.model.js';
 
 export type AllowedFacetField =
@@ -14,6 +15,7 @@ export interface AuthorizedFacetsPlan {
   readonly authorizedProjects: readonly string[];
   readonly environmentScopes?: readonly string[];
   readonly descriptors: readonly TrustedArchiveSegmentDescriptor[];
+  readonly parquetDescriptors?: readonly TrustedParquetSegmentDescriptor[];
   readonly timeInterval: {
     readonly startInclusive: string;
     readonly endExclusive: string;

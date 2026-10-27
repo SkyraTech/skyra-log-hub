@@ -45,9 +45,9 @@ To guarantee 100% deterministic, non-shifting pagination even in the presence of
 1. **Primary Sort Key:** `@timestamp` (ISO 8601 UTC timestamp).
 2. **Secondary Tie-Breaker:** `event.id` (UUIDv4/UUIDv7 string).
 3. **Tertiary Tie-Breaker:** `segment_id` (Physical archive segment filename, extracted via DuckDB `regexp_extract(filename, '([^/\\\\]+)$', 1)`).
-4. **Quaternary Tie-Breaker:** `record_offset` (Physical 0-indexed line ordinal within the segment, derived via DuckDB window function `row_number() OVER (PARTITION BY filename) - 1`).
+4. **Quaternary Tie-Breaker:** `record_offset` (Physical 0-indexed line ordinal within the segment, derived via deterministic DuckDB window function `CAST(row_number() OVER (PARTITION BY filename ORDER BY json_extract_string(json, '$."@timestamp"'), json_extract_string(json, '$.event.id'), md5(json)) - 1 AS BIGINT)`).
 
-This 4-tuple `(@timestamp, event.id, segment_id, record_offset)` is strictly unique across all files, gateway restarts, and catalog scans.
+This 4-tuple `(@timestamp, event.id, segment_id, record_offset)` is strictly unique across all files, gateway restarts, catalog scans, and **survives JSONL-to-Parquet materialization and transparent hybrid source substitution without cursor drift or pagination invalidation** (verified in LOGHUB-QUERY-006).
 
 ---
 

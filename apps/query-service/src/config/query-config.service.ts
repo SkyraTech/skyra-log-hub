@@ -48,6 +48,14 @@ export class QueryConfigService {
     const cursorSigningKeyId = process.env['CURSOR_SIGNING_KEY_ID'] ?? 'v1';
     const cursorTtlMs = Number.parseInt(process.env['CURSOR_TTL_MS'] ?? '86400000', 10); // 24h
 
+    const parquetCacheEnabled = process.env['PARQUET_CACHE_ENABLED'] !== 'false';
+    const parquetCacheRoot = process.env['PARQUET_CACHE_ROOT']
+      ? path.resolve(process.env['PARQUET_CACHE_ROOT'])
+      : path.resolve(archiveRoot, '..', 'derived-parquet');
+    const parquetMaterializationEnabled = process.env['PARQUET_MATERIALIZATION_ENABLED'] !== 'false';
+    const parquetMaxWorkers = Number.parseInt(process.env['PARQUET_MAX_WORKERS'] ?? '2', 10);
+    const parquetVerifyChecksums = process.env['PARQUET_VERIFY_CHECKSUMS'] !== 'false';
+
     this.config = {
       nodeEnv,
       port: isNaN(port) ? 3100 : port,
@@ -71,6 +79,11 @@ export class QueryConfigService {
       cursorSigningSecret,
       cursorSigningKeyId,
       cursorTtlMs: isNaN(cursorTtlMs) ? 86400000 : cursorTtlMs,
+      parquetCacheEnabled,
+      parquetCacheRoot,
+      parquetMaterializationEnabled,
+      parquetMaxWorkers: isNaN(parquetMaxWorkers) ? 2 : parquetMaxWorkers,
+      parquetVerifyChecksums,
       ...envOverride,
     };
 
@@ -180,6 +193,26 @@ export class QueryConfigService {
 
   public get cursorTtlMs(): number {
     return this.config.cursorTtlMs;
+  }
+
+  public get parquetCacheEnabled(): boolean {
+    return this.config.parquetCacheEnabled;
+  }
+
+  public get parquetCacheRoot(): string {
+    return this.config.parquetCacheRoot;
+  }
+
+  public get parquetMaterializationEnabled(): boolean {
+    return this.config.parquetMaterializationEnabled;
+  }
+
+  public get parquetMaxWorkers(): number {
+    return this.config.parquetMaxWorkers;
+  }
+
+  public get parquetVerifyChecksums(): boolean {
+    return this.config.parquetVerifyChecksums;
   }
 
   public isProduction(): boolean {
