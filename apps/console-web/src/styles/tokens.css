@@ -1,0 +1,50 @@
+/**
+ * Skyra LogHub — Core Design Tokens (tokens.css)
+ * Task: LOGHUB-CONSOLE-002
+ * Reference: docs/console/04-UI_UX_DESIGN_SYSTEM.md
+ */
+
+:root {
+  /* 4px Incremental Spacing Scale */
+  --space-0: 0;
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Border Radii */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* Layout Constants */
+  --sidebar-width-expanded: 240px;
+  --sidebar-width-collapsed: 68px;
+  --topbar-height: 56px;
+  --table-row-compact: 32px;
+  --table-row-comfortable: 40px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-Index Hierarchy */
+  --z-base: 1;
+  --z-sticky: 100;
+  --z-dropdown: 200;
+  --z-overlay: 400;
+  --z-drawer: 500;
+  --z-modal: 1000;
+  --z-toast: 2000;
+}

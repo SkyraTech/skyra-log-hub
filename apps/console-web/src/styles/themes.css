@@ -1,0 +1,150 @@
+/**
+ * Skyra LogHub — Dual-Theme Color System (themes.css)
+ * Task: LOGHUB-CONSOLE-002
+ * Reference: docs/console/04-UI_UX_DESIGN_SYSTEM.md
+ */
+
+/* Default Light Theme */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Surfaces & Backgrounds */
+  --color-bg-base: #F8FAFC;
+  --color-bg-subtle: #F1F5F9;
+  --color-surface-default: #FFFFFF;
+  --color-surface-raised: #FFFFFF;
+  --color-surface-hover: #F8FAFC;
+  --color-surface-active: #F1F5F9;
+  --color-surface-overlay: rgba(15, 23, 42, 0.45);
+
+  /* Typography Colors */
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94A3B8;
+  --color-text-inverse: #FFFFFF;
+
+  /* Borders & Dividers */
+  --color-border-subtle: #E2E8F0;
+  --color-border-default: #CBD5E1;
+  --color-border-strong: #94A3B8;
+  --color-focus: #2563EB;
+  --color-focus-ring: rgba(37, 99, 235, 0.35);
+
+  /* Brand Accents */
+  --color-brand-primary: #2563EB;
+  --color-brand-hover: #1D4ED8;
+  --color-brand-active: #1E40AF;
+  --color-brand-subtle: #EFF6FF;
+  --color-brand-border: #BFDBFE;
+
+  /* Secondary Accents */
+  --color-accent-cyan: #0891B2;
+  --color-accent-cyan-subtle: #ECFEFF;
+  --color-accent-purple: #7C3AED;
+  --color-accent-purple-subtle: #F5F3FF;
+
+  /* Semantic Severity Tokens (WCAG 2.2 AA Verified) */
+  --color-sev-fatal-bg: #FEF2F2;
+  --color-sev-fatal-text: #991B1B;
+  --color-sev-fatal-border: #FECACA;
+  --color-sev-fatal-dot: #DC2626;
+
+  --color-sev-error-bg: #FFF1F2;
+  --color-sev-error-text: #BE123C;
+  --color-sev-error-border: #FECDD3;
+  --color-sev-error-dot: #E11D48;
+
+  --color-sev-warn-bg: #FFFBEB;
+  --color-sev-warn-text: #B45309;
+  --color-sev-warn-border: #FDE68A;
+  --color-sev-warn-dot: #F59E0B;
+
+  --color-sev-info-bg: #EFF6FF;
+  --color-sev-info-text: #1D4ED8;
+  --color-sev-info-border: #BFDBFE;
+  --color-sev-info-dot: #3B82F6;
+
+  --color-sev-debug-bg: #F1F5F9;
+  --color-sev-debug-text: #475569;
+  --color-sev-debug-border: #E2E8F0;
+  --color-sev-debug-dot: #64748B;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-drawer: -4px 0 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces & Backgrounds */
+  --color-bg-base: #0B0F17;
+  --color-bg-subtle: #111827;
+  --color-surface-default: #182234;
+  --color-surface-raised: #1E293B;
+  --color-surface-hover: #1F2C42;
+  --color-surface-active: #23344D;
+  --color-surface-overlay: rgba(3, 7, 18, 0.7);
+
+  /* Typography Colors */
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+  --color-text-inverse: #0B0F17;
+
+  /* Borders & Dividers */
+  --color-border-subtle: #1E293B;
+  --color-border-default: #334155;
+  --color-border-strong: #475569;
+  --color-focus: #60A5FA;
+  --color-focus-ring: rgba(96, 165, 250, 0.35);
+
+  /* Brand Accents */
+  --color-brand-primary: #3B82F6;
+  --color-brand-hover: #60A5FA;
+  --color-brand-active: #93C5FD;
+  --color-brand-subtle: rgba(59, 130, 246, 0.15);
+  --color-brand-border: #1E3A8A;
+
+  /* Secondary Accents */
+  --color-accent-cyan: #06B6D4;
+  --color-accent-cyan-subtle: rgba(6, 182, 212, 0.15);
+  --color-accent-purple: #A855F7;
+  --color-accent-purple-subtle: rgba(168, 85, 247, 0.15);
+
+  /* Semantic Severity Tokens */
+  --color-sev-fatal-bg: #450A0A;
+  --color-sev-fatal-text: #FCA5A5;
+  --color-sev-fatal-border: #7F1D1D;
+  --color-sev-fatal-dot: #EF4444;
+
+  --color-sev-error-bg: #4C0519;
+  --color-sev-error-text: #FDA4AF;
+  --color-sev-error-border: #881337;
+  --color-sev-error-dot: #F43F5E;
+
+  --color-sev-warn-bg: #451A03;
+  --color-sev-warn-text: #FCD34D;
+  --color-sev-warn-border: #78350F;
+  --color-sev-warn-dot: #F59E0B;
+
+  --color-sev-info-bg: #172554;
+  --color-sev-info-text: #93C5FD;
+  --color-sev-info-border: #1E3A8A;
+  --color-sev-info-dot: #60A5FA;
+
+  --color-sev-debug-bg: #1E293B;
+  --color-sev-debug-text: #94A3B8;
+  --color-sev-debug-border: #334155;
+  --color-sev-debug-dot: #64748B;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-drawer: -6px 0 28px rgba(0, 0, 0, 0.6);
+}

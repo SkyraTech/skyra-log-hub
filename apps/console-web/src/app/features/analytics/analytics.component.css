@@ -1,0 +1,59 @@
+.analytics-container {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.dimension-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background-color: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-2);
+}
+
+.picker-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: var(--font-medium);
+  padding-left: var(--space-1);
+}
+
+.dim-btn {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.dim-btn:hover {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.dim-btn.active {
+  background-color: var(--brand-primary);
+  color: #ffffff;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  gap: var(--space-6);
+}
+
+.chart-box {
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

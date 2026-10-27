@@ -1,0 +1,118 @@
+<div class="showcase-container">
+  <!-- Visual fixture disclaimer banner -->
+  <div class="fixture-banner" role="alert">
+    <div class="banner-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <div class="banner-text">
+      <strong>DEVELOPMENT VISUAL FIXTURE:</strong> The data and components on this page are isolated synthetic fixtures used strictly for UI/UX review and design verification. No live backend queries or privileged operations are invoked.
+    </div>
+  </div>
+
+  <skyra-page-header
+    title="Design System & Component Showcase"
+    description="Interactive preview of typography, buttons, badges, surface elevations, and high-density tables."
+  />
+
+  <!-- 1. Buttons & Variants -->
+  <skyra-card title="Buttons & Actions" subtitle="Standard button variants, sizes, and interactive states">
+    <div class="showcase-grid-rows">
+      <div class="showcase-row">
+        <span class="row-label">Primary:</span>
+        <div class="row-items">
+          <skyra-button variant="primary" size="sm">Small Primary</skyra-button>
+          <skyra-button variant="primary" size="md">Medium Primary</skyra-button>
+          <skyra-button variant="primary" size="lg">Large Primary</skyra-button>
+          <skyra-button variant="primary" [loading]="true">Loading</skyra-button>
+          <skyra-button variant="primary" [disabled]="true">Disabled</skyra-button>
+        </div>
+      </div>
+
+      <div class="showcase-row">
+        <span class="row-label">Secondary:</span>
+        <div class="row-items">
+          <skyra-button variant="secondary" size="sm">Small Secondary</skyra-button>
+          <skyra-button variant="secondary" size="md">Medium Secondary</skyra-button>
+          <skyra-button variant="secondary" size="lg">Large Secondary</skyra-button>
+          <skyra-button variant="secondary" [disabled]="true">Disabled</skyra-button>
+        </div>
+      </div>
+
+      <div class="showcase-row">
+        <span class="row-label">Ghost & Danger:</span>
+        <div class="row-items">
+          <skyra-button variant="ghost" size="md">Ghost Button</skyra-button>
+          <skyra-button variant="danger" size="md">Danger Action</skyra-button>
+          <skyra-button variant="danger" [disabled]="true">Disabled Danger</skyra-button>
+        </div>
+      </div>
+    </div>
+  </skyra-card>
+
+  <!-- 2. Badges & Log Severities -->
+  <skyra-card title="Badges & ECS Log Severity Indicators" subtitle="Semantic status badges and high-contrast log severity pills">
+    <div class="showcase-grid-rows">
+      <div class="showcase-row">
+        <span class="row-label">Status Badges:</span>
+        <div class="row-items">
+          <skyra-badge variant="brand">Brand Active</skyra-badge>
+          <skyra-badge variant="neutral">Neutral State</skyra-badge>
+          <skyra-badge variant="success">Engine Online</skyra-badge>
+          <skyra-badge variant="warning">WAL Delayed</skyra-badge>
+          <skyra-badge variant="danger">Critical Alert</skyra-badge>
+          <skyra-badge variant="purple">Parquet Storage</skyra-badge>
+        </div>
+      </div>
+
+      <div class="showcase-row">
+        <span class="row-label">Severity Pills:</span>
+        <div class="row-items">
+          <skyra-severity-badge severity="fatal" />
+          <skyra-severity-badge severity="error" />
+          <skyra-severity-badge severity="warn" />
+          <skyra-severity-badge severity="info" />
+          <skyra-severity-badge severity="debug" />
+        </div>
+      </div>
+    </div>
+  </skyra-card>
+
+  <!-- 3. High-Density Log Table Preview -->
+  <skyra-card title="High-Density Log Table Preview" subtitle="Demonstrating 32px compact / 40px comfortable row density with synthetic data">
+    <div class="table-showcase-box">
+      <skyra-log-table
+        [logs]="mockLogs"
+        [density]="showcaseDensity()"
+        [selectedId]="selectedLogId()"
+        (rowSelect)="onRowSelect($event)"
+        (densityChange)="onDensityChange($event)"
+      />
+    </div>
+  </skyra-card>
+
+  <!-- 4. Skeletons & Empty States -->
+  <div class="dual-column-grid">
+    <skyra-card title="Loading Skeletons" subtitle="Shimmer placeholder animations">
+      <div class="skeleton-showcase">
+        <skyra-skeleton width="100%" height="24px" />
+        <skyra-skeleton width="70%" height="16px" />
+        <skyra-skeleton width="40%" height="16px" />
+        <div class="skeleton-row">
+          <skyra-skeleton width="32px" height="32px" borderRadius="var(--radius-full)" />
+          <skyra-skeleton width="140px" height="20px" />
+        </div>
+      </div>
+    </skyra-card>
+
+    <skyra-card title="Empty State Pattern" subtitle="Accessible zero-data callout">
+      <skyra-empty-state
+        title="No items found"
+        message="This is a demonstration of the standardized empty state component."
+      />
+    </skyra-card>
+  </div>
+</div>

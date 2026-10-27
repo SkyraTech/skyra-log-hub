@@ -1,0 +1,81 @@
+/**
+ * Skyra LogHub — Typography Scale (typography.css)
+ * Task: LOGHUB-CONSOLE-002
+ * Reference: docs/console/04-UI_UX_DESIGN_SYSTEM.md
+ */
+
+:root {
+  --font-family-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+body {
+  font-family: var(--font-family-sans);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Scale Classes */
+.display-1 {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.heading-1 {
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.heading-2 {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.heading-3 {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.body-base {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+}
+
+.body-medium {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+}
+
+.caption {
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.code-base {
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+}
+
+.code-dense {
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 400;
+}

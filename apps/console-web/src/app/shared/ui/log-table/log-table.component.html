@@ -1,0 +1,100 @@
+<div class="log-table-container" [class.compact]="density() === 'compact'" [class.comfortable]="density() === 'comfortable'">
+  <!-- Controls toolbar -->
+  <div class="table-toolbar">
+    <div class="table-metrics">
+      <span class="count-badge">{{ logs().length }} events</span>
+    </div>
+    <div class="density-switch" role="group" aria-label="Table row density">
+      <button
+        type="button"
+        class="density-btn"
+        [class.active]="density() === 'compact'"
+        (click)="setDensity('compact')"
+        aria-label="Compact row density (32px)"
+        title="Compact (32px)"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+        Compact
+      </button>
+      <button
+        type="button"
+        class="density-btn"
+        [class.active]="density() === 'comfortable'"
+        (click)="setDensity('comfortable')"
+        aria-label="Comfortable row density (40px)"
+        title="Comfortable (40px)"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="5" x2="21" y2="5"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="19" x2="21" y2="19"/>
+        </svg>
+        Comfortable
+      </button>
+    </div>
+  </div>
+
+  <!-- Table wrapper -->
+  <div class="table-scroll-wrapper" tabindex="0" aria-label="Log events table">
+    <table class="log-table" role="grid">
+      <thead>
+        <tr>
+          <th scope="col" class="th-timestamp">Timestamp</th>
+          <th scope="col" class="th-severity">Severity</th>
+          <th scope="col" class="th-service">Service</th>
+          <th scope="col" class="th-message">Message</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          @for (item of [1, 2, 3, 4, 5, 6, 7, 8]; track item) {
+            <tr class="loading-row">
+              <td><skyra-skeleton width="180px" height="14px" /></td>
+              <td><skyra-skeleton width="56px" height="18px" /></td>
+              <td><skyra-skeleton width="110px" height="14px" /></td>
+              <td><skyra-skeleton width="100%" height="14px" /></td>
+            </tr>
+          }
+        } @else if (logs().length === 0) {
+          <tr>
+            <td colspan="4" class="empty-cell">
+              <skyra-empty-state
+                title="No log events found"
+                message="No logs match your filter criteria. Try expanding your search timeframe or modifying severity filters."
+              />
+            </td>
+          </tr>
+        } @else {
+          @for (log of logs(); track log.id) {
+            <tr
+              class="data-row"
+              [class.selected]="selectedId() === log.id"
+              (click)="onRowClick(log)"
+              (keydown)="onKeyDown($event, log)"
+              tabindex="0"
+              role="row"
+              [attr.aria-selected]="selectedId() === log.id"
+            >
+              <td class="td-timestamp font-mono">
+                {{ formatTimestamp(log.timestamp) }}
+              </td>
+              <td class="td-severity">
+                <skyra-severity-badge [severity]="log.severity" />
+              </td>
+              <td class="td-service">
+                <span class="service-tag font-mono">{{ log.service }}</span>
+              </td>
+              <td class="td-message font-mono">
+                <span class="message-text" [title]="log.message">{{ log.message }}</span>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

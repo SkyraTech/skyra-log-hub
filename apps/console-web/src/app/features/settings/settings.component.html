@@ -1,0 +1,109 @@
+<div class="settings-container">
+  <skyra-page-header
+    title="Console Settings"
+    description="Interface personalization, endpoint configuration, and security posture."
+  />
+
+  <div class="settings-sections">
+    <!-- Appearance / Theme -->
+    <skyra-card title="Appearance & Theme" subtitle="Switch between Dark, Light, or System OS synchronization">
+      <div class="theme-selector-area">
+        <div class="theme-modes-grid">
+          <button
+            type="button"
+            class="mode-card"
+            [class.active]="currentTheme() === 'dark'"
+            (click)="setTheme('dark')"
+          >
+            <div class="mode-preview dark-preview">
+              <div class="preview-bar"></div>
+              <div class="preview-content"></div>
+            </div>
+            <span class="mode-name">Dark Mode (Default)</span>
+          </button>
+
+          <button
+            type="button"
+            class="mode-card"
+            [class.active]="currentTheme() === 'light'"
+            (click)="setTheme('light')"
+          >
+            <div class="mode-preview light-preview">
+              <div class="preview-bar"></div>
+              <div class="preview-content"></div>
+            </div>
+            <span class="mode-name">Light Mode</span>
+          </button>
+
+          <button
+            type="button"
+            class="mode-card"
+            [class.active]="currentTheme() === 'system'"
+            (click)="setTheme('system')"
+          >
+            <div class="mode-preview system-preview">
+              <div class="preview-bar"></div>
+              <div class="preview-content"></div>
+            </div>
+            <span class="mode-name">Sync with System</span>
+          </button>
+        </div>
+        <span class="theme-active-note">
+          Current active palette: <strong>{{ resolvedTheme() }}</strong>
+        </span>
+      </div>
+    </skyra-card>
+
+    <!-- API & Environment Config -->
+    <skyra-card title="API Endpoints & Runtime Config" subtitle="Configured service URLs from AppConfigService">
+      <div class="config-table">
+        <div class="config-row">
+          <span class="config-key">Query Service Base URL</span>
+          <span class="config-val font-mono">{{ config().queryApiBaseUrl }}</span>
+        </div>
+        <div class="config-row">
+          <span class="config-key">BFF Admin Base URL</span>
+          <span class="config-val font-mono">{{ config().adminApiBaseUrl }}</span>
+        </div>
+        <div class="config-row">
+          <span class="config-key">Environment</span>
+          <span class="config-val font-mono">{{ config().environment }}</span>
+        </div>
+        <div class="config-row">
+          <span class="config-key">Local Preview Mode</span>
+          <span class="config-val font-mono">{{ config().previewMode ? 'Enabled' : 'Disabled' }}</span>
+        </div>
+      </div>
+    </skyra-card>
+
+    <!-- Security Posture -->
+    <skyra-card title="Frontend Security Posture" subtitle="Defense-in-depth protections implemented in CONSOLE-002">
+      <div class="security-list">
+        <div class="sec-item">
+          <svg class="sec-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <div class="sec-desc">
+            <strong>XSS Mitigation:</strong> All log payloads are rendered strictly as text nodes. No <code>[innerHTML]</code> on untrusted log data.
+          </div>
+        </div>
+        <div class="sec-item">
+          <svg class="sec-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <div class="sec-desc">
+            <strong>Credential Isolation:</strong> No long-lived access tokens or client secrets stored in <code>localStorage</code> or sessionStorage.
+          </div>
+        </div>
+        <div class="sec-item">
+          <svg class="sec-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <div class="sec-desc">
+            <strong>RFC 7807 Error Handling:</strong> Structured API error details normalized with correlation IDs without leaking stack traces.
+          </div>
+        </div>
+      </div>
+    </skyra-card>
+  </div>
+</div>

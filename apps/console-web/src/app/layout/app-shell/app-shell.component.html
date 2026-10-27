@@ -1,0 +1,53 @@
+<div class="shell-layout">
+  <!-- Desktop Sidebar -->
+  <div class="desktop-sidebar-container">
+    <skyra-sidebar
+      [collapsed]="sidebarCollapsed()"
+      (toggleCollapse)="toggleSidebar()"
+    />
+  </div>
+
+  <!-- Mobile Drawer Backdrop -->
+  @if (mobileNavOpen()) {
+    <div
+      class="mobile-backdrop"
+      (click)="closeMobileNav()"
+      aria-hidden="true"
+    ></div>
+  }
+
+  <!-- Mobile Drawer -->
+  <div
+    class="mobile-drawer"
+    [class.open]="mobileNavOpen()"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Mobile Navigation"
+  >
+    <div class="drawer-header">
+      <span class="drawer-title">Navigation</span>
+      <button
+        type="button"
+        class="drawer-close-btn"
+        (click)="closeMobileNav()"
+        aria-label="Close navigation menu"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="drawer-content" (click)="closeMobileNav()">
+      <skyra-sidebar [collapsed]="false" />
+    </div>
+  </div>
+
+  <!-- Main View Area -->
+  <div class="shell-main">
+    <skyra-topbar (toggleMobileNav)="toggleMobileNav()" />
+    <main id="main-content" class="content-outlet" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+</div>

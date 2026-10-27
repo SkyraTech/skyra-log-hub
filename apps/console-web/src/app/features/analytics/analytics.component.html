@@ -1,0 +1,44 @@
+<div class="analytics-container">
+  <skyra-page-header
+    title="Analytics & Aggregations"
+    description="Multi-dimensional faceted analysis and aggregate distribution across ingested log streams."
+  >
+    <div header-actions class="header-actions">
+      <div class="dimension-picker" role="group" aria-label="Group by dimension">
+        <span class="picker-label">Group By:</span>
+        @for (dim of dimensions; track dim.value) {
+          <button
+            type="button"
+            class="dim-btn font-mono"
+            [class.active]="selectedDimension() === dim.value"
+            (click)="setDimension(dim.value)"
+          >
+            {{ dim.label }}
+          </button>
+        }
+      </div>
+    </div>
+  </skyra-page-header>
+
+  <div class="analytics-grid">
+    <!-- Volume Distribution Chart Card -->
+    <skyra-card title="Event Distribution Over Time" subtitle="Bucket interval: 5 minutes">
+      <div class="chart-box">
+        <skyra-empty-state
+          title="Aggregations pending CONSOLE-005"
+          message="DuckDB hybrid aggregation engine is verified in Query Service. Console analytics charts will connect in Milestone CONSOLE-005."
+        />
+      </div>
+    </skyra-card>
+
+    <!-- Facet Cardinality Breakdown Card -->
+    <skyra-card title="Top Facet Breakdown" [subtitle]="'Ranked by ' + selectedDimension()">
+      <div class="chart-box">
+        <skyra-empty-state
+          title="No facet data loaded"
+          message="Facet counters require an authenticated BFF session and live Query Service aggregate endpoint."
+        />
+      </div>
+    </skyra-card>
+  </div>
+</div>

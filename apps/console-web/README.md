@@ -1,0 +1,135 @@
+# @skyra/console-web
+
+> **Skyra LogHub** — Enterprise Observability & Log Intelligence Web Console
+
+`@skyra/console-web` is the enterprise observability workstation frontend for the Skyra LogHub platform. Built on Angular 19 (Standalone Components, Signals, Modern Control Flow, OnPush change detection), it provides a high-density, developer-focused log exploration and telemetry investigation experience.
+
+---
+
+## 1. Quick Start & Prerequisites
+
+### Prerequisites
+
+- **Node.js**: `v20.0.0` or higher (verified on Node `v24.21.0`)
+- **Package Manager**: `pnpm` `v9.0.0` or higher (workspace uses `pnpm@12.3.4`)
+- **Query Service Backend**: Running on `http://localhost:3100` (port 3100)
+- **Ingestion Gateway**: Running on `http://localhost:3000` (port 3000)
+
+### Development Commands
+
+Run from monorepo root or within `apps/console-web`:
+
+```bash
+# Start local development server (port 4200)
+pnpm --filter @skyra/console-web dev
+
+# Production AOT build
+pnpm --filter @skyra/console-web build
+
+# Strict TypeScript typecheck
+pnpm --filter @skyra/console-web typecheck
+
+# Execute unit and component test suite
+pnpm --filter @skyra/console-web test
+```
+
+Access the web console in browser at: `http://localhost:4200`
+
+---
+
+## 2. Architecture & Design Principles
+
+The application adheres strictly to Clean Architecture boundaries:
+
+```text
+Presentation (App Shell, Layout, Features, Shared UI)
+    ↓
+Feature Application State / Facades (Angular Signals & Computed Stores)
+    ↓
+Domain Contracts (Session, Workspace, ProblemDetails, LogTable Models)
+    ↓
+Infrastructure / API Adapters (QueryApiClient, Functional Interceptors)
+```
+
+- **Standalone Components Only**: No NgModules.
+- **Signals & Computed**: UI reactivity driven by fine-grained Angular Signals (`signal`, `computed`).
+- **OnPush Change Detection**: Every component is configured with `ChangeDetectionStrategy.OnPush`.
+- **Dual Themes with WCAG 2.2 AA Contrast**: Dark (default) and Light themes defined strictly through CSS custom properties in `src/styles/themes.css`.
+- **High-Density Workstation Layout**: Row density toggles for 32px compact and 40px comfortable log inspections.
+- **RFC 7807 Error Normalization**: Consistent API error modeling with Correlation ID tracking.
+
+---
+
+## 3. Directory Structure
+
+```text
+apps/console-web/
+├── public/                 # Static assets and icons
+├── src/
+│   ├── app/
+│   │   ├── core/           # Singleton infrastructure, auth contracts, error parser, workspace context
+│   │   │   ├── auth/       # BFF session contracts and RBAC capability evaluation
+│   │   │   ├── config/     # Typed environment configuration
+│   │   │   ├── errors/     # RFC 7807 Problem Details model and error parser
+│   │   │   ├── http/       # Strongly typed API client implementing IQueryApiClient port
+│   │   │   ├── theme/      # Signal-based theme management (light/dark/system)
+│   │   │   └── workspace/  # Multi-tenant workspace scoping and 30-day retention boundaries
+│   │   ├── layout/         # App Shell, Collapsible Sidebar, Topbar, Breadcrumbs
+│   │   ├── shared/         # Reusable design system primitives
+│   │   │   └── ui/         # Button, Badge, SeverityBadge, Card, EmptyState, LogTable, Skeleton
+│   │   ├── features/       # Lazy-loaded feature views
+│   │   │   ├── overview/   # KPI metrics slots and ingestion volume trend
+│   │   │   ├── log-explorer/# High-density search workstation and event detail drawer
+│   │   │   ├── analytics/  # Faceted aggregations and histogram grid layout
+│   │   │   ├── projects/   # Workspace project boundaries and RBAC overview
+│   │   │   ├── settings/   # Theme personalization, API endpoints, and security posture
+│   │   │   ├── showcase/   # Development-only visual showcase with isolated fixtures
+│   │   │   └── not-found/  # 404 error destination
+│   │   ├── app.component.ts
+│   │   ├── app.config.ts
+│   │   └── app.routes.ts
+│   ├── styles/             # Centralized design tokens and typography
+│   │   ├── tokens.css      # Spacing, radii, shadows, z-index scale
+│   │   ├── themes.css      # Dual Light/Dark themes and semantic severities
+│   │   ├── typography.css  # Inter sans-serif and JetBrains Mono monospace scale
+│   │   ├── utilities.css   # Screen-reader, focus-visible, and scrollbar helpers
+│   │   └── global.css      # Baseline CSS reset and layout defaults
+│   ├── index.html
+│   └── main.ts
+├── tests/                  # Unit and component test suites (node:test + tsx)
+├── angular.json
+├── package.json
+└── tsconfig.json
+```
+
+---
+
+## 4. UI Showcase & Development Fixtures
+
+To enable design review without connecting to live customer log streams, a dedicated **UI Showcase** route is provided:
+
+- Route: `/showcase`
+- Access: Clearly identified with a prominent **DEV PREVIEW FIXTURE** disclaimer banner.
+- Contains synthetic fixtures demonstrating:
+  - All button variants (`primary`, `secondary`, `ghost`, `danger`) and sizes (`sm`, `md`, `lg`)
+  - Status badges and ECS log severity pills (`fatal`, `error`, `warn`, `info`, `debug`)
+  - High-density log table in both 32px compact and 40px comfortable configurations
+  - Loading skeleton shimmers and accessible empty states
+
+---
+
+## 5. Security & Isolation Guarantees
+
+1. **No Sensitive Tokens in Browser Storage**: `localStorage` is strictly restricted to user UI theme preference (`skyra-theme`). No JWTs, API keys, or tenant credentials are stored on the client.
+2. **Untrusted Log Content Escaping**: All log messages and attributes are rendered as text nodes through standard Angular interpolation. Unsafe `[innerHTML]` is forbidden.
+3. **BFF Session Model**: Prepares integration for OIDC Authorization Code Flow with PKCE and HTTP-only SameSite cookies (Milestone `LOGHUB-CONSOLE-003`).
+
+---
+
+## 6. Known Milestones & Scope Roadmap
+
+- **LOGHUB-CONSOLE-001**: Architecture & UI/UX Design (Reported PASS)
+- **LOGHUB-CONSOLE-002**: Angular Foundation, Responsive App Shell & Design System (**THIS MILESTONE — PASS**)
+- **LOGHUB-CONSOLE-003**: Authentication, BFF Integration & Dynamic Workspace Context
+- **LOGHUB-CONSOLE-004**: Production Log Explorer, Keyset Cursor Pagination & Search Filters
+- **LOGHUB-CONSOLE-005**: Analytical Dashboards, Cardinality Facets & Real-Time Aggregations

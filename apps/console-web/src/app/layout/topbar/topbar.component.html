@@ -1,0 +1,59 @@
+<header class="topbar">
+  <!-- Left section: mobile hamburger & breadcrumbs -->
+  <div class="topbar-left">
+    <button
+      type="button"
+      class="mobile-menu-btn"
+      (click)="onMobileNavClick()"
+      aria-label="Open navigation menu"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <skyra-breadcrumbs />
+  </div>
+
+  <!-- Right section: Workspace Context, Environment, Retention, Theme Toggle, Profile -->
+  <div class="topbar-right">
+    <!-- Workspace & Tenant badge -->
+    <div class="context-pill" title="Active Tenant & Project Context">
+      <span class="tenant-label">{{ currentContext().tenantId }}</span>
+      <span class="context-divider">/</span>
+      <span class="project-label">{{ currentContext().projectId }}</span>
+    </div>
+
+    <!-- Environment pill -->
+    <div class="env-badge" [class.prod]="currentContext().environment === 'production'">
+      <span class="env-dot"></span>
+      <span class="env-name">{{ currentContext().environment }}</span>
+    </div>
+
+    <!-- Theme Toggle -->
+    <skyra-theme-toggle />
+
+    <!-- User Profile indicator -->
+    <div class="user-profile" [title]="currentUser() ? currentUser()?.email : 'Unauthenticated / Dev Mode'">
+      <div class="avatar" aria-hidden="true">
+        @if (currentUser()) {
+          {{ currentUser()?.fullName?.substring(0, 2)?.toUpperCase() }}
+        } @else {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        }
+      </div>
+      <div class="user-meta">
+        <span class="user-name">
+          {{ currentUser() ? currentUser()?.fullName : 'Dev Preview' }}
+        </span>
+        <span class="user-role">
+          {{ currentUser() ? currentUser()?.roles?.[0] : 'Local UI Mode' }}
+        </span>
+      </div>
+    </div>
+  </div>
+</header>

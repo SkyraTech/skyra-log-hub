@@ -1,0 +1,47 @@
+<div class="projects-container">
+  <skyra-page-header
+    title="Workspace Projects"
+    description="Manage tenant data isolation boundaries, project keys, and ingestion credentials."
+  />
+
+  <div class="projects-grid">
+    <skyra-card [title]="'Current Scope: ' + context().tenantId" subtitle="Configured tenant context">
+      <div class="project-details">
+        <div class="detail-row">
+          <span class="detail-label">Active Project ID</span>
+          <span class="detail-val font-mono">{{ context().projectId }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Target Environment</span>
+          <span class="detail-val">
+            <skyra-badge variant="brand">{{ context().environment }}</skyra-badge>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Retention Boundary</span>
+          <span class="detail-val font-mono">30 Days</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Administration State</span>
+          <span class="detail-val">
+            <skyra-badge variant="neutral">BFF Integration in CONSOLE-003</skyra-badge>
+          </span>
+        </div>
+      </div>
+    </skyra-card>
+
+    <skyra-card title="Project Creation & RBAC" subtitle="Role-based administration">
+      <p class="admin-notice">
+        Dynamic project creation, multi-tenant workspace switching, and API key provisioning require the NestJS BFF administration endpoints being designed for Task <strong>CONSOLE-003</strong>.
+      </p>
+      <div class="capabilities-box">
+        <span class="cap-title">Configured Architecture Standards:</span>
+        <ul class="cap-list">
+          <li>Tenancy model: Shared storage, strict tenant_id & project_id row isolation.</li>
+          <li>Ingestion endpoints: <code>/v1/logs</code> with HMAC / Api-Key authentication.</li>
+          <li>Query authorization: Scoped to verified session claims.</li>
+        </ul>
+      </div>
+    </skyra-card>
+  </div>
+</div>
