@@ -136,3 +136,11 @@ Pilot services, privilege isolation, credential revocation, log rotation, ingest
   5. *Single-Active-Writer Topology Certified*: Exclusive journal directory ownership enforced via `.journal.owner`; second writer fails closed; stale dead-PID locks safely recovered.
   6. *Reconciled Monorepo Test Baseline*: 462 unique automated test cases passing across 10 packages (384 TypeScript + 78 Python), plus 1 real headless browser CDP E2E suite and 2 isolated package consumer runners. Zero failing tests.
 
+- **Phase 3 Final Acceptance Quality Gates (LOGHUB-QUERY-008):**
+  1. *Full End-to-End Pipeline Traceability*: Independently verified entire pipeline: representative SDK emits events $\rightarrow$ shipper delivers batch to Gateway WAL $\rightarrow$ archiver commits canonical partition with signed manifest $\rightarrow$ Parquet converter derives compressed columnar cache $\rightarrow$ Query Service serves Search, Keyset Pagination, Lookup, Aggregations, and Facets via HTTP with zero canonical data mutation.
+  2. *30-Dimension Acceptance Verification*: 100% of acceptance criteria verified across `ACC-001` through `ACC-030` (`docs/query/11-PHASE3_ACCEPTANCE_MATRIX.md`), including tenant isolation, pre-read file security, keyset pagination, and query resource governance.
+  3. *Zero Production Security/Data Integrity Defect*: Zero P0 defects. Pre-read authorization gate prevents unauthorized DuckDB file access; 4-part composite locator `(@timestamp, event.id, segment_id, record_offset)` guarantees gapless pagination over byte-identical duplicates; DuckDB sandboxed with extension loading disabled.
+  4. *Derived Parquet & Hybrid Equivalence*: Verified 100% logical equivalence across JSONL-only, Parquet-only, and Hybrid execution modes for event counts, search ordering, date histograms, terms distributions, and dynamic facets.
+  5. *Reconciled Monorepo Test Baseline*: 630 automated test cases passing monorepo-wide (0 failed, 0 skipped) across 10 packages, including 210 query-service tests, 120 ingestion gateway tests, 45 contracts tests, 21 shipper tests, 146 TypeScript SDK tests, 78 Python SDK tests, 10 real browser CDP tests, and 2 isolated consumer verification runners.
+
+

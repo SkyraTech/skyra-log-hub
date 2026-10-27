@@ -93,4 +93,24 @@ Local synthetic → isolated staging with 2 demo services → private pilot with
 - **Graceful Shutdown**:
   - Ingestion gateway flushes in-memory WAL buffers, executes synchronous `fsync()`, releases `.journal.owner`, closes PostgreSQL pools, and drains connections within 10 seconds.
 
+## 15. Phase 3 Query Service Deployment Architecture & Operational Controls (LOGHUB-QUERY-008)
+- **Service Decoupling & Read-Only Invariants**:
+  - `apps/query-service` operates as an independent NestJS microservice distinct from `apps/ingestion-gateway`.
+  - Canonical archive directories (`ARCHIVE_ROOT`) must be mounted **read-only** (`ro`) for all query worker containers, providing OS-level write immunity.
+  - Derived Parquet cache (`PARQUET_CACHE_ROOT`) requires read-write access for conversion workers and read-only access for pure query workers.
+- **DuckDB Runtime Sandboxing**:
+  - In-memory execution (`DuckDbInstanceManager`) with explicit memory limits (`DUCKDB_MAX_MEMORY=512MB` default) and worker thread caps (`DUCKDB_THREADS=2`).
+  - Community and remote extension loading strictly disabled (`autoinstall_known_extensions: false`, `autoload_known_extensions: false`).
+  - Raw filesystem access bounded by pre-read descriptor validation before DuckDB opens any files.
+- **Multi-Tenant Concurrency & Fair-Share Governance**:
+  - `QueryResourceGovernorService` limits concurrent queries (default 4 execution slots, 16 queued requests).
+  - Per-tenant fair-share scheduling caps active execution slots (max 2 per tenant), preventing noisy neighbor saturation.
+  - Client disconnections abort execution via DuckDB's native `conn.interrupt()` to release threads immediately.
+- **Production Deployment Prerequisites (from `docs/query/12-PHASE3_OPERATIONS_GAPS.md`)**:
+  - Corporate OIDC/JWKS identity provider configuration (fail-closed in production, replacing test mock tokens).
+  - Read-only container volume mounts (`ro` on `/var/loghub/archive`).
+  - Process cgroups memory limit (1.5x DuckDB configured budget) to prevent host OOM.
+  - Dedicated conversion worker isolation or distributed lock for multi-replica deployments.
+
+
 

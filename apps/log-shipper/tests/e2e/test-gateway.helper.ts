@@ -39,6 +39,7 @@ export async function startTestGateway(): Promise<TestGatewayInstance> {
 
   process.env['WAL_DIRECTORY'] = walDir;
   process.env['ARCHIVE_ROOT'] = archiveDir;
+  process.env['DATABASE_URL'] = 'postgresql://REPLACE_ME';
 
   const validToken = 'sk_live_e2e_valid_token_001';
   const tokenHash = crypto.createHash('sha256').update(validToken).digest('hex');

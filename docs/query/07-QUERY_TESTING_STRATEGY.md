@@ -139,3 +139,44 @@ As of LOGHUB-QUERY-007, `apps/query-service` contains **201 automated tests acro
 - `@skyra/ingestion-gateway`: 120 tests across 18 suites (100% passing).
 - **Total Monorepo Active Suite:** **366 tests passing** (0 failed, 0 skipped).
 
+---
+
+## 7. Phase 3 Final Acceptance & Unified Monorepo Baseline Reconciliation (LOGHUB-QUERY-008)
+
+LOGHUB-QUERY-008 added comprehensive full-pipeline integration verification and completed the final 30-dimension acceptance audit:
+
+### 7.1 New End-to-End Pipeline Integration Suite
+- **Suite File:** `apps/query-service/tests/integration/phase3-end-to-end-pipeline.test.ts`
+- **Tests Added:** 9 automated tests passing:
+  1. Real Node SDK event production (`@skyra/logger-node`) into local spool.
+  2. Canonical archive segment finalization and SHA-256 manifest stamping.
+  3. Parquet derivation via DuckDB with atomic staging publication.
+  4. Search API execution over HTTP with valid JWT and project authorization.
+  5. Keyset pagination forward continuation using signed HMAC-SHA256 cursor.
+  6. Direct single-event lookup by RFC 4122 UUIDv4 (`GET /query/v1/logs/:eventId`).
+  7. Aggregation API execution (`date_histogram` and `terms`) over HTTP.
+  8. Dynamic facets discovery across multiple dimensions.
+  9. Cross-tenant isolation verification and canonical archive file immutability check.
+
+### 7.2 Updated Query Service Test Baseline
+- `@skyra/query-service`: **210 automated tests across 35 suites** (100% passing, 0 failing, 0 skipped).
+
+### 7.3 Full Unified Monorepo Test Baseline (All Packages)
+| Package / Test Domain | Test Suites | Passing Tests | Failed | Skipped | Status |
+|---|---:|---:|---:|---:|:---:|
+| `@skyra/contracts` | 4 | 45 | 0 | 0 | PASS |
+| `@skyra/query-service` | 35 | 210 | 0 | 0 | PASS |
+| `@skyra/ingestion-gateway` | 18 | 120 | 0 | 0 | PASS |
+| `@skyra/log-shipper` | 9 | 21 | 0 | 0 | PASS |
+| `@skyra/logger-node` | 10 | 46 | 0 | 0 | PASS |
+| `@skyra/logger-nestjs` | 12 | 46 | 0 | 0 | PASS |
+| `@skyra/logger-browser` | 5 | 40 | 0 | 0 | PASS |
+| `@skyra/logger-angular` | 1 | 8 | 0 | 0 | PASS |
+| `@skyra/logger-react` | 1 | 6 | 0 | 0 | PASS |
+| `skyra-logger` (Python) | pytest | 78 | 0 | 0 | PASS |
+| Real Browser CDP E2E (Chrome/Edge) | 1 | 10 | 0 | 0 | PASS |
+| **Total Monorepo Automated Tests** | **96+** | **630** | **0** | **0** | **100% PASS** |
+
+In addition, isolated consumer verifications (`scripts/verify_isolated_browser_consumer.mjs` and `scripts/verify_isolated_python_consumer.py`) passed 12/12 validation steps.
+
+

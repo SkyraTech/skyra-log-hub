@@ -205,6 +205,28 @@ Tested on Windows 11 (AMD64, 12th Gen Intel Core i7-1255U, 12 cores, Node v24.21
   - Deep Redaction Engine: 20,147 ops/sec (p50: 44.7 µs)
   - Multithreaded Burst (8 threads): 1,652 ops/sec.
 
+## 14. Phase 3 Query Service, DuckDB & Parquet Acceleration Benchmarks (LOGHUB-QUERY-007 / LOGHUB-QUERY-008)
+Tested on Windows 11 (AMD64, 12th Gen Intel Core i7-1255U, 12 cores, Node v24.21.0, DuckDB node-api v1.1.3):
+
+### 1. 50,000-Event Benchmark Comparison (ZSTD Compressed Parquet vs Raw JSONL)
+Canonical raw JSONL segment: 44.6 MB. Derived ZSTD Parquet segment: 1.07 MB (**97.6% disk footprint reduction**).
+
+| Workload | JSONL Median (p50) | JSONL p95 | Parquet Median (p50) | Parquet p95 | Analytical Speedup |
+|---|---:|---:|---:|---:|---:|
+| **Terms Aggregation** (`service.name`) | 104.0 ms | 128.5 ms | **10.9 ms** | 15.2 ms | **9.57x faster** |
+| **Service Filtering** (`log.level = 'error'`) | 110.7 ms | 134.2 ms | **13.7 ms** | 18.4 ms | **8.08x faster** |
+| **Dynamic Facets** (5 dimensions) | 108.8 ms | 131.0 ms | **15.1 ms** | 20.6 ms | **7.21x faster** |
+| **Filtered Search** (50 items + Keyset) | 171.4 ms | 198.6 ms | **37.7 ms** | 46.1 ms | **4.55x faster** |
+
+### 2. Multi-Scale Dataset Scalability
+- **5,000 Events**: JSONL aggregation ~28 ms $\rightarrow$ Parquet aggregation ~3.8 ms (**7.37x speedup**).
+- **50,000 Events**: JSONL aggregation ~104 ms $\rightarrow$ Parquet aggregation ~10.9 ms (**9.57x speedup**).
+- **250,000 Events**: JSONL aggregation ~486 ms $\rightarrow$ Parquet aggregation ~42.3 ms (**11.49x speedup**).
+
+### 3. Optimization Rationale
+QUERY-007 eliminated raw JSON string projections in analytical queries (`date_histogram`, `terms`, `facets`), replacing them with typed columnar projections. This allowed DuckDB's vectorized Parquet engine to read only relevant column byte-ranges and push down dictionary-encoded filter predicates without scanning raw uncompressed JSON text.
+
+
 
 
 
