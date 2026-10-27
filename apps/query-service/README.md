@@ -83,6 +83,12 @@ Environment variables parsed and validated at service startup:
 | `JWT_ISSUER` | `https://auth.skyra.internal` | Expected JWT issuer (`iss`) |
 | `JWT_AUDIENCE` | `skyra-loghub-query` | Expected JWT audience (`aud`) |
 | `JWT_SECRET_OR_PUBLIC_KEY` | *(dev key)* | Verification secret or PEM public key |
+| `QUERY_SOURCE_MODE` | `hybrid` | Execution mode (`hybrid`, `jsonl_only`, `parquet_only`) |
+| `PARQUET_CACHE_ENABLED` | `true` | Derived Parquet cache enablement |
+| `PARQUET_CACHE_ROOT` | `../derived-parquet` | Isolated root path for derived Parquet files |
+| `PARQUET_MATERIALIZATION_ENABLED` | `true` | Asynchronous/on-demand segment materialization |
+| `PARQUET_MAX_WORKERS` | `2` | Max concurrent Parquet conversion workers |
+| `PARQUET_VERIFY_CHECKSUMS` | `true` | Cryptographic SHA-256 verification on Parquet cache |
 | `CURSOR_SIGNING_SECRET` | *(dev key)* | HMAC-SHA256 cursor signing secret (min 32 chars in production) |
 | `CURSOR_SIGNING_KEY_ID` | `v1` | Identifier for active cursor signing key |
 | `CURSOR_TTL_MS` | `86400000` | Cursor expiration window (default 24 hours) |
@@ -98,7 +104,7 @@ Environment variables parsed and validated at service startup:
 ## 5. Development & Testing
 
 ```bash
-# Run all Query Service tests (unit, integration, security, architecture) - 116 tests across 19 suites
+# Run all Query Service tests (unit, integration, security, architecture) - 201 tests across 34 suites
 pnpm --filter @skyra/query-service test
 
 # Run unit tests only
@@ -116,3 +122,4 @@ pnpm --filter @skyra/query-service exec tsc --noEmit
 # Build production bundle
 pnpm --filter @skyra/query-service build
 ```
+

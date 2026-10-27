@@ -7,6 +7,7 @@ import {
 } from '../domain/parquet-catalog.port.js';
 import { QueryConfigService } from '../../../config/query-config.service.js';
 import { QueryAuditService } from '../../audit/query-audit.service.js';
+import { ArchiveIntegrityException } from '../../../common/errors/query.errors.js';
 
 export interface PlannedHybridSources {
   readonly canonicalDescriptors: readonly TrustedArchiveSegmentDescriptor[];
@@ -33,7 +34,11 @@ export class HybridSourcePlannerService {
     projects?: readonly string[],
     correlationId?: string,
   ): Promise<PlannedHybridSources> {
-    if (!this.config.parquetCacheEnabled || descriptors.length === 0) {
+    if (
+      !this.config.parquetCacheEnabled ||
+      descriptors.length === 0 ||
+      this.config.hybridSourceMode === 'jsonl_only'
+    ) {
       return {
         canonicalDescriptors: descriptors,
         parquetDescriptors: [],
@@ -51,6 +56,10 @@ export class HybridSourcePlannerService {
         const parquet = await this.catalog.getParquetDescriptor(descriptor);
         if (parquet && parquet.integrityStatus === 'VERIFIED') {
           parquetSelected.push(parquet);
+        } else if (this.config.hybridSourceMode === 'parquet_only') {
+          throw new ArchiveIntegrityException(
+            `Parquet-only diagnostic mode rejected: verified Parquet cache is unavailable for segment ${descriptor.segmentFilename}.`,
+          );
         } else {
           canonicalSelected.push(descriptor);
           if (this.config.enableAuditLogging) {
@@ -64,6 +73,14 @@ export class HybridSourcePlannerService {
           }
         }
       } catch (err: unknown) {
+        if (err instanceof ArchiveIntegrityException) {
+          throw err;
+        }
+        if (this.config.hybridSourceMode === 'parquet_only') {
+          throw new ArchiveIntegrityException(
+            `Parquet-only diagnostic mode rejected: error resolving Parquet cache for segment ${descriptor.segmentFilename}: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
         const msg = err instanceof Error ? err.message : String(err);
         this.logger.warn(`Error resolving Parquet cache for ${descriptor.segmentFilename}, falling back to JSONL: ${msg}`);
         canonicalSelected.push(descriptor);

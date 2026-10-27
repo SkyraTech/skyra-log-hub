@@ -45,13 +45,15 @@ export class SqlGeneratorService {
 
     const subqueries: string[] = [];
 
+    const isParquetOnly = hasParquet && !hasJsonl;
+
     if (hasParquet) {
       const parquetParams: string[] = [];
       for (const d of plan.parquetDescriptors!) {
         const norm = d.resolvedPath.replace(/\\/g, '/');
         parquetParams.push(nextParam(norm));
       }
-      subqueries.push(`SELECT "@timestamp", "event.id", "segment_id", "record_offset", json FROM read_parquet([${parquetParams.join(', ')}], filename=true)`);
+      subqueries.push(`SELECT "@timestamp", "event.id", "segment_id", "record_offset", "tenant_id", "project_id", "environment", json FROM read_parquet([${parquetParams.join(', ')}], filename=true)`);
     }
 
     if (hasJsonl) {
@@ -66,6 +68,9 @@ export class SqlGeneratorService {
         json_extract_string(json, '$.event.id') AS "event.id",
         regexp_extract(filename, '([^/\\\\]+)$', 1) AS "segment_id",
         CAST(row_number() OVER (PARTITION BY filename ORDER BY json_extract_string(json, '$."@timestamp"'), json_extract_string(json, '$.event.id'), md5(json)) - 1 AS BIGINT) AS "record_offset",
+        json_extract_string(json, '$.skyra.tenant_id') AS "tenant_id",
+        json_extract_string(json, '$.skyra.project_id') AS "project_id",
+        COALESCE(json_extract_string(json, '$.service.environment'), json_extract_string(json, '$.skyra.environment')) AS "environment",
         json
       FROM read_ndjson_objects([${jsonlParams.join(', ')}], filename=true)`);
     }
@@ -77,30 +82,51 @@ export class SqlGeneratorService {
 
     // Tenant isolation: Double defense-in-depth row check
     const tenantParam = nextParam(plan.tenantId);
-    whereClauses.push(`json_extract_string(json, '$.skyra.tenant_id') = ${tenantParam}`);
+    if (isParquetOnly) {
+      whereClauses.push(`"tenant_id" = ${tenantParam}`);
+    } else {
+      whereClauses.push(`json_extract_string(json, '$.skyra.tenant_id') = ${tenantParam}`);
+    }
 
     // Project scope isolation
     if (plan.authorizedProjects.length === 1 && plan.authorizedProjects[0]) {
       const projParam = nextParam(plan.authorizedProjects[0]);
-      whereClauses.push(`json_extract_string(json, '$.skyra.project_id') = ${projParam}`);
+      if (isParquetOnly) {
+        whereClauses.push(`"project_id" = ${projParam}`);
+      } else {
+        whereClauses.push(`json_extract_string(json, '$.skyra.project_id') = ${projParam}`);
+      }
     } else if (plan.authorizedProjects.length > 1) {
       const projParams = plan.authorizedProjects.map((p) => nextParam(p));
-      whereClauses.push(`json_extract_string(json, '$.skyra.project_id') IN (${projParams.join(', ')})`);
+      if (isParquetOnly) {
+        whereClauses.push(`"project_id" IN (${projParams.join(', ')})`);
+      } else {
+        whereClauses.push(`json_extract_string(json, '$.skyra.project_id') IN (${projParams.join(', ')})`);
+      }
     }
 
     // Environment scopes if provided
     if (plan.environmentScopes && plan.environmentScopes.length > 0) {
       const envParams = plan.environmentScopes.map((e) => nextParam(e));
-      whereClauses.push(
-        `(json_extract_string(json, '$.service.environment') IN (${envParams.join(', ')}) OR json_extract_string(json, '$.skyra.environment') IN (${envParams.join(', ')}))`,
-      );
+      if (isParquetOnly) {
+        whereClauses.push(`"environment" IN (${envParams.join(', ')})`);
+      } else {
+        whereClauses.push(
+          `(json_extract_string(json, '$.service.environment') IN (${envParams.join(', ')}) OR json_extract_string(json, '$.skyra.environment') IN (${envParams.join(', ')}))`,
+        );
+      }
     }
 
     // Time boundaries (startInclusive <= @timestamp < endExclusive)
     const startParam = nextParam(plan.timeInterval.startInclusive);
     const endParam = nextParam(plan.timeInterval.endExclusive);
-    whereClauses.push(`json_extract_string(json, '$."@timestamp"') >= ${startParam}`);
-    whereClauses.push(`json_extract_string(json, '$."@timestamp"') < ${endParam}`);
+    if (isParquetOnly) {
+      whereClauses.push(`"@timestamp" >= ${startParam}`);
+      whereClauses.push(`"@timestamp" < ${endParam}`);
+    } else {
+      whereClauses.push(`json_extract_string(json, '$."@timestamp"') >= ${startParam}`);
+      whereClauses.push(`json_extract_string(json, '$."@timestamp"') < ${endParam}`);
+    }
 
     // AST Filters
     if (plan.filter) {

@@ -87,14 +87,14 @@ export class QueryResourceGovernorService {
     }
 
     // Tenant fairness: find the first queued item whose tenant hasn't exceeded maxConcurrentPerTenant
-    let selectedIndex = this.queue.findIndex((task) => {
+    const selectedIndex = this.queue.findIndex((task) => {
       const currentTenantActive = this.tenantActiveCount.get(task.tenantId) ?? 0;
       return currentTenantActive < this.maxConcurrentPerTenant;
     });
 
-    // If all queued items belong to saturated tenants, fallback to head of queue
+    // If all queued items belong to saturated tenants, wait until a slot opens
     if (selectedIndex === -1) {
-      selectedIndex = 0;
+      return;
     }
 
     const [task] = this.queue.splice(selectedIndex, 1);

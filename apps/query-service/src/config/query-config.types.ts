@@ -28,4 +28,5 @@ export interface QueryServiceConfig {
   parquetMaterializationEnabled: boolean;
   parquetMaxWorkers: number;
   parquetVerifyChecksums: boolean;
+  hybridSourceMode: 'hybrid' | 'jsonl_only' | 'parquet_only';
 }

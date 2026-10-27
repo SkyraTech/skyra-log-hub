@@ -26,6 +26,19 @@ const INTERVAL_SQL_MAP: Record<string, string> = {
   '1d': "INTERVAL '1 day'",
 };
 
+const PARQUET_COLUMN_MAP: Record<string, string> = {
+  '@timestamp': '"@timestamp"',
+  timestamp: '"@timestamp"',
+  'log.level': 'log_level',
+  level: 'log_level',
+  'service.name': 'service_name',
+  service: 'service_name',
+  'event.action': 'event_action',
+  action: 'event_action',
+  environment: 'environment',
+  'service.environment': 'environment',
+};
+
 @Injectable()
 export class AnalyticsSqlGeneratorService {
   constructor(private readonly sqlGenerator: SqlGeneratorService) {}
@@ -42,7 +55,15 @@ export class AnalyticsSqlGeneratorService {
       return `$${paramIndex++}`;
     };
 
-    const fromClause = this.buildFromClause(plan, nextParam);
+    const isParquetOnly =
+      (plan.descriptors?.length ?? 0) === 0 && (plan.parquetDescriptors?.length ?? 0) > 0;
+    const canUseParquetDirect =
+      isParquetOnly &&
+      !plan.filter &&
+      (spec.type === 'date_histogram' ||
+        Boolean(PARQUET_COLUMN_MAP[spec.field?.toLowerCase()?.trim() ?? '']));
+
+    const fromClause = this.buildFromClause(plan, nextParam, !canUseParquetDirect);
     if (!fromClause) {
       return {
         sql: 'SELECT 1 WHERE 1 = 0',
@@ -50,17 +71,17 @@ export class AnalyticsSqlGeneratorService {
       };
     }
 
-    const whereClauses = this.buildBaseWhereClauses(plan, nextParam);
+    const whereClauses = this.buildBaseWhereClauses(plan, nextParam, canUseParquetDirect);
 
     switch (spec.type) {
       case 'date_histogram':
-        return this.buildDateHistogramQuery(spec, fromClause, whereClauses, parameters);
+        return this.buildDateHistogramQuery(spec, fromClause, whereClauses, parameters, canUseParquetDirect);
 
       case 'terms':
-        return this.buildTermsQuery(spec, fromClause, whereClauses, parameters);
+        return this.buildTermsQuery(spec, fromClause, whereClauses, parameters, canUseParquetDirect);
 
       case 'cardinality':
-        return this.buildCardinalityQuery(spec, fromClause, whereClauses, parameters);
+        return this.buildCardinalityQuery(spec, fromClause, whereClauses, parameters, canUseParquetDirect);
 
       default: {
         const _exhaustiveCheck: never = spec;
@@ -81,7 +102,12 @@ export class AnalyticsSqlGeneratorService {
       return `$${paramIndex++}`;
     };
 
-    const fromClause = this.buildFromClause(plan, nextParam);
+    const isParquetOnly =
+      (plan.descriptors?.length ?? 0) === 0 && (plan.parquetDescriptors?.length ?? 0) > 0;
+    const canUseParquetDirect =
+      isParquetOnly && Boolean(PARQUET_COLUMN_MAP[field.toLowerCase().trim()]);
+
+    const fromClause = this.buildFromClause(plan, nextParam, !canUseParquetDirect);
     if (!fromClause) {
       return {
         sql: 'SELECT 1 WHERE 1 = 0',
@@ -89,12 +115,13 @@ export class AnalyticsSqlGeneratorService {
       };
     }
 
-    const whereClauses = this.buildBaseWhereClauses(plan, nextParam);
-    const fieldExpr = this.resolveFieldExpression(field);
+    const whereClauses = this.buildBaseWhereClauses(plan, nextParam, canUseParquetDirect);
+    const fieldExpr = this.resolveFieldExpression(field, canUseParquetDirect);
 
-    const fullWhere = whereClauses.length > 0
-      ? `WHERE ${whereClauses.join(' AND ')} AND ${fieldExpr} IS NOT NULL`
-      : `WHERE ${fieldExpr} IS NOT NULL`;
+    const fullWhere =
+      whereClauses.length > 0
+        ? `WHERE ${whereClauses.join(' AND ')} AND ${fieldExpr} IS NOT NULL`
+        : `WHERE ${fieldExpr} IS NOT NULL`;
 
     const sql = `SELECT ${fieldExpr} AS value, CAST(count(*) AS BIGINT) AS count FROM ${fromClause} ${fullWhere} GROUP BY value ORDER BY count DESC, value ASC LIMIT 50`;
 
@@ -107,6 +134,7 @@ export class AnalyticsSqlGeneratorService {
       readonly parquetDescriptors?: readonly (import('../../parquet-cache/domain/parquet-segment.model.js').TrustedParquetSegmentDescriptor)[];
     },
     nextParam: (val: string | number | bigint) => string,
+    includeJson = true,
   ): string | null {
     const hasJsonl = (plan.descriptors?.length ?? 0) > 0;
     const hasParquet = (plan.parquetDescriptors?.length ?? 0) > 0;
@@ -122,6 +150,9 @@ export class AnalyticsSqlGeneratorService {
 
     if (!hasJsonl && hasParquet) {
       const fileParams = plan.parquetDescriptors!.map((d) => nextParam(d.resolvedPath.replace(/\\/g, '/')));
+      if (!includeJson) {
+        return `(SELECT "@timestamp", "tenant_id", "project_id", "environment", "service_name", "log_level", "event_action" FROM read_parquet([${fileParams.join(', ')}]))`;
+      }
       return `read_parquet([${fileParams.join(', ')}])`;
     }
 
@@ -135,6 +166,7 @@ export class AnalyticsSqlGeneratorService {
     fromClause: string,
     whereClauses: string[],
     parameters: (string | number | bigint)[],
+    isParquetDirect = false,
   ): GeneratedAnalyticsSql {
     const intervalSql = INTERVAL_SQL_MAP[spec.interval];
     if (!intervalSql) {
@@ -142,8 +174,11 @@ export class AnalyticsSqlGeneratorService {
     }
 
     const fullWhere = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+    const tsExpr = isParquetDirect
+      ? 'CAST("@timestamp" AS TIMESTAMP)'
+      : 'CAST(json_extract_string(json, \'$."@timestamp"\') AS TIMESTAMP)';
 
-    const sql = `SELECT strftime(time_bucket(${intervalSql}, CAST(json_extract_string(json, '$."@timestamp"') AS TIMESTAMP)), '%Y-%m-%dT%H:%M:%S.000Z') AS bucket_ts, CAST(count(*) AS BIGINT) AS count FROM ${fromClause} ${fullWhere} GROUP BY bucket_ts ORDER BY bucket_ts ASC`;
+    const sql = `SELECT strftime(time_bucket(${intervalSql}, ${tsExpr}), '%Y-%m-%dT%H:%M:%S.000Z') AS bucket_ts, CAST(count(*) AS BIGINT) AS count FROM ${fromClause} ${fullWhere} GROUP BY bucket_ts ORDER BY bucket_ts ASC`;
 
     return { sql, parameters };
   }
@@ -153,13 +188,15 @@ export class AnalyticsSqlGeneratorService {
     fromClause: string,
     whereClauses: string[],
     parameters: (string | number | bigint)[],
+    isParquetDirect = false,
   ): GeneratedAnalyticsSql {
-    const fieldExpr = this.resolveFieldExpression(spec.field);
+    const fieldExpr = this.resolveFieldExpression(spec.field, isParquetDirect);
     const limit = Math.min(Math.max(spec.size || 10, 1), 50);
 
-    const fullWhere = whereClauses.length > 0
-      ? `WHERE ${whereClauses.join(' AND ')} AND ${fieldExpr} IS NOT NULL`
-      : `WHERE ${fieldExpr} IS NOT NULL`;
+    const fullWhere =
+      whereClauses.length > 0
+        ? `WHERE ${whereClauses.join(' AND ')} AND ${fieldExpr} IS NOT NULL`
+        : `WHERE ${fieldExpr} IS NOT NULL`;
 
     const sql = `SELECT ${fieldExpr} AS key, CAST(count(*) AS BIGINT) AS count FROM ${fromClause} ${fullWhere} GROUP BY key ORDER BY count DESC, key ASC LIMIT ${limit}`;
 
@@ -171,12 +208,14 @@ export class AnalyticsSqlGeneratorService {
     fromClause: string,
     whereClauses: string[],
     parameters: (string | number | bigint)[],
+    isParquetDirect = false,
   ): GeneratedAnalyticsSql {
-    const fieldExpr = this.resolveFieldExpression(spec.field);
+    const fieldExpr = this.resolveFieldExpression(spec.field, isParquetDirect);
 
-    const fullWhere = whereClauses.length > 0
-      ? `WHERE ${whereClauses.join(' AND ')} AND ${fieldExpr} IS NOT NULL`
-      : `WHERE ${fieldExpr} IS NOT NULL`;
+    const fullWhere =
+      whereClauses.length > 0
+        ? `WHERE ${whereClauses.join(' AND ')} AND ${fieldExpr} IS NOT NULL`
+        : `WHERE ${fieldExpr} IS NOT NULL`;
 
     const sql = `SELECT CAST(count(DISTINCT ${fieldExpr}) AS BIGINT) AS val FROM ${fromClause} ${fullWhere}`;
 
@@ -195,35 +234,57 @@ export class AnalyticsSqlGeneratorService {
       readonly filter?: import('../domain/query-filter.model.js').FilterAstNode;
     },
     nextParam: (val: string | number | bigint) => string,
+    isParquetDirect = false,
   ): string[] {
     const whereClauses: string[] = [];
 
     // Tenant isolation: Double defense-in-depth row check
     const tenantParam = nextParam(plan.tenantId);
-    whereClauses.push(`json_extract_string(json, '$.skyra.tenant_id') = ${tenantParam}`);
+    if (isParquetDirect) {
+      whereClauses.push(`"tenant_id" = ${tenantParam}`);
+    } else {
+      whereClauses.push(`json_extract_string(json, '$.skyra.tenant_id') = ${tenantParam}`);
+    }
 
     // Project scope isolation
     if (plan.authorizedProjects.length === 1 && plan.authorizedProjects[0]) {
       const projParam = nextParam(plan.authorizedProjects[0]);
-      whereClauses.push(`json_extract_string(json, '$.skyra.project_id') = ${projParam}`);
+      if (isParquetDirect) {
+        whereClauses.push(`"project_id" = ${projParam}`);
+      } else {
+        whereClauses.push(`json_extract_string(json, '$.skyra.project_id') = ${projParam}`);
+      }
     } else if (plan.authorizedProjects.length > 1) {
       const projParams = plan.authorizedProjects.map((p) => nextParam(p));
-      whereClauses.push(`json_extract_string(json, '$.skyra.project_id') IN (${projParams.join(', ')})`);
+      if (isParquetDirect) {
+        whereClauses.push(`"project_id" IN (${projParams.join(', ')})`);
+      } else {
+        whereClauses.push(`json_extract_string(json, '$.skyra.project_id') IN (${projParams.join(', ')})`);
+      }
     }
 
     // Environment scopes
     if (plan.environmentScopes && plan.environmentScopes.length > 0) {
       const envParams = plan.environmentScopes.map((e) => nextParam(e));
-      whereClauses.push(
-        `(json_extract_string(json, '$.service.environment') IN (${envParams.join(', ')}) OR json_extract_string(json, '$.skyra.environment') IN (${envParams.join(', ')}))`,
-      );
+      if (isParquetDirect) {
+        whereClauses.push(`"environment" IN (${envParams.join(', ')})`);
+      } else {
+        whereClauses.push(
+          `(json_extract_string(json, '$.service.environment') IN (${envParams.join(', ')}) OR json_extract_string(json, '$.skyra.environment') IN (${envParams.join(', ')}))`,
+        );
+      }
     }
 
     // Time interval (startInclusive <= @timestamp < endExclusive)
     const startParam = nextParam(plan.timeInterval.startInclusive);
     const endParam = nextParam(plan.timeInterval.endExclusive);
-    whereClauses.push(`json_extract_string(json, '$."@timestamp"') >= ${startParam}`);
-    whereClauses.push(`json_extract_string(json, '$."@timestamp"') < ${endParam}`);
+    if (isParquetDirect) {
+      whereClauses.push(`"@timestamp" >= ${startParam}`);
+      whereClauses.push(`"@timestamp" < ${endParam}`);
+    } else {
+      whereClauses.push(`json_extract_string(json, '$."@timestamp"') >= ${startParam}`);
+      whereClauses.push(`json_extract_string(json, '$."@timestamp"') < ${endParam}`);
+    }
 
     // AST Filters
     if (plan.filter) {
@@ -236,8 +297,12 @@ export class AnalyticsSqlGeneratorService {
     return whereClauses;
   }
 
-  private resolveFieldExpression(field: string): string {
+  private resolveFieldExpression(field: string, isParquetDirect = false): string {
     const f = field.toLowerCase().trim();
+    if (isParquetDirect && PARQUET_COLUMN_MAP[f]) {
+      return PARQUET_COLUMN_MAP[f]!;
+    }
+
     if (f === '@timestamp' || f === 'timestamp') {
       return `json_extract_string(json, '$."@timestamp"')`;
     }
@@ -253,3 +318,4 @@ export class AnalyticsSqlGeneratorService {
     return `json_extract_string(json, '${resolved.jsonPath}')`;
   }
 }
+

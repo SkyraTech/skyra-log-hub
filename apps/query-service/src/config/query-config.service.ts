@@ -55,6 +55,9 @@ export class QueryConfigService {
     const parquetMaterializationEnabled = process.env['PARQUET_MATERIALIZATION_ENABLED'] !== 'false';
     const parquetMaxWorkers = Number.parseInt(process.env['PARQUET_MAX_WORKERS'] ?? '2', 10);
     const parquetVerifyChecksums = process.env['PARQUET_VERIFY_CHECKSUMS'] !== 'false';
+    const rawSourceMode = (process.env['QUERY_SOURCE_MODE'] ?? 'hybrid').toLowerCase();
+    const hybridSourceMode: 'hybrid' | 'jsonl_only' | 'parquet_only' =
+      rawSourceMode === 'jsonl_only' || rawSourceMode === 'parquet_only' ? rawSourceMode : 'hybrid';
 
     this.config = {
       nodeEnv,
@@ -84,6 +87,7 @@ export class QueryConfigService {
       parquetMaterializationEnabled,
       parquetMaxWorkers: isNaN(parquetMaxWorkers) ? 2 : parquetMaxWorkers,
       parquetVerifyChecksums,
+      hybridSourceMode,
       ...envOverride,
     };
 
@@ -213,6 +217,10 @@ export class QueryConfigService {
 
   public get parquetVerifyChecksums(): boolean {
     return this.config.parquetVerifyChecksums;
+  }
+
+  public get hybridSourceMode(): 'hybrid' | 'jsonl_only' | 'parquet_only' {
+    return this.config.hybridSourceMode;
   }
 
   public isProduction(): boolean {

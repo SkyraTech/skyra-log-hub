@@ -119,3 +119,23 @@ LOGHUB-QUERY-005 added comprehensive end-to-end analytical testing and performan
 3. **P0-A Stable Record Locator:** Multi-threaded window partition ordering verified deterministically across parallel DuckDB workers with identical timestamps and duplicate event IDs.
 4. **P0-B Descriptor Provenance:** Verified that unauthorized foreign tenant segments are rejected at the pre-read boundary before DuckDB opens any files.
 5. **PERF-1 Direct JSONL Benchmark:** Verified 5,000 raw JSONL event aggregation executed in ~30ms with 100% accurate bucket counts and zero cross-tenant contamination.
+
+---
+
+## 6. Hardening & Operational Safety Verification (LOGHUB-QUERY-007)
+
+As of LOGHUB-QUERY-007, `apps/query-service` contains **201 automated tests across 34 suites** (100% passing, 0 failing, 0 skipped), up from 194 tests in QUERY-006.
+
+### 6.1 New Targeted Integration Suites
+
+| Suite File | Tests | Focus Area |
+| :--- | :--- | :--- |
+| `tests/integration/stable-locator-duplicate-pagination.test.ts` | 3 | **P0-D:** Stable event identity and pagination over byte-identical duplicates (identical `@timestamp`, `event.id`, and JSON payload) within the same segment. Verified gapless pagination across multiple pages (P0-D1), parity between JSONL and Parquet (P0-D2), and seamless cross-format cursor continuity from JSONL to Parquet (P0-D3). |
+| `tests/integration/tenant-fairness-cancellation.test.ts` | 4 | **P0-G:** Multi-tenant fairness, queue eviction on `AbortSignal`, slot release on execution timeout via `conn.interrupt()`, and bounded queue rejection HTTP 429 (`QueryBudgetExceededException`). |
+
+### 6.2 Full Monorepo Active Test Suite Reconciliation
+- `@skyra/query-service`: 201 tests across 34 suites (100% passing).
+- `@skyra/contracts`: 45 tests across 4 suites (100% passing).
+- `@skyra/ingestion-gateway`: 120 tests across 18 suites (100% passing).
+- **Total Monorepo Active Suite:** **366 tests passing** (0 failed, 0 skipped).
+

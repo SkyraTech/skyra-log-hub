@@ -120,3 +120,35 @@ The engine requests `page_size + 1` rows (`fetchExtraRow: true`).
 - If $\le N$ rows are returned: `has_more = false`, and `next_cursor = null`.
 
 This approach provides $O(1)$ cursor advancement without scanning previous pages.
+
+---
+
+## 5. Byte-Identical Duplicate Handling & Hardening (LOGHUB-QUERY-007)
+
+### 5.1 The Duplicate Record Challenge (P0-D)
+In real-world ingestion, transient network retries or edge shipper errors can produce byte-identical duplicate events that share identical `@timestamp`, identical `event.id`, identical payload bodies, and reside within the exact same canonical segment.
+
+In previous naive approaches, pagination queries relying solely on `(@timestamp, event.id)` or `md5(json)` would loop infinitely or skip records when paginating across duplicate boundaries because every duplicate row evaluated to identical keyset values.
+
+### 5.2 Resolution via Deterministic Record Ordinals
+Under LOGHUB-QUERY-007, the physical record ordinal `record_offset` is derived using DuckDB's deterministic window function:
+```sql
+CAST(row_number() OVER (
+  PARTITION BY filename 
+  ORDER BY 
+    json_extract_string(json, '$."@timestamp"'), 
+    json_extract_string(json, '$.event.id'), 
+    md5(json)
+) - 1 AS BIGINT) AS "record_offset"
+```
+Because `row_number()` strictly generates a monotonic sequence `0, 1, 2, ..., N-1` for every row in a partition (even if all columns and content hashes are identical), each duplicate event is guaranteed a unique, stable, deterministic `record_offset`.
+
+### 5.3 Cross-Format Cursor Continuity
+When JSONL segments are materialized to Parquet, DuckDB preserves the exact same tuple:
+- In Parquet materialization, `record_offset` is persisted as an `INT64` physical column.
+- In both JSONL and Parquet execution paths, the composite keyset tuple `(@timestamp, event.id, segment_id, record_offset)` produces byte-for-byte identical sorting sequences.
+- Verified in `apps/query-service/tests/integration/stable-locator-duplicate-pagination.test.ts`:
+  1. **P0-D1:** Complete exhaustive pagination of 5 duplicate records across multiple pages (page size = 2) returned 100% of rows with zero infinite loops and zero dropped rows.
+  2. **P0-D2:** Parquet-only execution over identical duplicates matched JSONL ordering exactly.
+  3. **P0-D3:** Cross-format cursor continuity verified: Page 1 retrieved from JSONL produced a cursor that was passed directly to a Parquet execution query, retrieving the exact expected remaining records seamlessly.
+

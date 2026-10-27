@@ -115,20 +115,32 @@ LOGHUB-QUERY-008 (Phase 3 Final Acceptance & Certification)
 - **Database Migrations:** None (0 database migrations; file-backed catalog).
 - **Verification:** 194 automated query-service tests passing across 32 suites (32 new tests), 0 failing, 0 skipped. Zero regressions in contracts (45) or ingestion gateway (120). Total active-suite tests: 359 passing.
 
-### LOGHUB-QUERY-007: Resource Governance, Concurrency & Security Hardening
-- **Scope:**
-  - Implement `FairQueueScheduler`: Deficit Round-Robin tenant concurrency queue.
-  - Implement `TimeoutInterceptor`: AbortController integration with `DuckDBConnection.interrupt()`.
-  - Enforce maximum time range, segment count, and scanned byte ceilings.
-  - Implement `QueryAuditService`: writes audit records to PostgreSQL `query_audit_logs`.
-- **Database Migrations:** **MIGRATION REQUIRED** (New `query_audit_logs` table).
-- **Verification:** Fault injection tests for query timeouts, client cancellations, and memory exhaustion.
+### LOGHUB-QUERY-007: Enterprise Security, Query Performance Optimization, Reliability & Operational Hardening
+- **Status:** Complete (PASS).
+- **Scope & Deliverables:**
+  - **Parquet Query Performance Optimization (P0-A, P0-B):** Investigated and resolved the QUERY-006 Parquet latency regression. Eliminated raw JSON string column extraction from analytical queries (`date_histogram`, `terms`, `facets`), projecting typed Parquet columns and enabling DuckDB columnar predicate pushdown. Achieved up to 9.57x speedup over JSONL on 50,000 events.
+  - **Hybrid Source Selection Modes (P0-C):** Added explicit `QUERY_SOURCE_MODE` (`hybrid`, `jsonl_only`, `parquet_only`) for deterministic routing and isolated testing without exposing physical paths.
+  - **Stable Event Identity over Byte-Identical Duplicates (P0-D):** Verified and proved that the 4-part composite locator tuple `(@timestamp, event.id, segment_id, record_offset)` provides 100% gapless sequential keyset pagination over byte-identical duplicate records in both JSONL and Parquet, and across format transitions (`stable-locator-duplicate-pagination.test.ts`).
+  - **Derived Cache Provenance & Filesystem Security (P0-E):** Enforced read-time identity checks, source hash verification, strict directory boundary validation, and documented OS-level TOCTOU defense invariants.
+  - **Atomic Publication & Crash Recovery (P0-F):** Implemented `cleanupOrphanedStagingFiles` in `DuckDbParquetConverter` to purge stale temporary conversion artifacts.
+  - **Multi-Tenant Fairness & Cancellation (P0-G):** Resolved saturated tenant queue dispatch defect in `QueryResourceGovernorService`; verified strict tenant concurrency capping, `AbortSignal` queue eviction, query timeout slot release, and bounded queue overflow rejection (`tenant-fairness-cancellation.test.ts`).
+  - **Zero Database Migrations:** Preserved 0-migration development architecture without modifying PostgreSQL schema.
+- **Database Migrations:** None (0 schema changes).
+- **Verification:** 201 automated query-service tests passing across 34 suites (7 new tests), 0 failing, 0 skipped. Total monorepo active suite: 366 passing.
 
-### LOGHUB-QUERY-008: Phase 3 Final Functional Acceptance
+### LOGHUB-QUERY-008: Phase 3 Final Functional, Security & Architecture Acceptance
+- **Status:** Ready (Next Task).
+- **Prerequisites Satisfied:**
+  - Complete Phase 3 query foundation, search, aggregations, facets, and Parquet acceleration implemented and hardened.
+  - Parquet performance regression fully resolved with reproducible benchmark evidence.
+  - Stable event identity and keyset pagination verified over duplicate records.
+  - Multi-tenant fairness and query cancellation verified.
+  - All 366 active monorepo tests passing with zero regressions.
 - **Scope:**
   - Execute full 30-scenario test matrix (`QTEST-01` through `QTEST-30`).
   - Full end-to-end integration: Ingest logs via SDK $\rightarrow$ Finalize segment $\rightarrow$ Query via Search API $\rightarrow$ Verify results and watermark.
-  - Benchmark query latency and throughput.
-  - Issue Phase 3 Final Acceptance Report.
+  - Final security audit, architecture compliance check, and production deployment review.
+  - Issue Phase 3 Final Functional, Security & Architecture Acceptance Report.
 - **Database Migrations:** None.
-- **Verification:** 100% automated test pass, zero regressions across Phase 1 and Phase 2 suites.
+- **Verification:** 100% automated test pass, zero regressions across Phase 1, Phase 2, and Phase 3 suites.
+

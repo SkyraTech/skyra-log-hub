@@ -181,3 +181,27 @@ CAST(row_number() OVER (
 ) - 1 AS BIGINT) AS record_offset
 ```
 This guarantees identical locator offsets regardless of DuckDB thread allocation or query execution plan changes.
+
+---
+
+## 10. Derived Cache Provenance, Filesystem Security & TOCTOU Defense (LOGHUB-QUERY-007)
+
+### 10.1 Trust Chain Verification
+To guarantee that derived Parquet caches can never expand privileges or serve unverified data:
+1. **Source Finalization Invariant:** Parquet files can only be materialized from finalized canonical JSONL archive segments recorded in PostgreSQL.
+2. **Metadata Integrity Check:** Every derived Parquet file is accompanied by a `.meta.json` manifest recording `sourceChecksum`, `parquetSha256Checksum`, `parquetByteSize`, `sourceRecordCount`, and `state = 'READY'`.
+3. **Pre-Read Containment & Verification:** Prior to passing Parquet paths to DuckDB:
+   - Tenant isolation: `parquetDescriptor.tenantId === plan.tenantId` is asserted.
+   - Project authorization: `plan.authorizedProjects.includes(parquetDescriptor.projectId)` is asserted.
+   - Root containment: `ParquetPathSafetyService.validateParquetFileContainment` enforces native canonical root containment and rejects path traversal, null bytes, and symlink/junction escapes.
+   - Physical file checks: Disk byte size matches manifest; SHA-256 is validated when `PARQUET_VERIFY_CHECKSUMS=true`.
+4. **Graceful Fail-Closed Fallback:** If any Parquet file is corrupt, modified, or drifted, the planner logs a security audit event (`PARQUET_CACHE_INVALIDATED`) and falls back to canonical JSONL only if the canonical source segment itself passes manifest verification.
+
+### 10.2 TOCTOU Analysis & Compensating Controls
+- **Threat:** A local attacker replaces a verified Parquet file after validation but before DuckDB opens it.
+- **Compensating Controls:**
+  - Dedicated isolated cache directory (`PARQUET_CACHE_ROOT`) with restricted operating system permissions (0700).
+  - Staging directories (`.staging`) use randomized UUID identifiers and atomic renames (`fs.renameSync`).
+  - Read-only filesystem mounts for canonical archives.
+  - Separate service accounts for background cache generator and query reader in production deployments.
+

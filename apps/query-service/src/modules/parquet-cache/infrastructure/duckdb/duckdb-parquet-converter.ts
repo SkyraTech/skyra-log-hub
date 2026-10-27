@@ -193,4 +193,35 @@ export class DuckDbParquetConverter {
       // ignore
     }
   }
+
+  /**
+   * Scans a staging directory and purges stale intermediate files older than maxAgeMs (crash recovery).
+   */
+  public cleanupOrphanedStagingFiles(stagingDir: string, maxAgeMs = 3600000): number {
+    let purged = 0;
+    try {
+      if (!fs.existsSync(stagingDir)) {
+        return 0;
+      }
+      const files = fs.readdirSync(stagingDir);
+      const now = Date.now();
+      for (const file of files) {
+        const fullPath = path.join(stagingDir, file);
+        try {
+          const stat = fs.statSync(fullPath);
+          if (now - stat.mtimeMs > maxAgeMs) {
+            fs.unlinkSync(fullPath);
+            purged++;
+          }
+        } catch {
+          // ignore concurrent worker delete
+        }
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Failed to cleanup orphaned staging directory ${stagingDir}: ${msg}`);
+    }
+    return purged;
+  }
 }
+
