@@ -64,15 +64,18 @@
 | LH-304 | Query service AST, cost controls and field discovery | SUPERSEDED | LOGHUB-QUERY-001–007 | Superseded by LOGHUB-QUERY-001 through 007 |
 | LH-305 | Distributed throttles and audit trails | NOT_STARTED | LH-303, LH-304 | Per identity/IP/token limits and auditable sensitive actions |
 
-## Phase 4 — Angular Log Explorer
-| ID | Task | Dependencies | Evidence / acceptance |
-|---|---|---|---|
-| LH-401 | Angular shell using Skyra Platform releases | LH-003, LH-301 | Install/build/accessibility smoke tests |
-| LH-402 | Project/time/service selectors, saved filter state | LH-401, LH-304 | No stale unauthorized cross-project data |
-| LH-403 | Field list and safe visual query builder | LH-402 | Field metadata tests, keyboard use |
-| LH-404 | Approved advanced query subset/editor | LH-403 | Reject nonallowlisted commands and runaway queries |
-| LH-405 | Histogram, results grid and JSON detail drawer | LH-403 | Search E2E and safe HTML/text rendering |
-| LH-406 | Saved searches, controlled export | LH-405, LH-305 | Role/isolation tests and download auditing |
+## Phase 4 — Web Console, Administration & Observability Experience
+| ID | Task | Status | Dependencies | Evidence / acceptance |
+|---|---|---|---|---|
+| LOGHUB-CONSOLE-001 | Architecture, Design System & Contracts | DONE (PASS) | LOGHUB-QUERY-008 | Deliverables `docs/console/01-` to `11-`, ADR-022 to ADR-026, UI tokens, screen specs, API gap analysis, architecture report `SKYRA_LOGHUB_CONSOLE_001_ARCHITECTURE_REPORT.md` |
+| LOGHUB-CONSOLE-002 | Angular Foundation, Shell & Design Tokens | READY | LOGHUB-CONSOLE-001 | Angular 19 standalone workspace `apps/console-web`, layout shell, CSS custom properties, Light/Dark theme, dev mock auth |
+| LOGHUB-CONSOLE-003 | Core API Client, Session & Context | NOT_STARTED | LOGHUB-CONSOLE-002 | Typed Query API client, interceptors, RFC 7807 error handling, tenant/project switcher with URL state sync |
+| LOGHUB-CONSOLE-004 | Log Explorer & Event Drawer | NOT_STARTED | LOGHUB-CONSOLE-003 | High-density table, keyset cursor pagination, structured filter builder, slide-out drawer (formatted fields, raw JSON, trace link) |
+| LOGHUB-CONSOLE-005 | Overview & Analytics Dashboards | NOT_STARTED | LOGHUB-CONSOLE-004 | KPI overview cards, interactive date histogram, terms distribution, dynamic facets sidebar |
+| LOGHUB-ADMIN-001 | Backend Administration REST APIs | NOT_STARTED | LOGHUB-QUERY-008 | Backend REST endpoints for projects, quotas, and ingestion credentials using existing PostgreSQL schema |
+| LOGHUB-CONSOLE-006 | Project & Credential Administration | NOT_STARTED | LOGHUB-CONSOLE-005, LOGHUB-ADMIN-001 | Project quota configuration, ingestion credential generation with one-time secret display |
+| LOGHUB-CONSOLE-007 | Performance, Security & E2E Hardening | NOT_STARTED | LOGHUB-CONSOLE-006 | Axe-Core WCAG 2.2 AA audit, keyboard navigation (`j`/`k`, `/`, `Esc`), Playwright E2E suites |
+| LOGHUB-CONSOLE-008 | Phase 4 Final Acceptance & Certification| NOT_STARTED | LOGHUB-CONSOLE-007 | 30-dimension acceptance matrix verification, monorepo regression, production readiness audit |
 
 ## Phase 5 — Performance and diagnostics
 | ID | Task | Dependencies | Evidence / acceptance |

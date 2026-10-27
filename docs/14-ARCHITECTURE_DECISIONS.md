@@ -30,6 +30,11 @@ Each ADR is a *proposal* until the owner approves it. Record context, alternativ
 | ADR-019 | Tenant-Safe Metadata-Driven Query Planning & Filesystem Containment | Proposed |
 | ADR-020 | Keyset Cursor Pagination & Eventual Consistency Watermark | Proposed |
 | ADR-021 | Multi-Tenant Resource Governance & Query Scheduling | Proposed |
+| ADR-022 | Angular 19 Standalone Web Console Architecture & Workspace Layout | Proposed |
+| ADR-023 | Token-Driven Dual-Theme Design System & WCAG 2.2 AA Accessibility | Proposed |
+| ADR-024 | Backend-for-Frontend (BFF) Session Architecture & OIDC PKCE Authentication | Proposed |
+| ADR-025 | Keyset Pagination State Management & URL-Driven Navigation | Proposed |
+| ADR-026 | Administrative API Gateway Boundary & Phased Schema Strategy | Proposed |
 
 ## ADR-001 — Monorepo and repo boundaries
 **Context:** All operational apps, SDKs, UI and MCP must be coordinated and documented. Existing Skyra Platform focuses on Web Components and cannot own Python/server runtime distribution cleanly. **Decision:** Keep all LogHub-related code under renamed `skyra-loghub`; continue consuming Skyra Platform packages and authoritative service contracts by version. **Consequence:** Multi-language CI orchestration required; publish SDKs independently. **Alternative:** separate `skyra-logging` repo (less toolchain coupling, more coordination).
@@ -213,5 +218,65 @@ Identity provider, exact design token palette, regulatory retention requirements
 - **Data-Loss Assumptions:** None.
 - **Implementation Dependencies:** `LOGHUB-QUERY-006`, `LOGHUB-QUERY-007`.
 - **Unresolved Risks:** Memory limits enforced by DuckDB must be complemented by container cgroups to guard against native driver memory overhead.
+
+
+## ADR-022 — Angular 19 Standalone Web Console Architecture & Workspace Layout (new proposal, 2026-10-27)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Phase 4 requires an enterprise observability web console (`apps/console-web`) providing developers, SREs, and administrators with fast search, analytics, and project governance.
+- **Decision:** Build a single Angular 19 SPA located at `apps/console-web/` within the existing pnpm monorepo. Use standalone components exclusively (zero `NgModule`s), Signal-based reactivity (`signal()`, `computed()`), modern template control flow (`@if`, `@for`, `@switch`), route-level lazy loading, and functional route guards/interceptors.
+- **Alternatives Rejected:**
+  - *Micro-frontends / Module Federation:* Rejected as unjustified complexity for a unified observability workstation; introduces excessive bundle overhead and version-skew risks.
+  - *Next.js / React Web Console:* Rejected to maintain consistency with Skyra Platform Angular engineering standards and `@skyra/logger-angular` SDK capabilities.
+  - *Traditional NgModules:* Deprecated in modern Angular; standalone components provide faster compilation and cleaner tree-shaking.
+- **Security Impact:** Single SPA boundary enables unified Content Security Policy (CSP) and centralized authentication interceptors.
+- **Implementation Dependencies:** `LOGHUB-CONSOLE-001`, `LOGHUB-CONSOLE-002`.
+
+
+## ADR-023 — Token-Driven Dual-Theme Design System & WCAG 2.2 AA Accessibility (new proposal, 2026-10-27)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Observability workstations require high information density, long sessions in dark environments, and accessible contrast for incident response teams.
+- **Decision:** Implement a token-driven design system using vanilla CSS Custom Properties. Provide dual first-class Light and Dark themes. Enforce strict WCAG 2.2 AA contrast ratios ($\ge 4.5:1$ text contrast), multi-cue severity indicators (color tint + bold label + icon), visible focus rings, full keyboard shortcuts (`j`/`k`, `Enter`, `Esc`, `/`), and `prefers-reduced-motion` compliance.
+- **Alternatives Rejected:**
+  - *TailwindCSS / Utility-first CSS:* Rejected per workspace technology guidelines favoring standard vanilla CSS custom properties for maximum design token flexibility without build-time utility lock-in.
+  - *Component library framework lock-in (Material/Bootstrap):* Rejected to maintain bespoke high-density log layouts, custom ECS-aligned severity tokens, and lightweight bundle footprints.
+- **Security Impact:** Clean CSS custom properties avoid dangerous dynamic runtime stylesheet injection.
+- **Implementation Dependencies:** `LOGHUB-CONSOLE-002`.
+
+
+## ADR-024 — Backend-for-Frontend (BFF) Session Architecture & OIDC PKCE Authentication (new proposal, 2026-10-27)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Browser-based SPAs that store bearer JWT access tokens or refresh tokens in `localStorage` or `sessionStorage` are vulnerable to token theft via Cross-Site Scripting (XSS).
+- **Decision:** Adopt a Backend-for-Frontend (BFF) session security pattern. The frontend communicates with a same-origin gateway using secure, HTTP-only, `SameSite: Strict` cookies (`__Host-skyra-session`). The BFF interacts with the corporate OIDC identity provider via Authorization Code Flow with PKCE, manages token refresh, and injects bearer JWTs into internal Query Service requests. Multi-tab synchronization is maintained via `BroadcastChannel`. For local offline development, a pluggable dev session provider is supported that fails closed in production.
+- **Alternatives Rejected:**
+  - *Storing JWTs in localStorage:* Strictly rejected due to critical XSS token exfiltration risk.
+  - *Direct browser-to-IdP Implicit Flow:* Deprecated and forbidden by OAuth 2.1 standards.
+- **Security Impact:** Eliminates browser access to raw token secrets; defends against XSS token harvesting and CSRF.
+- **Implementation Dependencies:** `LOGHUB-AUTH-001`, `LOGHUB-CONSOLE-003`.
+
+
+## ADR-025 — Keyset Pagination State Management & URL-Driven Navigation (new proposal, 2026-10-27)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Log investigation requires shareable deep-links, browser history navigation (Back/Forward), and deterministic pagination over millions of records without offset drift.
+- **Decision:** Serialize search queries, active structured filter chips, time boundaries, and active cursor keys into standard URL query parameters. Keyset cursor navigation maintains an in-memory cursor stack in `LogExplorerFacade` enabling forward and backward traversal over signed HMAC-SHA256 cursors. Tampered cursors fail gracefully to page 1.
+- **Alternatives Rejected:**
+  - *SQL Offset-based page numbers:* Incompatible with backend keyset pagination; leads to skipped rows during active ingestion.
+  - *Storing query state in global persistent storage:* Prevents shareable URLs and multi-tab independent investigations.
+- **Security Impact:** Signed base64url HMAC-SHA256 cursors prevent parameter tampering or client-side scope manipulation.
+- **Implementation Dependencies:** `LOGHUB-CONSOLE-004`.
+
+
+## ADR-026 — Administrative API Gateway Boundary & Phased Schema Strategy (new proposal, 2026-10-27)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** While Phase 3 delivered production-ready Search and Analytics Query APIs, the PostgreSQL database models for projects and credentials currently lack REST management endpoints, and user/membership models do not yet exist.
+- **Decision:** Strictly separate Phase 4 frontend milestones based on backend readiness:
+  1. CONSOLE-002 through CONSOLE-005 implement screens 100% backed by existing Query Service APIs (Log Explorer, Event Drawer, Overview, Analytics Histograms, Dynamic Facets).
+  2. Administrative screens (Projects, Ingestion Credentials, Team Access) are deferred until separate backend milestones (`LOGHUB-ADMIN-001` and `LOGHUB-AUTH-001`) deliver verified REST APIs and database models.
+  3. The frontend is strictly forbidden from implementing "mock" or client-side-only persistence for administrative mutations.
+- **Alternatives Rejected:**
+  - *Frontend mock/fake CRUD:* Strictly rejected as a violation of enterprise data integrity and security standards.
+  - *Merging backend admin API development into frontend tasks:* Rejected to maintain clean separation of concerns and rigorous API contract-first design.
+- **Security Impact:** Guarantees all administrative operations are authenticated, authorized, and audited server-side.
+- **Implementation Dependencies:** `LOGHUB-ADMIN-001`, `LOGHUB-CONSOLE-006`.
+
 
 
