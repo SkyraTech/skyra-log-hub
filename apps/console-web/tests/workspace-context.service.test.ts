@@ -1,3 +1,4 @@
+import '@angular/compiler';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { WorkspaceContextService } from '../src/app/core/workspace/workspace-context.service';

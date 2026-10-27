@@ -1,0 +1,35 @@
+{
+  "name": "@skyra/console-bff",
+  "version": "1.0.0",
+  "description": "Backend-for-Frontend (BFF) Security Gateway & Session Proxy for Skyra LogHub Web Console",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "clean": "node -e \"fs.rmSync('dist', { recursive: true, force: true }); fs.rmSync('dist-test', { recursive: true, force: true })\"",
+    "start": "node dist/main.js",
+    "dev": "tsx watch src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/tests/**/*.test.js",
+    "test:unit": "tsc -p tsconfig.test.json && node --test dist-test/tests/unit/**/*.test.js",
+    "test:security": "tsc -p tsconfig.test.json && node --test dist-test/tests/security/**/*.test.js"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^9.4.0",
+    "@fastify/cors": "^9.0.1",
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-fastify": "^10.4.15",
+    "@skyra/logger-core": "workspace:*",
+    "@skyra/logger-nestjs": "workspace:*",
+    "@skyra/logger-node": "workspace:*",
+    "fastify": "^4.28.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.22",
+    "@types/node": "^26.6.5",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,10 +1,10 @@
 # Skyra LogHub — Web Console Authentication & Authorization Architecture
 
-**Document Version:** 1.0.0  
-**Status:** Approved Architecture Specification  
-**Task ID:** `LOGHUB-CONSOLE-001`  
+**Document Version:** 1.1.0  
+**Status:** Implemented & Verified in Milestone `LOGHUB-CONSOLE-003`  
 **Phase:** Phase 4 — Web Console, Administration & Observability Experience  
 **Date:** 2026-10-27  
+**Implementation Package:** `@skyra/console-bff` (`apps/console-bff`) & `@skyra/console-web` (`apps/console-web`)  
 
 ---
 

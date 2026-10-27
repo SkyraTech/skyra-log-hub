@@ -11,14 +11,14 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
 |---|---|
 | Product | Skyra LogHub |
 | Repository | `skyra-log-hub` |
-| Current phase | Phase 3 — Search, Query & Analytics |
-| Current task | LOGHUB-QUERY-006 (Derived Parquet Materialization, Hybrid Query Planning, Cache Integrity & Performance Acceleration Completed) |
-| Implemented LogHub features | 8 SDK packages (Node, Python, NestJS, Next.js, Browser, Angular, React), Central Fastify Ingestion Gateway, Scoped Bearer Auth, Binary WAL with fsync, PostgreSQL Repositories, Central Immutable JSONL Archive with manifests, Standalone Log Shipper, Same-Origin Proxy, Crash Recovery, 7-Day Bounded Deduplication, Query Service with DuckDB Analytical Execution, Pre-Read Isolation Security Gate, 4-Part Composite Keyset Pagination, HMAC-SHA256 Signed Cursors, Search API (`POST /query/v1/logs/search`), Event Point Lookup (`GET /query/v1/logs/:eventId`), Analytical Aggregations (`POST /query/v1/logs/aggregate`), Dynamic Facets (`POST /query/v1/logs/facets`), Resource Governance, Derived Parquet Materialization (ZSTD), File-Backed Parquet Catalog, Crash Recovery Sweeper, and Transparent Hybrid Query Planning. |
-| Documents | 15 baseline documents + Phase 2 Acceptance + Phase 3 Query Specs (ADR-017 through ADR-021, docs/query/01-10) + Implementation/Audit Reports |
-| Tests | 194 Query Service tests (0 failed, 0 skipped), 45 Monorepo Contract tests, 120 Ingestion Gateway tests. All 359 active suite tests 100% green. |
+| Current phase | Phase 4 — Web Console & Administration |
+| Current task | LOGHUB-CONSOLE-003 (Enterprise BFF Authentication, OIDC Integration, Secure Sessions, Workspace Context & Role-Aware Angular Routing Completed) |
+| Implemented LogHub features | 8 SDK packages (Node, Python, NestJS, Next.js, Browser, Angular, React), Central Fastify Ingestion Gateway, Scoped Bearer Auth, Binary WAL with fsync, PostgreSQL Repositories, Central Immutable JSONL Archive with manifests, Standalone Log Shipper, Same-Origin Proxy, Crash Recovery, 7-Day Bounded Deduplication, Query Service with DuckDB Analytical Execution, Pre-Read Isolation Security Gate, 4-Part Composite Keyset Pagination, HMAC-SHA256 Signed Cursors, Search API, Point Lookup, Analytical Aggregations, Dynamic Facets, Resource Governance, Derived Parquet Materialization (ZSTD), File-Backed Parquet Catalog, Transparent Hybrid Query Planning, Angular 19 Enterprise Web Console, Design System & Reusable Components, NestJS Backend-for-Frontend (@skyra/console-bff), OIDC Authorization Code Flow with PKCE S256, HTTP-only SameSite=Lax Session Cookies, Authoritative Workspace Context & Fail-Closed Membership Provider, CSRF Token & Origin Verification, Authenticated Scoped Query Proxy, and Multi-Tab Broadcast Synchronization. |
+| Documents | 15 baseline documents + Phase 2 Acceptance + Phase 3 Query Specs + Phase 4 Console Specs (docs/console/01-11) + ADR-022 through ADR-026 + Implementation Reports |
+| Tests | 670 automated tests across monorepo (0 failed). All suites 100% passing. |
 | Hosting | AWS / Azure / own server portable (Docker / Linux filesystem) |
-| Identity provider | OIDC / OAuth2 + scoped machine tokens (spec approved) |
-| Design branding | Skyra Platform tokens |
+| Identity provider | OIDC Authorization Code Flow with PKCE S256 via Console BFF |
+| Design branding | Skyra Enterprise Obsidian Palette with Light/Dark Themes & High-Density Workstation UX |
 | Canonical schema | ECS-compatible Skyra Logging Standard v1.0.0 released (Draft 2020-12, `contracts/schemas/v1/log-event.schema.json`) |
 
 ## Confirmed user requirements

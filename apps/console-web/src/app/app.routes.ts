@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard, orgAdminGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   {
@@ -7,7 +8,24 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/login/login.component').then(
+        (m) => m.LoginComponent
+      ),
+    title: 'Sign In — Skyra LogHub Console',
+  },
+  {
+    path: 'unauthorized',
+    loadComponent: () =>
+      import('./features/unauthorized/unauthorized.component').then(
+        (m) => m.UnauthorizedComponent
+      ),
+    title: 'Access Restricted — Skyra LogHub Console',
+  },
+  {
     path: 'overview',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/overview/overview.component').then(
         (m) => m.OverviewComponent
@@ -16,6 +34,7 @@ export const routes: Routes = [
   },
   {
     path: 'logs',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/log-explorer/log-explorer.component').then(
         (m) => m.LogExplorerComponent
@@ -24,6 +43,7 @@ export const routes: Routes = [
   },
   {
     path: 'analytics',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/analytics/analytics.component').then(
         (m) => m.AnalyticsComponent
@@ -32,6 +52,7 @@ export const routes: Routes = [
   },
   {
     path: 'projects',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/projects/projects.component').then(
         (m) => m.ProjectsComponent
@@ -40,6 +61,7 @@ export const routes: Routes = [
   },
   {
     path: 'settings',
+    canActivate: [authGuard, orgAdminGuard],
     loadComponent: () =>
       import('./features/settings/settings.component').then(
         (m) => m.SettingsComponent
@@ -48,6 +70,7 @@ export const routes: Routes = [
   },
   {
     path: 'showcase',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/showcase/showcase.component').then(
         (m) => m.ShowcaseComponent

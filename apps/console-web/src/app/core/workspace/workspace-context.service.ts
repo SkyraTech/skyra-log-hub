@@ -1,15 +1,50 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject, type OnDestroy } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { TenantSummary, ProjectSummary, TimeRangeBoundary, TimeRangePreset } from './workspace.models';
+import { AppConfigService } from '../config/app-config.service';
+import { AuthService } from '../auth/auth.service';
+
+export interface BffWorkspaceResponse {
+  tenants: Array<{
+    tenantId: string;
+    tenantName: string;
+    projects: Array<{
+      projectId: string;
+      projectName: string;
+      roles: string[];
+      allowedEnvironments?: string[];
+    }>;
+  }>;
+  activeTenantId?: string;
+  activeProjectId?: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
-export class WorkspaceContextService {
+export class WorkspaceContextService implements OnDestroy {
+  private http: HttpClient | null = null;
+  private configService: AppConfigService | null = null;
+  private authService: AuthService | null = null;
+
   private readonly _activeTenant = signal<TenantSummary | null>({
     id: '00000000-0000-0000-0000-000000000001',
     code: 'skyra-internal',
     name: 'Skyra Technologies'
   });
+
+  private readonly _availableTenants = signal<TenantSummary[]>([
+    {
+      id: '00000000-0000-0000-0000-000000000001',
+      code: 'skyra-internal',
+      name: 'Skyra Technologies'
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000002',
+      code: 'partner-demo',
+      name: 'Partner Demonstration Tenant'
+    }
+  ]);
 
   private readonly _availableProjects = signal<ProjectSummary[]>([
     { id: 'skyra-tech', name: 'Skyra Platform Core', status: 'ACTIVE' },
@@ -24,7 +59,43 @@ export class WorkspaceContextService {
     this.calculateTimeRange('1h')
   );
 
+  private broadcastChannel: BroadcastChannel | null = null;
+
+  constructor() {
+    try {
+      this.http = inject(HttpClient, { optional: true });
+      this.configService = inject(AppConfigService, { optional: true });
+      this.authService = inject(AuthService, { optional: true });
+    } catch {
+      // In direct non-DI unit tests
+    }
+    this.initBroadcastChannel();
+  }
+
+  public ngOnDestroy(): void {
+    if (this.broadcastChannel) {
+      this.broadcastChannel.close();
+      this.broadcastChannel = null;
+    }
+  }
+
+  private initBroadcastChannel(): void {
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        this.broadcastChannel = new BroadcastChannel('skyra-auth-channel');
+        this.broadcastChannel.addEventListener('message', (event) => {
+          if (event.data?.type === 'WORKSPACE_SWITCHED') {
+            void this.loadWorkspacesFromBff();
+          }
+        });
+      } catch {
+        // Silently catch
+      }
+    }
+  }
+
   readonly activeTenant = this._activeTenant.asReadonly();
+  readonly availableTenants = this._availableTenants.asReadonly();
   readonly availableProjects = this._availableProjects.asReadonly();
   readonly selectedProjectIds = this._selectedProjectIds.asReadonly();
   readonly selectedEnvironment = this._selectedEnvironment.asReadonly();
@@ -43,28 +114,117 @@ export class WorkspaceContextService {
       .map(p => p.name);
   });
 
-  selectTenant(tenant: TenantSummary): void {
+  public selectTenant(tenant: TenantSummary): void {
     this._activeTenant.set(tenant);
   }
 
-  selectProjects(projectIds: string[]): void {
+  public selectProjects(projectIds: string[]): void {
     this._selectedProjectIds.set(projectIds);
   }
 
-  selectEnvironment(env: string): void {
+  public selectEnvironment(env: string): void {
     this._selectedEnvironment.set(env);
   }
 
-  setTimeRangePreset(preset: TimeRangePreset): void {
+  public setTimeRangePreset(preset: TimeRangePreset): void {
     this._timeRange.set(this.calculateTimeRange(preset));
   }
 
-  setCustomTimeRange(startIso: string, endIso: string): void {
+  public setCustomTimeRange(startIso: string, endIso: string): void {
     this._timeRange.set({
       preset: 'custom',
       startIso,
       endIso
     });
+  }
+
+  /**
+   * Switches active workspace on the BFF and clears local sensitive state.
+   */
+  public async switchWorkspace(tenantId: string, projectId: string): Promise<boolean> {
+    const bffUrl = this.configService?.config().adminApiBaseUrl || 'http://127.0.0.1:3200';
+    const csrf = this.authService?.csrfToken() || '';
+
+    // Clear sensitive previous-workspace data and reset in-flight state
+    this._selectedProjectIds.set([projectId]);
+
+    const matchingTenant = this._availableTenants().find((t) => t.code === tenantId || t.id === tenantId);
+    if (matchingTenant) {
+      this._activeTenant.set(matchingTenant);
+    }
+
+    if (this.http) {
+      try {
+        await this.http.post(
+          `${bffUrl}/bff/workspaces/select`,
+          { tenantId, projectId },
+          {
+            withCredentials: true,
+            headers: csrf ? { 'X-CSRF-Token': csrf } : {},
+          },
+        ).toPromise();
+
+        // Notify other tabs
+        if (this.broadcastChannel) {
+          this.broadcastChannel.postMessage({
+            type: 'WORKSPACE_SWITCHED',
+            tenantId,
+            projectId,
+            timestamp: Date.now(),
+          });
+        }
+
+        return true;
+      } catch {
+        // Handle error gracefully
+      }
+    }
+
+    return false;
+  }
+
+  public async loadWorkspacesFromBff(): Promise<void> {
+    const bffUrl = this.configService?.config().adminApiBaseUrl || 'http://127.0.0.1:3200';
+    if (!this.http) return;
+
+    try {
+      const data = await this.http.get<BffWorkspaceResponse>(`${bffUrl}/bff/workspaces`, {
+        withCredentials: true,
+      }).toPromise();
+
+      if (data && data.tenants) {
+        const tenants: TenantSummary[] = data.tenants.map((t) => ({
+          id: t.tenantId,
+          code: t.tenantId,
+          name: t.tenantName,
+        }));
+        this._availableTenants.set(tenants);
+
+        const currentTenant = data.tenants.find((t) => t.tenantId === data.activeTenantId) ?? data.tenants[0];
+        if (currentTenant) {
+          this._activeTenant.set({
+            id: currentTenant.tenantId,
+            code: currentTenant.tenantId,
+            name: currentTenant.tenantName,
+          });
+
+          const projects: ProjectSummary[] = currentTenant.projects.map((p) => ({
+            id: p.projectId,
+            name: p.projectName,
+            status: 'ACTIVE',
+          }));
+          this._availableProjects.set(projects);
+
+          if (data.activeProjectId) {
+            this._selectedProjectIds.set([data.activeProjectId]);
+          } else if (projects[0]) {
+            this._selectedProjectIds.set([projects[0].id]);
+          }
+        }
+      }
+    } catch {
+      // Retain default or dev preview workspaces
+    }
   }
 
   private calculateTimeRange(preset: TimeRangePreset): TimeRangeBoundary {

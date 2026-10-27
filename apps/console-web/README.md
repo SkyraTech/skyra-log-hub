@@ -120,16 +120,18 @@ To enable design review without connecting to live customer log streams, a dedic
 
 ## 5. Security & Isolation Guarantees
 
-1. **No Sensitive Tokens in Browser Storage**: `localStorage` is strictly restricted to user UI theme preference (`skyra-theme`). No JWTs, API keys, or tenant credentials are stored on the client.
-2. **Untrusted Log Content Escaping**: All log messages and attributes are rendered as text nodes through standard Angular interpolation. Unsafe `[innerHTML]` is forbidden.
-3. **BFF Session Model**: Prepares integration for OIDC Authorization Code Flow with PKCE and HTTP-only SameSite cookies (Milestone `LOGHUB-CONSOLE-003`).
+1. **No Sensitive Tokens in Browser Storage**: `localStorage` is strictly restricted to user UI theme preference (`skyra-theme`). No access tokens, refresh tokens, or session secrets are stored on the client.
+2. **Untrusted Log Content Escaping**: All log messages and attributes are rendered as text nodes through standard Angular interpolation. Unsafe `[innerHTML]` is strictly prohibited.
+3. **BFF Session Model**: Integrates with `@skyra/console-bff` via `__Host-skyra-session` HTTP-only, SameSite=Lax cookies, CSRF tokens (`X-CSRF-Token`), and multi-tab synchronization using `BroadcastChannel`.
+4. **Role-Aware Route Protection**: `authGuard`, `orgAdminGuard`, and `roleGuard` protect application routes, redirecting unauthenticated requests to `/login` with returnUrl and unauthorized requests to `/unauthorized`.
 
 ---
 
 ## 6. Known Milestones & Scope Roadmap
 
 - **LOGHUB-CONSOLE-001**: Architecture & UI/UX Design (Reported PASS)
-- **LOGHUB-CONSOLE-002**: Angular Foundation, Responsive App Shell & Design System (**THIS MILESTONE — PASS**)
-- **LOGHUB-CONSOLE-003**: Authentication, BFF Integration & Dynamic Workspace Context
-- **LOGHUB-CONSOLE-004**: Production Log Explorer, Keyset Cursor Pagination & Search Filters
+- **LOGHUB-CONSOLE-002**: Angular Foundation, Responsive App Shell & Design System (Reported PASS)
+- **LOGHUB-CONSOLE-003**: Enterprise BFF Authentication, OIDC Integration, Secure Sessions, Workspace Context & Role-Aware Angular Routing (**THIS MILESTONE — PASS**)
+- **LOGHUB-CONSOLE-004**: Live Log Explorer & Authenticated Search Integration
 - **LOGHUB-CONSOLE-005**: Analytical Dashboards, Cardinality Facets & Real-Time Aggregations
+
