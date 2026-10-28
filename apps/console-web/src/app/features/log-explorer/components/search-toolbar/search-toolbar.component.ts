@@ -7,12 +7,13 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ButtonComponent } from '../../../../shared/ui/button/button.component';
 import { TimeRangePreset, TIME_RANGE_PRESETS } from '../../domain/log-search.model';
 
 @Component({
   selector: 'skyra-search-toolbar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ButtonComponent],
   templateUrl: './search-toolbar.component.html',
   styleUrl: './search-toolbar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  CUSTOM_ELEMENTS_SCHEMA,
   HostListener,
   signal,
 } from '@angular/core';
@@ -13,6 +14,7 @@ import { TopbarComponent } from '../topbar/topbar.component';
   selector: 'skyra-app-shell',
   standalone: true,
   imports: [CommonModule, RouterModule, SidebarComponent, TopbarComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

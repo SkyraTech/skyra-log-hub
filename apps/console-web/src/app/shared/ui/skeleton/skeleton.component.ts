@@ -1,40 +1,35 @@
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'skyra-skeleton',
   standalone: true,
   imports: [CommonModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div
-      class="skeleton"
-      [style.width]="width()"
-      [style.height]="height()"
-      [style.border-radius]="borderRadius()"
+    <skyra-tech-skeleton
+      [attr.width]="width()"
+      [attr.height]="height()"
+      [attr.radius]="radius()"
+      animation="shimmer"
       aria-hidden="true">
-    </div>
+    </skyra-tech-skeleton>
   `,
   styles: [`
-    .skeleton {
-      background: linear-gradient(
-        90deg,
-        var(--color-bg-subtle) 25%,
-        var(--color-border-subtle) 50%,
-        var(--color-bg-subtle) 75%
-      );
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      display: inline-block;
+    :host {
+      display: block;
+      width: 100%;
     }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+    skyra-tech-skeleton {
+      display: block;
+      width: 100%;
     }
   `]
 })
 export class SkeletonComponent {
   readonly width = input<string>('100%');
   readonly height = input<string>('16px');
+  readonly radius = input<'none' | 'sm' | 'md' | 'lg' | 'full'>('md');
   readonly borderRadius = input<string>('var(--radius-sm)');
 }

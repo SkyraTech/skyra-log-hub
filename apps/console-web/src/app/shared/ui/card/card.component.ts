@@ -26,35 +26,36 @@ import { CommonModule } from '@angular/common';
   `,
   styles: [`
     .card {
-      background: var(--color-surface-default);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-sm);
+      background: var(--skyra-surface, #ffffff);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-md, 10px);
+      box-shadow: var(--skyra-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
       overflow: hidden;
-      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      transition: border-color 150ms ease, box-shadow 150ms ease;
     }
     .card:hover {
-      border-color: var(--color-border-default);
+      border-color: var(--skyra-primary, #0A58CA);
     }
     .pad-none { padding: 0; }
-    .pad-sm { padding: var(--space-3); }
-    .pad-md { padding: var(--space-4); }
-    .pad-lg { padding: var(--space-6); }
+    .pad-sm { padding: var(--space-3, 12px); }
+    .pad-md { padding: var(--space-4, 16px); }
+    .pad-lg { padding: var(--space-6, 24px); }
 
     .card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: var(--space-3);
+      margin-bottom: var(--space-3, 12px);
     }
     .card-title {
-      font-size: 14px;
+      font-family: var(--skyra-font-display, 'Outfit', sans-serif);
+      font-size: 15px;
       font-weight: 600;
-      color: var(--color-text-primary);
+      color: var(--skyra-text, #0f172a);
     }
     .card-subtitle {
       font-size: 12px;
-      color: var(--color-text-secondary);
+      color: var(--skyra-text-muted, #64748b);
       margin-top: 2px;
     }
   `]

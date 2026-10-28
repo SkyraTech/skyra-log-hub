@@ -24,22 +24,27 @@ import { CommonModule } from '@angular/common';
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: var(--space-4);
-      margin-bottom: var(--space-6);
-      padding-bottom: var(--space-4);
-      border-bottom: 1px solid var(--color-border-subtle);
+      gap: var(--space-4, 16px);
+      margin-bottom: var(--space-6, 24px);
+      padding-bottom: var(--space-4, 16px);
+      border-bottom: 1px solid var(--skyra-border, #e2e8f0);
     }
     .title {
-      color: var(--color-text-primary);
+      font-family: var(--skyra-font-display, 'Outfit', sans-serif);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--skyra-text, #0f172a);
+      margin: 0;
     }
     .description {
-      color: var(--color-text-secondary);
-      margin-top: var(--space-1);
+      color: var(--skyra-text-muted, #64748b);
+      font-size: 14px;
+      margin-top: var(--space-1, 4px);
     }
     .header-actions {
       display: flex;
       align-items: center;
-      gap: var(--space-2);
+      gap: var(--space-2, 8px);
       flex-shrink: 0;
     }
   `]

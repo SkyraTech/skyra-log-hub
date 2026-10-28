@@ -7,6 +7,12 @@
   padding-bottom: 40px;
 }
 
+.explorer-main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .header-context-tags {
   display: flex;
   align-items: center;
@@ -20,27 +26,29 @@
   padding: 4px 10px;
   font-size: 12px;
   font-weight: 500;
-  background-color: var(--color-bg-secondary, #121721);
-  border: 1px solid var(--color-border-subtle, #1e2638);
-  border-radius: var(--radius-md, 6px);
-  color: var(--color-text-secondary, #a4b1c7);
+  background-color: var(--skyra-bg, #f4f7fc);
+  border: 1px solid var(--skyra-border, #e2e8f0);
+  border-radius: var(--skyra-radius-sm, 6px);
+  color: var(--skyra-text-muted, #64748b);
 }
 
 .project-badge {
-  color: var(--color-primary-400, #60a5fa);
-  border-color: rgba(59, 130, 246, 0.3);
-  background-color: rgba(59, 130, 246, 0.08);
+  color: var(--skyra-primary, #0A58CA);
+  border-color: rgba(10, 88, 202, 0.3);
+  background-color: var(--skyra-primary-light, rgba(10, 88, 202, 0.08));
 }
 
 .results-wrapper {
-  background-color: var(--color-bg-secondary, #121721);
-  border: 1px solid var(--color-border-subtle, #1e2638);
-  border-radius: var(--radius-lg, 10px);
+  background-color: var(--skyra-surface, #ffffff);
+  border: 1px solid var(--skyra-border, #e2e8f0);
+  border-radius: var(--skyra-radius-lg, 14px);
   overflow: hidden;
+  box-shadow: var(--skyra-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
 }
 
 @media (max-width: 768px) {
-  .explorer-container {
+  .explorer-container,
+  .explorer-main-content {
     gap: 12px;
   }
 }

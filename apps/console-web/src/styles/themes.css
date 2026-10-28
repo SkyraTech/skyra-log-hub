@@ -1,7 +1,13 @@
 /**
  * Skyra LogHub — Dual-Theme Color System (themes.css)
- * Task: LOGHUB-CONSOLE-002
- * Reference: docs/console/04-UI_UX_DESIGN_SYSTEM.md
+ * Task: PLATFORM-LOGHUB-001 — Skyra Platform Brand & Theme Migration
+ * Authoritative Palette: @skyra-tech-platform/design-tokens
+ *
+ * Light mode primary:  #0A58CA (Skyra Blue)
+ * Secondary palette:   #002B66 (Navy), #FF6B00 (Orange), #00A3E0 (Cyan)
+ * Backgrounds:         #F4F7FC (Light) / #0B111E (Dark)
+ * Surfaces:            #FFFFFF (Light) / #151D30 (Dark)
+ * Sidebar BG:          #002B66 (Light) / #0B111E (Dark)
  */
 
 /* Default Light Theme */
@@ -9,110 +15,185 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  /* Surfaces & Backgrounds */
-  --color-bg-base: #F8FAFC;
-  --color-bg-subtle: #F1F5F9;
-  --color-surface-default: #FFFFFF;
-  --color-surface-raised: #FFFFFF;
-  --color-surface-hover: #F8FAFC;
-  --color-surface-active: #F1F5F9;
-  --color-surface-overlay: rgba(15, 23, 42, 0.45);
+  /* Surfaces & Backgrounds — Mapped to official Skyra Platform tokens */
+  --color-bg-base: var(--skyra-bg, #F4F7FC);
+  --color-bg-subtle: #edf2f9;
+  --color-surface-default: var(--skyra-surface, #FFFFFF);
+  --color-surface-raised: var(--skyra-surface, #FFFFFF);
+  --color-surface-card: var(--skyra-surface, #FFFFFF);
+  --color-surface-hover: #f1f5f9;
+  --color-surface-active: #e2e8f0;
+  --color-surface-overlay: rgba(0, 43, 102, 0.45);
 
-  /* Typography Colors */
-  --color-text-primary: #0F172A;
-  --color-text-secondary: #475569;
-  --color-text-muted: #94A3B8;
+  /* Legacy & Framework Surface Mappings */
+  --color-bg-primary: var(--skyra-surface, #FFFFFF);
+  --color-bg-secondary: var(--skyra-bg, #F4F7FC);
+  --color-bg-tertiary: #edf2f9;
+  --skyra-bg-app: var(--skyra-bg, #F4F7FC);
+  --skyra-bg-surface: var(--skyra-surface, #FFFFFF);
+
+  /* Typography Colors — Mapped to official Skyra Platform text tokens */
+  --color-text-primary: var(--skyra-text, #0f172a);
+  --color-text-secondary: var(--skyra-text-muted, #64748b);
+  --color-text-muted: var(--skyra-text-muted, #64748b);
+  --color-text-subtle: var(--skyra-text-subtle, #94a3b8);
   --color-text-inverse: #FFFFFF;
+  --skyra-text-primary: var(--skyra-text, #0f172a);
+  --skyra-text-secondary: var(--skyra-text-muted, #64748b);
+  --skyra-text-muted: var(--skyra-text-muted, #64748b);
 
   /* Borders & Dividers */
-  --color-border-subtle: #E2E8F0;
-  --color-border-default: #CBD5E1;
-  --color-border-strong: #94A3B8;
-  --color-focus: #2563EB;
-  --color-focus-ring: rgba(37, 99, 235, 0.35);
+  --color-border-subtle: var(--skyra-border, #e2e8f0);
+  --color-border-default: #cbd5e1;
+  --color-border-strong: #94a3b8;
+  --skyra-border-subtle: var(--skyra-border, #e2e8f0);
+  --color-focus: var(--skyra-border-focus, #0A58CA);
+  --color-focus-ring: var(--skyra-focus-ring, 0 0 0 3px rgba(10, 88, 202, 0.15));
 
-  /* Brand Accents */
-  --color-brand-primary: #2563EB;
-  --color-brand-hover: #1D4ED8;
-  --color-brand-active: #1E40AF;
-  --color-brand-subtle: #EFF6FF;
-  --color-brand-border: #BFDBFE;
+  /* Brand Accents — Official Skyra Platform Blue (#0A58CA) */
+  --color-brand-primary: var(--skyra-primary, #0A58CA);
+  --color-brand-hover: var(--skyra-primary-hover, #0847a8);
+  --color-brand-active: #063988;
+  --color-brand-subtle: var(--skyra-primary-light, rgba(10, 88, 202, 0.1));
+  --color-brand-border: #bfdbfe;
+  --color-primary-400: #3b82f6;
+  --color-primary-500: var(--skyra-primary, #0A58CA);
+  --color-primary-600: var(--skyra-primary-hover, #0847a8);
 
-  /* Secondary Accents */
-  --color-accent-cyan: #0891B2;
-  --color-accent-cyan-subtle: #ECFEFF;
+  /* Component Aliases */
+  --bg-base: var(--color-bg-base);
+  --bg-subtle: var(--color-bg-subtle);
+  --surface-default: var(--color-surface-default);
+  --surface-raised: var(--color-surface-raised);
+  --surface-secondary: var(--color-bg-subtle);
+  --surface-hover: var(--color-surface-hover);
+  --surface-active: var(--color-surface-active);
+  --surface-sidebar: var(--skyra-sidebar-bg, #002B66);
+  --surface-primary: var(--color-surface-default);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --border-subtle: var(--color-border-subtle);
+  --border-default: var(--color-border-default);
+  --brand-primary: var(--color-brand-primary);
+  --brand-hover: var(--color-brand-hover);
+
+  /* Secondary Accents — Official Platform Colors */
+  --color-accent-orange: var(--skyra-orange, #FF6B00);
+  --color-accent-orange-subtle: var(--skyra-orange-light, rgba(255, 107, 0, 0.1));
+  --color-accent-cyan: var(--skyra-cyan, #00A3E0);
+  --color-accent-cyan-subtle: var(--skyra-cyan-light, rgba(0, 163, 224, 0.1));
+  --color-accent-navy: var(--skyra-navy, #002B66);
   --color-accent-purple: #7C3AED;
   --color-accent-purple-subtle: #F5F3FF;
 
-  /* Semantic Severity Tokens (WCAG 2.2 AA Verified) */
+  /* Semantic Severity Tokens (WCAG 2.2 AA Verified, mapped to Platform semantics) */
   --color-sev-fatal-bg: #FEF2F2;
   --color-sev-fatal-text: #991B1B;
   --color-sev-fatal-border: #FECACA;
-  --color-sev-fatal-dot: #DC2626;
+  --color-sev-fatal-dot: var(--skyra-danger, #ef4444);
 
   --color-sev-error-bg: #FFF1F2;
   --color-sev-error-text: #BE123C;
   --color-sev-error-border: #FECDD3;
-  --color-sev-error-dot: #E11D48;
+  --color-sev-error-dot: var(--skyra-danger, #ef4444);
 
   --color-sev-warn-bg: #FFFBEB;
   --color-sev-warn-text: #B45309;
   --color-sev-warn-border: #FDE68A;
-  --color-sev-warn-dot: #F59E0B;
+  --color-sev-warn-dot: var(--skyra-warning, #f59e0b);
 
-  --color-sev-info-bg: #EFF6FF;
-  --color-sev-info-text: #1D4ED8;
+  --color-sev-info-bg: var(--skyra-primary-light, rgba(10, 88, 202, 0.1));
+  --color-sev-info-text: var(--skyra-primary, #0A58CA);
   --color-sev-info-border: #BFDBFE;
-  --color-sev-info-dot: #3B82F6;
+  --color-sev-info-dot: var(--skyra-info, #3b82f6);
 
   --color-sev-debug-bg: #F1F5F9;
-  --color-sev-debug-text: #475569;
-  --color-sev-debug-border: #E2E8F0;
-  --color-sev-debug-dot: #64748B;
+  --color-sev-debug-text: var(--skyra-text-muted, #64748b);
+  --color-sev-debug-border: var(--skyra-border, #e2e8f0);
+  --color-sev-debug-dot: var(--skyra-text-subtle, #94a3b8);
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-drawer: -4px 0 24px rgba(0, 0, 0, 0.12);
+  /* Shadows — Official Skyra Platform shadows */
+  --shadow-sm: var(--skyra-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04));
+  --shadow-md: var(--skyra-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04));
+  --shadow-lg: var(--skyra-shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.10), 0 4px 10px rgba(0, 0, 0, 0.05));
+  --shadow-drawer: var(--skyra-shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.10));
 }
 
-/* Dark Theme */
+/* Official Skyra Platform Dark Theme */
+.dark,
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Surfaces & Backgrounds */
-  --color-bg-base: #0B0F17;
-  --color-bg-subtle: #111827;
-  --color-surface-default: #182234;
-  --color-surface-raised: #1E293B;
-  --color-surface-hover: #1F2C42;
-  --color-surface-active: #23344D;
+  /* Surfaces & Backgrounds — Official Platform Dark Tokens */
+  --color-bg-base: var(--skyra-bg, #0B111E);
+  --color-bg-subtle: #0f172a;
+  --color-surface-default: var(--skyra-surface, #151D30);
+  --color-surface-raised: #1c263d;
+  --color-surface-card: var(--skyra-surface, #151D30);
+  --color-surface-hover: #1e2942;
+  --color-surface-active: #253352;
   --color-surface-overlay: rgba(3, 7, 18, 0.7);
 
-  /* Typography Colors */
-  --color-text-primary: #F8FAFC;
-  --color-text-secondary: #94A3B8;
-  --color-text-muted: #64748B;
-  --color-text-inverse: #0B0F17;
+  /* Legacy & Framework Surface Mappings */
+  --color-bg-primary: var(--skyra-bg, #0B111E);
+  --color-bg-secondary: #0f172a;
+  --color-bg-tertiary: #151D30;
+  --skyra-bg-app: var(--skyra-bg, #0B111E);
+  --skyra-bg-surface: var(--skyra-surface, #151D30);
+
+  /* Typography Colors — Official Platform Dark Text */
+  --color-text-primary: var(--skyra-text, #f1f5f9);
+  --color-text-secondary: var(--skyra-text-muted, #94a3b8);
+  --color-text-muted: var(--skyra-text-muted, #94a3b8);
+  --color-text-subtle: var(--skyra-text-subtle, #64748b);
+  --color-text-inverse: #0B111E;
+  --skyra-text-primary: var(--skyra-text, #f1f5f9);
+  --skyra-text-secondary: var(--skyra-text-muted, #94a3b8);
+  --skyra-text-muted: var(--skyra-text-muted, #94a3b8);
 
   /* Borders & Dividers */
-  --color-border-subtle: #1E293B;
-  --color-border-default: #334155;
-  --color-border-strong: #475569;
+  --color-border-subtle: var(--skyra-border, rgba(255, 255, 255, 0.08));
+  --color-border-default: rgba(255, 255, 255, 0.12);
+  --color-border-strong: rgba(255, 255, 255, 0.20);
+  --skyra-border-subtle: var(--skyra-border, rgba(255, 255, 255, 0.08));
   --color-focus: #60A5FA;
-  --color-focus-ring: rgba(96, 165, 250, 0.35);
+  --color-focus-ring: rgba(59, 130, 246, 0.35);
 
   /* Brand Accents */
   --color-brand-primary: #3B82F6;
   --color-brand-hover: #60A5FA;
   --color-brand-active: #93C5FD;
-  --color-brand-subtle: rgba(59, 130, 246, 0.15);
+  --color-brand-subtle: var(--skyra-primary-light, rgba(10, 88, 202, 0.15));
   --color-brand-border: #1E3A8A;
+  --color-primary-400: #60A5FA;
+  --color-primary-500: #3B82F6;
+  --color-primary-600: #2563EB;
+
+  /* Component Aliases */
+  --bg-base: var(--color-bg-base);
+  --bg-subtle: var(--color-bg-subtle);
+  --surface-default: var(--color-surface-default);
+  --surface-raised: var(--color-surface-raised);
+  --surface-secondary: var(--color-bg-subtle);
+  --surface-hover: var(--color-surface-hover);
+  --surface-active: var(--color-surface-active);
+  --surface-sidebar: var(--skyra-sidebar-bg, #0B111E);
+  --surface-primary: var(--color-surface-default);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --border-subtle: var(--color-border-subtle);
+  --border-default: var(--color-border-default);
+  --brand-primary: var(--color-brand-primary);
+  --brand-hover: var(--color-brand-hover);
 
   /* Secondary Accents */
-  --color-accent-cyan: #06B6D4;
-  --color-accent-cyan-subtle: rgba(6, 182, 212, 0.15);
+  --color-accent-orange: var(--skyra-orange, #FF6B00);
+  --color-accent-orange-subtle: var(--skyra-orange-light, rgba(255, 107, 0, 0.15));
+  --color-accent-cyan: var(--skyra-cyan, #00A3E0);
+  --color-accent-cyan-subtle: var(--skyra-cyan-light, rgba(0, 163, 224, 0.15));
+  --color-accent-navy: var(--skyra-navy, #002B66);
   --color-accent-purple: #A855F7;
   --color-accent-purple-subtle: rgba(168, 85, 247, 0.15);
 
@@ -120,7 +201,7 @@
   --color-sev-fatal-bg: #450A0A;
   --color-sev-fatal-text: #FCA5A5;
   --color-sev-fatal-border: #7F1D1D;
-  --color-sev-fatal-dot: #EF4444;
+  --color-sev-fatal-dot: var(--skyra-danger, #ef4444);
 
   --color-sev-error-bg: #4C0519;
   --color-sev-error-text: #FDA4AF;
@@ -130,7 +211,7 @@
   --color-sev-warn-bg: #451A03;
   --color-sev-warn-text: #FCD34D;
   --color-sev-warn-border: #78350F;
-  --color-sev-warn-dot: #F59E0B;
+  --color-sev-warn-dot: var(--skyra-warning, #f59e0b);
 
   --color-sev-info-bg: #172554;
   --color-sev-info-text: #93C5FD;
@@ -138,13 +219,13 @@
   --color-sev-info-dot: #60A5FA;
 
   --color-sev-debug-bg: #1E293B;
-  --color-sev-debug-text: #94A3B8;
-  --color-sev-debug-border: #334155;
-  --color-sev-debug-dot: #64748B;
+  --color-sev-debug-text: var(--skyra-text-muted, #94a3b8);
+  --color-sev-debug-border: var(--skyra-border, rgba(255, 255, 255, 0.08));
+  --color-sev-debug-dot: var(--skyra-text-subtle, #64748b);
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
-  --shadow-drawer: -6px 0 28px rgba(0, 0, 0, 0.6);
+  --shadow-sm: var(--skyra-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.40));
+  --shadow-md: var(--skyra-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.50));
+  --shadow-lg: var(--skyra-shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.60));
+  --shadow-drawer: var(--skyra-shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.60));
 }

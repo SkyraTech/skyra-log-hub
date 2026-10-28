@@ -1,0 +1,264 @@
+{
+  "timestamp": "2026-10-28T07:09:03.169Z",
+  "screens": {},
+  "consoleErrors": [
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/aggregate",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/facets",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/search",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/search",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/search",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/aggregate",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "networkFailures": [
+    {
+      "url": "http://127.0.0.1:3000/bff/query/aggregate",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/facets",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/search",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/search",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/search",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/aggregate",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    }
+  ],
+  "accessibility": {
+    "login-desktop-light": {
+      "violationsCount": 1,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodesCount": 5,
+          "target": [
+            ".desktop-sidebar-container > skyra-sidebar > aside > .sidebar-nav > ul > .nav-item:nth-child(6) > .nav-link[href$=\"showcase\"][routerlinkactive=\"active\"] > .dev-badge.nav-badge",
+            ".avatar",
+            ".sandbox-divider > span[_ngcontent-ng-c3864274574=\"\"]",
+            ".footer-tag[_ngcontent-ng-c3864274574=\"\"]:nth-child(1)",
+            ".footer-tag[_ngcontent-ng-c3864274574=\"\"]:nth-child(2)"
+          ]
+        }
+      ]
+    },
+    "overview-desktop-light": {
+      "violationsCount": 2,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodesCount": 2,
+          "target": [
+            ".desktop-sidebar-container > skyra-sidebar > aside > .sidebar-nav > ul > .nav-item:nth-child(6) > .nav-link[href$=\"showcase\"][routerlinkactive=\"active\"] > .dev-badge.nav-badge",
+            ".avatar"
+          ]
+        },
+        {
+          "id": "label-content-name-mismatch",
+          "impact": "serious",
+          "description": "Ensure that elements labelled through their content must have their visible text as part of their accessible name",
+          "nodesCount": 5,
+          "target": [
+            "div[aria-label=\"Total Logs: 0\"]",
+            "div[aria-label=\"Exceptions & Errors: 0\"]",
+            "div[aria-label=\"Warnings: 0\"]",
+            "div[aria-label=\"Active Services: 0\"]",
+            ".toggle-view-btn"
+          ]
+        }
+      ]
+    },
+    "log-explorer-desktop-light": {
+      "violationsCount": 1,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodesCount": 7,
+          "target": [
+            ".desktop-sidebar-container > skyra-sidebar > aside > .sidebar-nav > ul > .nav-item:nth-child(6) > .nav-link[href$=\"showcase\"][routerlinkactive=\"active\"] > .dev-badge.nav-badge",
+            ".avatar",
+            "#time-range-select",
+            "#page-size-select",
+            ".error-title",
+            ".error-message",
+            ".metric-pill"
+          ]
+        }
+      ]
+    },
+    "event-detail-drawer": {
+      "violationsCount": 1,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodesCount": 3,
+          "target": [
+            "label[for=\"time-range-select\"]",
+            "label[for=\"page-size-select\"]",
+            ".facet-title"
+          ]
+        }
+      ]
+    },
+    "analytics-desktop-light": {
+      "violationsCount": 2,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodesCount": 2,
+          "target": [
+            ".desktop-sidebar-container > skyra-sidebar > aside > .sidebar-nav > ul > .nav-item:nth-child(6) > .nav-link[href$=\"showcase\"][routerlinkactive=\"active\"] > .dev-badge.nav-badge",
+            ".avatar"
+          ]
+        },
+        {
+          "id": "label-content-name-mismatch",
+          "impact": "serious",
+          "description": "Ensure that elements labelled through their content must have their visible text as part of their accessible name",
+          "nodesCount": 5,
+          "target": [
+            "div[aria-label=\"Total Scanned Events: 0\"]",
+            "div[aria-label=\"Error & Fatal Volume: 0\"]",
+            "div[aria-label=\"Warnings: 0\"]",
+            "div[aria-label=\"Unique Services: 0\"]",
+            ".toggle-view-btn"
+          ]
+        }
+      ]
+    },
+    "projects-page": {
+      "violationsCount": 1,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodesCount": 1,
+          "target": [
+            ".badge.brand[_ngcontent-ng-c1489579341=\"\"]"
+          ]
+        }
+      ]
+    },
+    "settings-page": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "unauthorized-screen": {
+      "violationsCount": 1,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodesCount": 3,
+          "target": [
+            ".detail-row[_ngcontent-ng-c2904397554=\"\"]:nth-child(1) > .label[_ngcontent-ng-c2904397554=\"\"]",
+            ".detail-row[_ngcontent-ng-c2904397554=\"\"]:nth-child(2) > .label[_ngcontent-ng-c2904397554=\"\"]",
+            ".detail-row[_ngcontent-ng-c2904397554=\"\"]:nth-child(3) > .label[_ngcontent-ng-c2904397554=\"\"]"
+          ]
+        }
+      ]
+    },
+    "not-found-screen": {
+      "violationsCount": 1,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodesCount": 1,
+          "target": [
+            ".error-badge"
+          ]
+        }
+      ]
+    }
+  }
+}

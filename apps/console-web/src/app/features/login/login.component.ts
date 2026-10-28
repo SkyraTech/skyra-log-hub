@@ -91,19 +91,19 @@ import { ThemeService } from '../../core/theme/theme.service';
       align-items: center;
       justify-content: center;
       padding: 1.5rem;
-      background: radial-gradient(circle at 50% 20%, rgba(99, 102, 241, 0.08), transparent 70%),
-                  var(--skyra-bg-app, #0f172a);
+      background: radial-gradient(circle at 50% 20%, rgba(10, 88, 202, 0.1), transparent 70%),
+                  var(--skyra-bg, #0B111E);
       font-family: inherit;
     }
 
     .login-card {
       width: 100%;
       max-width: 480px;
-      background: var(--skyra-bg-surface, #1e293b);
-      border: 1px solid var(--skyra-border-subtle, rgba(255, 255, 255, 0.1));
-      border-radius: 1rem;
+      background: var(--skyra-surface, #151D30);
+      border: 1px solid var(--skyra-border, #1e293b);
+      border-radius: var(--skyra-radius-lg, 14px);
       padding: 2.5rem;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+      box-shadow: var(--skyra-shadow-lg, 0 20px 25px -5px rgba(0, 0, 0, 0.5));
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -118,18 +118,20 @@ import { ThemeService } from '../../core/theme/theme.service';
     .logo-mark {
       width: 48px;
       height: 48px;
-      border-radius: 0.75rem;
-      background: linear-gradient(135deg, #6366f1, #3b82f6);
+      border-radius: var(--skyra-radius-md, 10px);
+      background: linear-gradient(135deg, var(--skyra-primary, #0A58CA), var(--skyra-cyan, #00A3E0));
       color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 4px 12px rgba(10, 88, 202, 0.3);
     }
 
     .brand-title {
+      font-family: var(--skyra-font-display, 'Outfit', sans-serif);
       font-size: 1.5rem;
       font-weight: 700;
-      color: var(--skyra-text-primary, #f8fafc);
+      color: var(--skyra-text, #ffffff);
       margin: 0;
       letter-spacing: -0.025em;
     }
@@ -144,16 +146,21 @@ import { ThemeService } from '../../core/theme/theme.service';
       align-items: center;
       gap: 0.5rem;
       padding: 0.5rem 0.75rem;
-      background: rgba(99, 102, 241, 0.1);
-      border: 1px solid rgba(99, 102, 241, 0.2);
-      border-radius: 0.5rem;
+      background: var(--skyra-primary-light, rgba(10, 88, 202, 0.1));
+      border: 1px solid rgba(10, 88, 202, 0.2);
+      border-radius: var(--skyra-radius-sm, 6px);
       font-size: 0.75rem;
-      color: #a5b4fc;
+      color: var(--skyra-primary, #0A58CA);
+    }
+
+    :host-context([data-theme="dark"]) .security-banner,
+    [data-theme="dark"] .security-banner {
+      color: #93c5fd;
     }
 
     .alert-box {
       padding: 0.75rem 1rem;
-      border-radius: 0.5rem;
+      border-radius: var(--skyra-radius-sm, 6px);
       font-size: 0.875rem;
       display: flex;
       align-items: center;
@@ -161,15 +168,15 @@ import { ThemeService } from '../../core/theme/theme.service';
     }
 
     .error-alert {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #fca5a5;
+      background: rgba(220, 38, 38, 0.1);
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      color: var(--skyra-danger, #dc2626);
     }
 
     .login-instructions {
       font-size: 0.875rem;
       line-height: 1.5;
-      color: var(--skyra-text-secondary, #cbd5e1);
+      color: var(--skyra-text-muted, #94a3b8);
       margin-bottom: 1.25rem;
     }
 
@@ -180,10 +187,10 @@ import { ThemeService } from '../../core/theme/theme.service';
       justify-content: center;
       gap: 0.75rem;
       padding: 0.875rem 1.25rem;
-      background: #4f46e5;
+      background: var(--skyra-primary, #0A58CA);
       color: #ffffff;
       border: none;
-      border-radius: 0.5rem;
+      border-radius: var(--skyra-radius-sm, 6px);
       font-size: 0.9375rem;
       font-weight: 600;
       cursor: pointer;
@@ -191,7 +198,7 @@ import { ThemeService } from '../../core/theme/theme.service';
     }
 
     .sso-button:hover:not(:disabled) {
-      background: #4338ca;
+      background: var(--skyra-primary-hover, #0847a8);
     }
 
     .sso-button:disabled {
@@ -203,7 +210,7 @@ import { ThemeService } from '../../core/theme/theme.service';
       position: relative;
       text-align: center;
       font-size: 0.75rem;
-      color: var(--skyra-text-muted, #64748b);
+      color: var(--skyra-text-muted, #94a3b8);
       margin: 0.5rem 0;
     }
 
@@ -214,13 +221,14 @@ import { ThemeService } from '../../core/theme/theme.service';
       left: 0;
       right: 0;
       height: 1px;
-      background: var(--skyra-border-subtle, rgba(255, 255, 255, 0.1));
+      background: var(--skyra-border, #1e293b);
       z-index: 0;
     }
 
     .sandbox-divider span {
       position: relative;
-      background: var(--skyra-bg-surface, #1e293b);
+      background: var(--skyra-surface, #151D30);
+      color: var(--skyra-text-muted, #94a3b8);
       padding: 0 0.75rem;
       z-index: 1;
     }
@@ -229,9 +237,9 @@ import { ThemeService } from '../../core/theme/theme.service';
       width: 100%;
       padding: 0.75rem 1rem;
       background: transparent;
-      color: var(--skyra-text-secondary, #94a3b8);
-      border: 1px solid var(--skyra-border-subtle, rgba(255, 255, 255, 0.15));
-      border-radius: 0.5rem;
+      color: var(--skyra-text-muted, #94a3b8);
+      border: 1px solid var(--skyra-border, #1e293b);
+      border-radius: var(--skyra-radius-sm, 6px);
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
@@ -239,17 +247,28 @@ import { ThemeService } from '../../core/theme/theme.service';
     }
 
     .sandbox-button:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--skyra-text-primary, #ffffff);
+      background: var(--skyra-primary-light, rgba(10, 88, 202, 0.1));
+      color: var(--skyra-text, #ffffff);
+      border-color: var(--skyra-primary, #0A58CA);
     }
 
     .card-footer {
       display: flex;
       justify-content: space-between;
-      border-top: 1px solid var(--skyra-border-subtle, rgba(255, 255, 255, 0.08));
+      border-top: 1px solid var(--skyra-border, #1e293b);
       padding-top: 1rem;
       font-size: 0.7rem;
-      color: var(--skyra-text-muted, #64748b);
+      color: var(--skyra-text-muted, #94a3b8);
+    }
+
+    :host-context([data-theme="light"]) .sandbox-divider span,
+    [data-theme="light"] .sandbox-divider span {
+      color: #334155;
+    }
+
+    :host-context([data-theme="light"]) .card-footer,
+    [data-theme="light"] .card-footer {
+      color: #475569;
     }
   `]
 })

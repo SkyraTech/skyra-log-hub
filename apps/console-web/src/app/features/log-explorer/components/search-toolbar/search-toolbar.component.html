@@ -56,11 +56,11 @@
   <!-- Action buttons -->
   <div class="actions-group">
     @if (loading()) {
-      <button
+      <skyra-button
         id="btn-cancel-search"
-        type="button"
-        class="cancel-btn"
-        (click)="triggerCancel()"
+        variant="danger"
+        size="md"
+        (clicked)="triggerCancel()"
         aria-label="Cancel active search"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -68,13 +68,13 @@
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
         <span>Cancel</span>
-      </button>
+      </skyra-button>
     } @else {
-      <button
+      <skyra-button
         id="btn-run-search"
-        type="button"
-        class="search-btn"
-        (click)="triggerSearch()"
+        variant="primary"
+        size="md"
+        (clicked)="triggerSearch()"
         aria-label="Execute search"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -82,7 +82,7 @@
           <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
         </svg>
         <span>Search</span>
-      </button>
+      </skyra-button>
     }
   </div>
 </div>

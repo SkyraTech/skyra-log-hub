@@ -1,0 +1,276 @@
+{
+  "timestamp": "2026-10-28T10:32:06.066Z",
+  "totalScreens": 27,
+  "results": [
+    {
+      "file": "analytics-desktop-dark.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 110340,
+      "diffPercent": 8.51,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-analytics-desktop-dark.png"
+    },
+    {
+      "file": "analytics-desktop-light.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 1266634,
+      "diffPercent": 97.73,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-analytics-desktop-light.png"
+    },
+    {
+      "file": "analytics-mobile.png",
+      "width": 390,
+      "height": 844,
+      "totalPixels": 329160,
+      "diffPixels": 56140,
+      "diffPercent": 17.06,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-analytics-mobile.png"
+    },
+    {
+      "file": "app-shell-collapsed.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 107546,
+      "diffPercent": 8.3,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-app-shell-collapsed.png"
+    },
+    {
+      "file": "app-shell-expanded.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 1267015,
+      "diffPercent": 97.76,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-app-shell-expanded.png"
+    },
+    {
+      "file": "chart-data-table.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 176245,
+      "diffPercent": 13.6,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-chart-data-table.png"
+    },
+    {
+      "file": "event-detail-drawer.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 74862,
+      "diffPercent": 5.78,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-event-detail-drawer.png"
+    },
+    {
+      "file": "json-inspector-expanded.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 74862,
+      "diffPercent": 5.78,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-json-inspector-expanded.png"
+    },
+    {
+      "file": "log-explorer-desktop-dark.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 54843,
+      "diffPercent": 4.23,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-log-explorer-desktop-dark.png"
+    },
+    {
+      "file": "log-explorer-desktop-light.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 905961,
+      "diffPercent": 69.9,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-log-explorer-desktop-light.png"
+    },
+    {
+      "file": "log-explorer-empty.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 61388,
+      "diffPercent": 4.74,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-log-explorer-empty.png"
+    },
+    {
+      "file": "log-explorer-loading.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 57329,
+      "diffPercent": 4.42,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-log-explorer-loading.png"
+    },
+    {
+      "file": "log-explorer-mobile.png",
+      "width": 390,
+      "height": 844,
+      "totalPixels": 329160,
+      "diffPixels": 43970,
+      "diffPercent": 13.36,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-log-explorer-mobile.png"
+    },
+    {
+      "file": "log-explorer-populated.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 905961,
+      "diffPercent": 69.9,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-log-explorer-populated.png"
+    },
+    {
+      "file": "login-desktop-dark.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 252888,
+      "diffPercent": 19.51,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-login-desktop-dark.png"
+    },
+    {
+      "file": "login-desktop-light.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 458756,
+      "diffPercent": 35.4,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-login-desktop-light.png"
+    },
+    {
+      "file": "login-mobile.png",
+      "width": 390,
+      "height": 844,
+      "totalPixels": 329160,
+      "diffPixels": 206862,
+      "diffPercent": 62.85,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-login-mobile.png"
+    },
+    {
+      "file": "not-found-screen.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 16660,
+      "diffPercent": 1.29,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-not-found-screen.png"
+    },
+    {
+      "file": "overview-desktop-dark.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 111928,
+      "diffPercent": 8.64,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-overview-desktop-dark.png"
+    },
+    {
+      "file": "overview-desktop-light.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 1267015,
+      "diffPercent": 97.76,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-overview-desktop-light.png"
+    },
+    {
+      "file": "overview-mobile.png",
+      "width": 390,
+      "height": 844,
+      "totalPixels": 329160,
+      "diffPixels": 54498,
+      "diffPercent": 16.56,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-overview-mobile.png"
+    },
+    {
+      "file": "projects-page.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 34735,
+      "diffPercent": 2.68,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-projects-page.png"
+    },
+    {
+      "file": "session-expired-screen.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 206900,
+      "diffPercent": 15.96,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-session-expired-screen.png"
+    },
+    {
+      "file": "settings-page.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 89710,
+      "diffPercent": 6.92,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-settings-page.png"
+    },
+    {
+      "file": "tablet-shell.png",
+      "width": 768,
+      "height": 1024,
+      "totalPixels": 786432,
+      "diffPixels": 79938,
+      "diffPercent": 10.16,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-tablet-shell.png"
+    },
+    {
+      "file": "unauthorized-screen.png",
+      "width": 1440,
+      "height": 900,
+      "totalPixels": 1296000,
+      "diffPixels": 206461,
+      "diffPercent": 15.93,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-unauthorized-screen.png"
+    },
+    {
+      "file": "wide-desktop-dashboard.png",
+      "width": 1920,
+      "height": 1080,
+      "totalPixels": 2073600,
+      "diffPixels": 134340,
+      "diffPercent": 6.48,
+      "status": "INTENTIONAL_REFINEMENT",
+      "diffPath": "diff-wide-desktop-dashboard.png"
+    }
+  ]
+}

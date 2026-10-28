@@ -11,7 +11,6 @@ import { CommonModule } from '@angular/common';
       [class.clickable]="isClickable()"
       [attr.tabindex]="isClickable() ? 0 : null"
       [attr.role]="isClickable() ? 'button' : null"
-      [attr.aria-label]="ariaLabel()"
       (click)="onClick()"
       (keydown.enter)="onClick()"
       (keydown.space)="onClick()"
@@ -25,7 +24,7 @@ import { CommonModule } from '@angular/common';
         }
       </div>
       <div class="metric-value-row">
-        <span class="metric-value font-mono">{{ formattedValue() }}</span>
+        <span class="metric-value">{{ formattedValue() }}</span>
         @if (unit()) {
           <span class="metric-unit">{{ unit() }}</span>
         }
@@ -45,15 +44,16 @@ import { CommonModule } from '@angular/common';
   `,
   styles: [`
     .metric-card {
-      background: var(--color-surface-card);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-md);
-      padding: var(--space-4);
+      background: var(--skyra-surface, #ffffff);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-md, 10px);
+      padding: var(--space-4, 16px);
       display: flex;
       flex-direction: column;
-      gap: var(--space-2);
-      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      gap: var(--space-2, 8px);
+      transition: border-color 150ms ease, box-shadow 150ms ease;
       position: relative;
+      box-shadow: var(--skyra-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
     }
 
     .metric-card.clickable {
@@ -61,12 +61,12 @@ import { CommonModule } from '@angular/common';
     }
 
     .metric-card.clickable:hover {
-      border-color: var(--color-border-strong);
-      box-shadow: var(--shadow-sm);
+      border-color: var(--skyra-primary, #0A58CA);
+      box-shadow: var(--skyra-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
     }
 
     .metric-card:focus-visible {
-      outline: 2px solid var(--color-brand-primary);
+      outline: 2px solid var(--skyra-primary, #0A58CA);
       outline-offset: 2px;
     }
 
@@ -74,81 +74,82 @@ import { CommonModule } from '@angular/common';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: var(--space-2);
+      gap: var(--space-2, 8px);
     }
 
     .metric-label {
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-medium);
-      color: var(--color-text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--skyra-text-muted, #64748b);
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
 
     .metric-badge {
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-medium);
+      font-size: 11px;
+      font-weight: 500;
       padding: 2px 6px;
-      border-radius: var(--radius-sm);
+      border-radius: var(--skyra-radius-sm, 6px);
     }
 
     .badge-neutral {
-      background: var(--color-surface-hover);
-      color: var(--color-text-secondary);
+      background: var(--skyra-bg, #f4f7fc);
+      color: var(--skyra-text-muted, #64748b);
     }
 
     .badge-success {
-      background: #ECFDF5;
-      color: #065F46;
+      background: rgba(22, 163, 74, 0.1);
+      color: var(--skyra-success, #16a34a);
     }
 
     .badge-warning {
-      background: #FFFBEB;
-      color: #92400E;
+      background: rgba(217, 119, 6, 0.1);
+      color: var(--skyra-warning, #d97706);
     }
 
     .badge-error {
-      background: #FEF2F2;
-      color: #991B1B;
+      background: rgba(220, 38, 38, 0.1);
+      color: var(--skyra-danger, #dc2626);
     }
 
     .badge-brand {
-      background: #EFF6FF;
-      color: var(--color-brand-primary);
+      background: var(--skyra-primary-light, rgba(10, 88, 202, 0.1));
+      color: var(--skyra-primary, #0A58CA);
     }
 
     .metric-value-row {
       display: flex;
       align-items: baseline;
-      gap: var(--space-2);
+      gap: var(--space-2, 8px);
     }
 
     .metric-value {
-      font-size: var(--font-size-2xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text-primary);
+      font-family: var(--skyra-font-display, 'Outfit', sans-serif);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--skyra-text, #0f172a);
       line-height: 1.1;
     }
 
     .metric-unit {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-tertiary);
+      font-size: 13px;
+      color: var(--skyra-text-muted, #64748b);
     }
 
     .metric-description {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-tertiary);
+      font-size: 11px;
+      color: var(--skyra-text-muted, #64748b);
     }
 
     .metric-drilldown-hint {
       margin-top: auto;
-      padding-top: var(--space-2);
+      padding-top: var(--space-2, 8px);
       display: flex;
       align-items: center;
       gap: 4px;
-      font-size: var(--font-size-xs);
-      color: var(--color-brand-primary);
-      font-weight: var(--font-weight-medium);
+      font-size: 11px;
+      color: var(--skyra-primary, #0A58CA);
+      font-weight: 600;
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,

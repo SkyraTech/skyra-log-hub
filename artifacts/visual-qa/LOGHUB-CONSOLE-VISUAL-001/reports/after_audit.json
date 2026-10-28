@@ -1,0 +1,160 @@
+{
+  "timestamp": "2026-10-28T10:31:24.513Z",
+  "screens": {},
+  "consoleErrors": [
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/aggregate",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/facets",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/search",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/search",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/search",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/aggregate",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "networkFailures": [
+    {
+      "url": "http://127.0.0.1:3000/bff/query/aggregate",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/facets",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/search",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/search",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/search",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/aggregate",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    }
+  ],
+  "accessibility": {
+    "login-desktop-light": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "overview-desktop-light": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "log-explorer-desktop-light": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "event-detail-drawer": {
+      "violationsCount": 1,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodesCount": 6,
+          "target": [
+            ".body-base",
+            "label[for=\"time-range-select\"]",
+            "label[for=\"page-size-select\"]",
+            ".facet-title",
+            ".metric-pill",
+            [
+              "skyra-tech-empty-state",
+              ".skyra-empty-state-desc"
+            ]
+          ]
+        }
+      ]
+    },
+    "analytics-desktop-light": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "projects-page": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "settings-page": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "unauthorized-screen": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "not-found-screen": {
+      "violationsCount": 0,
+      "violations": []
+    }
+  }
+}

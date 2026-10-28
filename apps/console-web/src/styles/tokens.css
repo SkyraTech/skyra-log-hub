@@ -1,8 +1,11 @@
 /**
  * Skyra LogHub — Core Design Tokens (tokens.css)
- * Task: LOGHUB-CONSOLE-002
- * Reference: docs/console/04-UI_UX_DESIGN_SYSTEM.md
+ * Task: PLATFORM-LOGHUB-001 — Skyra Platform Design Tokens Integration
+ * Authoritative Reference: @skyra-tech-platform/design-tokens
  */
+
+@import '@skyra-tech-platform/design-tokens/tokens.css';
+@import '@skyra-tech-platform/design-tokens/reset.css';
 
 :root {
   /* 4px Incremental Spacing Scale */
@@ -19,32 +22,32 @@
   --space-12: 48px;
   --space-16: 64px;
 
-  /* Border Radii */
+  /* Border Radii — Mapped to official Skyra Platform design tokens */
   --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --radius-full: 9999px;
+  --radius-sm: var(--skyra-radius-sm, 6px);
+  --radius-md: var(--skyra-radius-md, 10px);
+  --radius-lg: var(--skyra-radius-lg, 14px);
+  --radius-xl: var(--skyra-radius-xl, 20px);
+  --radius-full: var(--skyra-radius-full, 9999px);
 
-  /* Layout Constants */
-  --sidebar-width-expanded: 240px;
-  --sidebar-width-collapsed: 68px;
-  --topbar-height: 56px;
+  /* Layout Constants — Mapped to official Skyra Platform dimensions */
+  --sidebar-width-expanded: var(--skyra-sidebar-width, 280px);
+  --sidebar-width-collapsed: var(--skyra-sidebar-collapsed, 72px);
+  --topbar-height: var(--skyra-header-height, 64px);
   --table-row-compact: 32px;
   --table-row-comfortable: 40px;
 
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Transitions — Mapped to official Skyra Platform animation curves */
+  --transition-fast: var(--skyra-duration-fast, 150ms) var(--skyra-ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+  --transition-base: var(--skyra-duration-normal, 250ms) var(--skyra-ease-default, cubic-bezier(0.4, 0, 0.2, 1));
+  --transition-smooth: var(--skyra-duration-slow, 350ms) var(--skyra-ease-default, cubic-bezier(0.4, 0, 0.2, 1));
 
-  /* Z-Index Hierarchy */
+  /* Z-Index Hierarchy — Mapped to official Skyra Platform Z-index scale */
   --z-base: 1;
-  --z-sticky: 100;
-  --z-dropdown: 200;
-  --z-overlay: 400;
-  --z-drawer: 500;
-  --z-modal: 1000;
-  --z-toast: 2000;
+  --z-sticky: var(--skyra-z-sticky, 150);
+  --z-dropdown: var(--skyra-z-dropdown, 100);
+  --z-overlay: var(--skyra-z-overlay, 199);
+  --z-drawer: var(--skyra-z-modal, 200);
+  --z-modal: var(--skyra-z-modal, 200);
+  --z-toast: var(--skyra-z-toast, 300);
 }

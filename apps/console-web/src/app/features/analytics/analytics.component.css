@@ -26,15 +26,16 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  background: #FEF2F2;
-  border: 1px solid #FCA5A5;
+  background: var(--color-sev-fatal-bg, #FEF2F2);
+  border: 1px solid var(--color-sev-fatal-border, #FCA5A5);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
-  color: #991B1B;
+  color: var(--color-sev-fatal-text, #991B1B);
 }
 
 .error-icon {
   flex-shrink: 0;
+  color: var(--color-sev-fatal-dot, #DC2626);
 }
 
 .error-content {
@@ -51,15 +52,16 @@
 
 .error-correlation {
   font-size: 11px;
-  color: #B91C1C;
+  color: var(--color-sev-fatal-text, #B91C1C);
+  opacity: 0.85;
 }
 
 .retry-btn {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  color: #991B1B;
-  background: #FFFFFF;
-  border: 1px solid #FCA5A5;
+  color: var(--color-sev-fatal-text, #991B1B);
+  background: var(--color-surface-default, #FFFFFF);
+  border: 1px solid var(--color-sev-fatal-border, #FCA5A5);
   border-radius: var(--radius-sm);
   padding: 4px 10px;
   cursor: pointer;
@@ -67,7 +69,7 @@
 }
 
 .retry-btn:hover {
-  background: #FEE2E2;
+  background: var(--color-sev-fatal-bg, #FEE2E2);
 }
 
 .kpi-grid {

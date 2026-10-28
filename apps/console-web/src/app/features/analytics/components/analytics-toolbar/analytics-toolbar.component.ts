@@ -165,20 +165,21 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
   `,
   styles: [`
     .toolbar-container {
-      background: var(--color-surface-card);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-md);
-      padding: var(--space-3) var(--space-4);
+      background: var(--skyra-surface, #ffffff);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-md, 10px);
+      padding: var(--space-3, 12px) var(--space-4, 16px);
       display: flex;
       flex-direction: column;
-      gap: var(--space-2);
+      gap: var(--space-2, 8px);
+      box-shadow: var(--skyra-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
     }
 
     .toolbar-top {
       display: flex;
       align-items: flex-end;
       flex-wrap: wrap;
-      gap: var(--space-3);
+      gap: var(--space-3, 12px);
     }
 
     .control-group {
@@ -189,8 +190,8 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
 
     .control-label {
       font-size: 11px;
-      font-weight: var(--font-weight-medium);
-      color: var(--color-text-secondary);
+      font-weight: 600;
+      color: var(--skyra-text-muted, #64748b);
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -201,26 +202,26 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
 
     .toolbar-select {
       height: 32px;
-      padding: 0 var(--space-3);
-      font-size: var(--font-size-xs);
-      background: var(--color-surface-base);
-      color: var(--color-text-primary);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-sm);
+      padding: 0 var(--space-3, 12px);
+      font-size: 12px;
+      background: var(--skyra-bg, #f4f7fc);
+      color: var(--skyra-text, #0f172a);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-sm, 6px);
       cursor: pointer;
       outline: none;
-      transition: border-color var(--transition-fast);
+      transition: border-color 150ms ease;
     }
 
     .toolbar-select:focus {
-      border-color: var(--color-brand-primary);
+      border-color: var(--skyra-primary, #0A58CA);
     }
 
     .toolbar-actions {
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: var(--space-2);
+      gap: var(--space-2, 8px);
     }
 
     .refresh-btn {
@@ -228,20 +229,20 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 0 var(--space-3);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-medium);
-      color: var(--color-text-primary);
-      background: var(--color-surface-hover);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-sm);
+      padding: 0 var(--space-3, 12px);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--skyra-text, #0f172a);
+      background: var(--skyra-bg, #f4f7fc);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-sm, 6px);
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: all 150ms ease;
     }
 
     .refresh-btn:hover:not(:disabled) {
-      border-color: var(--color-border-strong);
-      background: var(--color-surface-card);
+      border-color: var(--skyra-primary, #0A58CA);
+      background: var(--skyra-surface, #ffffff);
     }
 
     .refresh-btn:disabled {
@@ -260,9 +261,9 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
     .custom-range-bar {
       display: flex;
       align-items: flex-end;
-      gap: var(--space-3);
-      padding-top: var(--space-2);
-      border-top: 1px dashed var(--color-border-subtle);
+      gap: var(--space-3, 12px);
+      padding-top: var(--space-2, 8px);
+      border-top: 1px dashed var(--skyra-border, #e2e8f0);
     }
 
     .custom-field {
@@ -273,31 +274,36 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
 
     .custom-input {
       height: 30px;
-      padding: 0 var(--space-2);
-      font-size: var(--font-size-xs);
-      background: var(--color-surface-base);
-      color: var(--color-text-primary);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-sm);
+      padding: 0 var(--space-2, 8px);
+      font-size: 12px;
+      background: var(--skyra-bg, #f4f7fc);
+      color: var(--skyra-text, #0f172a);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-sm, 6px);
       width: 220px;
     }
 
     .apply-custom-btn {
       height: 30px;
-      padding: 0 var(--space-3);
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-medium);
-      background: var(--color-brand-primary);
+      padding: 0 var(--space-3, 12px);
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--skyra-primary, #0A58CA);
       color: #FFFFFF;
       border: none;
-      border-radius: var(--radius-sm);
+      border-radius: var(--skyra-radius-sm, 6px);
       cursor: pointer;
+      transition: background-color 150ms ease;
+    }
+
+    .apply-custom-btn:hover {
+      background: var(--skyra-primary-hover, #0847a8);
     }
 
     .progress-bar-container {
       height: 2px;
       width: 100%;
-      background: var(--color-surface-hover);
+      background: var(--skyra-border, #e2e8f0);
       overflow: hidden;
       border-radius: 1px;
     }
@@ -305,7 +311,7 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
     .progress-bar-indicator {
       height: 100%;
       width: 35%;
-      background: var(--color-brand-primary);
+      background: var(--skyra-primary, #0A58CA);
       animation: progress-indeterminate 1.2s infinite ease-in-out;
     }
 
@@ -319,14 +325,14 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
       align-items: center;
       justify-content: space-between;
       font-size: 11px;
-      color: var(--color-text-tertiary);
+      color: var(--skyra-text-muted, #64748b);
       padding-top: 2px;
     }
 
     .telemetry-left {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: var(--space-3, 12px);
     }
 
     .telemetry-item {
@@ -339,7 +345,7 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #10B981;
+      background: var(--skyra-success, #16a34a);
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,

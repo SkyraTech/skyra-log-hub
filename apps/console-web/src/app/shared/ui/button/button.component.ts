@@ -1,28 +1,36 @@
-import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 @Component({
   selector: 'skyra-button',
   standalone: true,
   imports: [CommonModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <button
-      [type]="type()"
-      [disabled]="disabled() || loading()"
-      [class]="'btn ' + variant() + ' ' + size()"
-      [attr.aria-busy]="loading()"
+    <skyra-tech-button
+      [attr.variant]="variant()"
+      [attr.size]="size()"
+      [attr.type]="type()"
+      [attr.disabled]="disabled() || loading() ? '' : null"
+      [attr.loading]="loading() ? '' : null"
       (click)="onClick($event)">
-      @if (loading()) {
-        <span class="spinner" aria-hidden="true"></span>
-      }
       <ng-content />
-    </button>
+    </skyra-tech-button>
   `,
-  styleUrls: ['./button.component.css']
+  styles: [`
+    :host {
+      display: inline-flex;
+      vertical-align: middle;
+    }
+    skyra-tech-button {
+      display: inline-flex;
+      width: 100%;
+    }
+  `]
 })
 export class ButtonComponent {
   readonly variant = input<ButtonVariant>('primary');

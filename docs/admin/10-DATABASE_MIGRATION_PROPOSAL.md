@@ -1,8 +1,8 @@
 # Skyra LogHub — Database & Prisma Schema Migration Proposal
 
-**Document Version:** 1.0.0  
-**Status:** PROPOSED (Pending Review & Approval Gate)  
-**Task ID:** `LOGHUB-ADMIN-001`  
+**Document Version:** 2.1.0  
+**Status:** STAGE 1A VERIFIED (Backup & Recovery Rehearsed) — PENDING STAGE 1B HUMAN AUTHORIZATION  
+**Task ID:** `LOGHUB-ADMIN-002-GATE-B-STAGE-1A`  
 **Phase:** Phase 4 — Administration Backend Foundation  
 **Date:** 2026-10-28  
 

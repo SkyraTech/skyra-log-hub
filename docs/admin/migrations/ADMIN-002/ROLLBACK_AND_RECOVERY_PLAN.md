@@ -25,7 +25,24 @@ This document defines the operational procedures for:
 
 Before executing Gate B migration on any target database, a full, consistent pre-migration logical backup must be captured and verified.
 
-### 2.1 Backup Execution Command
+### 2.1 Verified Pre-Migration Backup Artifact (Stage 1A Rehearsal)
+
+The pre-migration backup for `skyra_loghub_dev` was executed and certified during milestone `LOGHUB-ADMIN-002-GATE-B-STAGE-1A`:
+- **Artifact Path:** `C:\Users\jetti\.gemini\antigravity-ide\brain\71a6602c-0719-497d-b8ea-32065da7e315\backups\skyra_loghub_dev_pre_admin002_20261028051943.dump`
+- **Format:** PostgreSQL Custom Binary Archive (`-Fc`)
+- **File Size:** 18,122 bytes
+- **SHA-256 Checksum:** `1FA688AD20ECDC6EBF4CBCE5B1F257CEE3BE0DD08F76412FB32ACA83955D7CA2`
+- **Capture Duration:** 458 ms (Exit code: 0)
+- **TOC Entries:** 39 entries verified via `pg_restore --list`
+
+### 2.2 Rehearsed Restore Execution Metrics
+The backup was restored into an isolated PostgreSQL 18 cluster on port 5433 (`skyra_loghub_restore_rehearsal`):
+- **Restore Command:** `pg_restore -h 127.0.0.1 -p 5433 -U skyra_isolated_user -d skyra_loghub_restore_rehearsal --no-owner --role=skyra_isolated_user --exit-on-error <dumpfile>`
+- **Restore Duration:** 205 ms
+- **Exit Code:** `0` (Zero errors, zero warnings)
+- **Catalog Parity:** 100% parity across tables, columns, constraints, indexes, enums, migrations, and row counts.
+
+### 2.3 Standby Backup Command (For Future Production Migrations)
 ```bash
 # Capture full custom-format dump including schema, data, and constraints
 pg_dump \
@@ -36,14 +53,6 @@ pg_dump \
   --format=custom \
   --file="backup_skyra_loghub_pre_admin002_$(date +%Y%m%d_%H%M%S).dump" \
   --verbose
-```
-
-### 2.2 Backup Verification Command
-Ensure the dump is non-empty and readable:
-```bash
-# Verify dump integrity without restoring
-pg_restore --list backup_skyra_loghub_pre_admin002_*.dump > /dev/null
-echo "Backup verification exit code: $?"
 ```
 
 ---

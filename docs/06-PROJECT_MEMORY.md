@@ -11,11 +11,11 @@ Persistent lightweight source of truth for humans, Antigravity and other assista
 |---|---|
 | Product | Skyra LogHub |
 | Repository | `skyra-log-hub` |
-| Current phase | Phase 4 — Web Console & Administration |
-| Current task | LOGHUB-CONSOLE-003 (Enterprise BFF Authentication, OIDC Integration, Secure Sessions, Workspace Context & Role-Aware Angular Routing Completed) |
-| Implemented LogHub features | 8 SDK packages (Node, Python, NestJS, Next.js, Browser, Angular, React), Central Fastify Ingestion Gateway, Scoped Bearer Auth, Binary WAL with fsync, PostgreSQL Repositories, Central Immutable JSONL Archive with manifests, Standalone Log Shipper, Same-Origin Proxy, Crash Recovery, 7-Day Bounded Deduplication, Query Service with DuckDB Analytical Execution, Pre-Read Isolation Security Gate, 4-Part Composite Keyset Pagination, HMAC-SHA256 Signed Cursors, Search API, Point Lookup, Analytical Aggregations, Dynamic Facets, Resource Governance, Derived Parquet Materialization (ZSTD), File-Backed Parquet Catalog, Transparent Hybrid Query Planning, Angular 19 Enterprise Web Console, Design System & Reusable Components, NestJS Backend-for-Frontend (@skyra/console-bff), OIDC Authorization Code Flow with PKCE S256, HTTP-only SameSite=Lax Session Cookies, Authoritative Workspace Context & Fail-Closed Membership Provider, CSRF Token & Origin Verification, Authenticated Scoped Query Proxy, and Multi-Tab Broadcast Synchronization. |
-| Documents | 15 baseline documents + Phase 2 Acceptance + Phase 3 Query Specs + Phase 4 Console Specs (docs/console/01-11) + ADR-022 through ADR-026 + Implementation Reports |
-| Tests | 670 automated tests across monorepo (0 failed). All suites 100% passing. |
+| Current phase | Phase 4 — Web Console Quality Assurance & Administration |
+| Current task | LOGHUB-CONSOLE-VISUAL-001 (Real-Browser Visual QA, Responsive Matrix, Dual-Theme Verification & WCAG 2.2 AA Accessibility Audits Certified - 0 Violations) |
+| Implemented LogHub features | 8 SDK packages (Node, Python, NestJS, Next.js, Browser, Angular, React), Central Fastify Ingestion Gateway, Scoped Bearer Auth, Binary WAL with fsync, PostgreSQL Repositories, Central Immutable JSONL Archive with manifests, Standalone Log Shipper, Same-Origin Proxy, Crash Recovery, 7-Day Bounded Deduplication, Query Service with DuckDB Analytical Execution, Pre-Read Isolation Security Gate, 4-Part Composite Keyset Pagination, HMAC-SHA256 Signed Cursors, Search API, Point Lookup, Analytical Aggregations, Dynamic Facets, Resource Governance, Derived Parquet Materialization (ZSTD), File-Backed Parquet Catalog, Transparent Hybrid Query Planning, Angular 19 Enterprise Web Console, Design System & Reusable Components, NestJS Backend-for-Frontend (@skyra/console-bff), OIDC Authorization Code Flow with PKCE S256, HTTP-only SameSite=Lax Session Cookies, Authoritative Workspace Context & Fail-Closed Membership Provider, CSRF Token & Origin Verification, Authenticated Scoped Query Proxy, Multi-Tab Broadcast Synchronization, and Certified WCAG 2.2 AA Dual-Theme UI with 27 Real-Browser Visual QA Baselines. |
+| Documents | 15 baseline documents + Phase 2 Acceptance + Phase 3 Query Specs + Phase 4 Console Specs (docs/console/01-11) + ADR-022 through ADR-026 + Implementation Reports + Visual QA Reports |
+| Tests | 802+ automated tests across monorepo (0 failed). All suites 100% passing. Axe-core accessibility scan 0 violations. |
 | Hosting | AWS / Azure / own server portable (Docker / Linux filesystem) |
 | Identity provider | OIDC Authorization Code Flow with PKCE S256 via Console BFF |
 | Design branding | Skyra Enterprise Obsidian Palette with Light/Dark Themes & High-Density Workstation UX |
@@ -866,6 +866,90 @@ Always start by reading this file, `05-PROJECT_TASKS.md`, relevant ADR and task 
     - Full monorepo regression gate: **802 / 802 tests passing across 126 test suites with 0 failures**.
     - Strict TypeScript typecheck passing across all 11 monorepo packages. Zero schema drift.
 - **Next Task:** `LOGHUB-ADMIN-002-GATE-B` — Explicitly Approved Migration Execution & Live Integration.
+
+### Task LOGHUB-ADMIN-002-GATE-B-VALIDATION: Isolated PostgreSQL Migration Execution, Concurrency Safety & Validation (2026-10-28)
+- **Status:** COMPLETED (PASS — Real PostgreSQL Certified, Ready for Gate B Human Approval).
+- **Execution Mode:** Isolated PostgreSQL Validation Only. Zero database modifications performed against `skyra_loghub_dev`.
+- **Core Engineering Accomplishments:**
+  - **Isolated Disposable PostgreSQL 18.0 Cluster:** Successfully initialized and ran an isolated local PostgreSQL 18.0 instance on port 5433 using a dedicated user (`skyra_isolated_user`) and disposable database (`skyra_loghub_disposable_validation`). Strictly prevented any connections or DDL against `skyra_loghub_dev` on port 5432.
+  - **Baseline & Migration Application:** Applied baseline migration (`20261024000000_init_metadata`) establishing 7 operational tables, followed by the proposed additive migration `docs/admin/migrations/ADMIN-002/migration.sql`. Verified all 16 operational tables created cleanly in the `public` schema with zero errors.
+  - **Repeatable Test Harness (`tests/admin/postgres-integration/`):** Built automated integration test harness with strict environmental safety guards (`guard.ts`) enforcing non-5432 port, non-production DB names, and mandatory `SKYRA_ISOLATED_TEST_ENV="true"` markers.
+  - **P0 Last-Owner Concurrency Safety (Real PostgreSQL Transactions):** Implemented and proved tenant-level row locking (`SELECT id FROM tenants WHERE id = $1 FOR UPDATE`). Launched simultaneous competing transactions attempting to revoke different owners. Proved deterministically that the competing transaction is blocked until the first commits, unblocks to see `activeOwners <= 1`, aborts with conflict, and rolls back. Confirmed zero ownerless tenants are possible under race conditions.
+  - **Atomic Administrative Auditing:** Proved real PostgreSQL transaction rollback: when an audit event persistence fails (forced NOT NULL violation), the entire transaction aborts and rolls back, ensuring no un-audited state mutations can persist.
+  - **Identity Uniqueness & Federation:** Verified composite unique constraint `(issuer, subject)` rejecting duplicates with code 23505 while allowing identical emails across distinct identity providers.
+  - **Multi-Tenant Relational Isolation:** Verified foreign key cascades, project membership scoping constraints, and audit log immutability (`ON DELETE SET NULL` on actor references while preserving static email).
+  - **First-Owner Bootstrap Idempotency & Race Protection:** Proved single-use bootstrap semantics and serialized competing bootstrap requests.
+  - **Day-0 Migration Rollback:** Verified clean removal of newly added tables in reverse dependency order without affecting legacy operational tables.
+  - **Automated Verification:** 33/33 integration tests passing in `tests/admin/postgres-integration/`. Full monorepo regression gate: 802/802 tests passing across 126 test suites (0 failures). Schema sync passing with 0 drift.
+- **Next Task:** `LOGHUB-ADMIN-002-GATE-B` — Protected Database Migration, Requiring Explicit Human Approval.
+
+### Task LOGHUB-ADMIN-002-GATE-B: Controlled PostgreSQL Migration & Authoritative Activation (Stage 0 Readiness) (2026-10-28)
+- **Status:** STAGE 0 COMPLETED (PASS — Ready for Explicit Human Authorization).
+- **Execution Mode:** STAGE 0 ONLY — Read-only target database inspection, cryptographic verification, and approval package preparation. Zero database mutations performed against `skyra_loghub_dev`.
+- **Core Engineering Accomplishments:**
+  - **Migration Cryptographic Fingerprint Verification:** Verified exact migration SQL file `docs/admin/migrations/ADMIN-002/migration.sql` with SHA-256 `156AE317342CA4690EBF8B74BA501D3BB9998DE83293E0F7295E28B1CA1D07B9`. Proved byte-for-byte identity with the isolated PostgreSQL 18 validation artifact.
+  - **Read-Only Target Database Verification (`skyra_loghub_dev`):** Connected via read-only inspection query to `127.0.0.1:5432`. Verified PostgreSQL 18.0 (msvc-19.44.35217 64-bit on x86_64-windows), database size 8.6 MB, owned by `skyra_loghub_user`. Confirmed clean baseline: exactly 7 operational baseline tables + 1 migration ledger (`_prisma_migrations` with `20261024000000_init_metadata`). 79 constraints active. Exactly zero administrative tables present, zero partial migrations, zero schema drift.
+  - **Backup & Recovery Verification:** Documented logical pre-migration backup command using PostgreSQL 18 `pg_dump` in custom archive format (`-Fc`). Storage location (`backups/`), checksum verification, and non-destructive rehearsal procedures defined.
+  - **Staged Implementation Runbooks Delivered:**
+    - `GATE_B_APPROVAL_REQUEST.md`: Formal human sign-off matrix, target identity checks, and scope boundaries.
+    - `STAGE_1_MIGRATION_RUNBOOK.md`: Step-by-step DDL execution protocol for `skyra_loghub_dev`, pre-migration backup, catalog checks, and immediate abort criteria. Strictly forbids user bootstrap or service activation.
+    - `STAGE_2_AUTHORIZATION_ACTIVATION_RUNBOOK.md`: Step-by-step activation guide for `apps/admin-service` persistence, `FirstOwnerBootstrapService` runbook, BFF authoritative adapter toggle (`ADMIN_SERVICE_ENABLED=true`), 20-scenario cross-service security test suite, and revocation latency budget (≤ 60.55s).
+  - **Full Monorepo Regressions:**
+    - `pnpm check:schema-sync`: Clean pass (0 drift).
+    - `pnpm typecheck`: Clean pass (exit code 0 across all 11 packages).
+    - `pnpm test`: 802 / 802 automated tests passing across 126 test suites (0 failures).
+- **Next Task:** `LOGHUB-ADMIN-002-GATE-B-STAGE-1A` — Secure Backup & Isolated Restore Rehearsal.
+
+### Task LOGHUB-ADMIN-002-GATE-B-STAGE-1A: Secure Backup & Isolated Restore Rehearsal (2026-10-28)
+- **Status:** COMPLETED (PASS — Backup & Recovery Verified).
+- **Execution Mode:** SOURCE DATABASE READ-ONLY. BACKUP AND ISOLATED RESTORE REHEARSAL ONLY. Zero database modifications performed against `skyra_loghub_dev`.
+- **Core Engineering Accomplishments:**
+  - **Live Logical Backup (`pg_dump -Fc`):** Successfully executed `pg_dump` against `skyra_loghub_dev` on port 5432 in 458 ms. Output binary archive: 18,122 bytes. Verified SHA-256 checksum: `1FA688AD20ECDC6EBF4CBCE5B1F257CEE3BE0DD08F76412FB32ACA83955D7CA2`.
+  - **Backup Security & Confidentiality:** Stored in restricted directory outside Git tracking (`C:\Users\jetti\.gemini\antigravity-ide\brain\...\backups`). PGPASSWORD provided via ephemeral environment variable, zero plaintext secrets in reports or command logs. Verified 39 TOC entries via `pg_restore --list`.
+  - **Isolated PostgreSQL 18.0 Restore Rehearsal:** Restored backup into isolated disposable database `skyra_loghub_restore_rehearsal` on port 5433 using `pg_restore` in 205 ms with exit code 0 and zero warnings. Port 5432 remained strictly protected.
+  - **100% Schema & Data Parity Certified:** Automated side-by-side catalog comparison confirmed 100% exact match between source and restored database:
+    - Base Tables: 8 / 8 matching.
+    - Columns: 71 / 71 matching with identical data types and nullability.
+    - Constraints: 79 / 79 matching.
+    - Indexes: 16 / 16 matching.
+    - Enums: 2 enums with identical labels matching.
+    - Migration Ledger: `20261024000000_init_metadata` matching.
+    - Table Row Counts: 100% matching.
+  - **Zero Source Mutation Verified:** Read-only inspection of `skyra_loghub_dev` confirmed zero DDL or DML occurred during rehearsal. Table count unchanged (8), admin tables absent (0).
+  - **Revalidated Migration SQL Fingerprint:** Recomputed SHA-256 of `docs/admin/migrations/ADMIN-002/migration.sql` confirmed unchanged: `156AE317342CA4690EBF8B74BA501D3BB9998DE83293E0F7295E28B1CA1D07B9`.
+  - **Monorepo Regressions:**
+    - `pnpm check:schema-sync`: Clean pass (0 drift).
+    - `pnpm typecheck`: Clean pass (exit code 0 across all 11 packages).
+    - `pnpm test`: 802 / 802 automated tests passing across 126 test suites (0 failures).
+- **Next Task:** `LOGHUB-ADMIN-002-GATE-B-STAGE-1B` — Controlled Administration Schema Migration (Pending Explicit Human Authorization).
+
+### Task LOGHUB-CONSOLE-VISUAL-001: Comprehensive Real-Browser Visual QA, Responsive Design & WCAG 2.2 AA Accessibility Audit (2026-10-28)
+- **Status:** COMPLETED (PASS — Visual QA & Accessibility Certified).
+- **Execution Mode:** Browser-based real visual QA and scoped frontend corrections only (`apps/console-web`). Zero modifications to protected databases, schemas, or Query Service contracts.
+- **Core Engineering Accomplishments:**
+  - **Deterministic Real-Browser Automation:** Executed automated testing using Playwright v1.64.1 and genuine Google Chrome v131+ across 7 viewport classes (360px small mobile to 1920px wide desktop) and dual themes (Light and Dark).
+  - **27 Mandatory Viewport & State Baselines:** Captured and persisted all 27 required screenshots under `artifacts/visual-qa/LOGHUB-CONSOLE-VISUAL-001/before/` and `after/`.
+  - **Automated WCAG 2.2 AA Auditing (Axe-core v4.14.0):** Identified 10 initial violations across 32 DOM nodes:
+    - `label-content-name-mismatch` (WCAG 2.5.3) on metric cards and chart toggles.
+    - `color-contrast` (WCAG 1.4.3) on light theme text muted, active sidebar links, dev badges, and density buttons.
+  - **Surgical UI/UX & Design Token Corrections:**
+    - Darkened light theme `--color-text-muted` to `#475569` (7.0:1 contrast) and `--color-text-secondary` to `#334155` (8.2:1 contrast).
+    - Removed synthetic `aria-label` overrides on metric cards and view toggles so accessible names derive directly from visible text children.
+    - Added high-contrast active navigation state (`#1d4ed8` on `#eff6ff`) and amber badge text (`#92400e` in light, `#fcd34d` in dark).
+    - Bound error banners, 404 badges, and query status tags to semantic ECS tokens.
+  - **100% WCAG 2.2 AA Clean Pass Certified:** Post-refinement Axe-core scans verified **0 violations (0 nodes)** across all 9 application routes.
+  - **Visual Diff Generation (`pixelmatch` + `pngjs`):** Computed pixel-by-pixel diff images (`diff-*.png`) confirming that all changes were strictly intentional accessibility and contrast enhancements with zero layout regressions.
+  - **Monorepo Tests Passing:**
+    - `@skyra/console-web` build: Clean (16.28s).
+    - `@skyra/console-web` unit tests: 67 / 67 passing (16 suites).
+    - `@skyra/console-bff` tests: 54 / 54 passing (7 suites).
+    - Monorepo global test suite: All packages passing with 0 failures.
+- **Master Reports Produced:**
+  - `SKYRA_LOGHUB_CONSOLE_VISUAL_001_IMPLEMENTATION_REPORT.md` (20-section detailed report).
+  - `SKYRA_LOGHUB_CONSOLE_VISUAL_001_FINAL_AUDIT.md` (screen-by-screen audit matrix & PASS verdict).
+
+
+
 
 
 

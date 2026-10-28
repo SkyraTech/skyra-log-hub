@@ -4,9 +4,10 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background-color: var(--color-bg-secondary, #121721);
-  border: 1px solid var(--color-border-subtle, #1e2638);
-  border-radius: var(--radius-lg, 10px);
+  background-color: var(--skyra-surface, #ffffff);
+  border: 1px solid var(--skyra-border, #e2e8f0);
+  border-radius: var(--skyra-radius-lg, 14px);
+  box-shadow: var(--skyra-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
 }
 
 .search-input-wrapper {
@@ -20,7 +21,7 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--color-text-muted, #7e8ba0);
+  color: var(--skyra-text-muted, #64748b);
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -31,17 +32,18 @@
   height: 38px;
   padding: 0 12px 0 38px;
   font-size: 13px;
-  color: var(--color-text-primary, #ffffff);
-  background-color: var(--color-bg-primary, #0b0f17);
-  border: 1px solid var(--color-border-default, #2a364f);
-  border-radius: var(--radius-md, 6px);
+  color: var(--skyra-text, #0f172a);
+  background-color: var(--skyra-bg, #f4f7fc);
+  border: 1px solid var(--skyra-border, #e2e8f0);
+  border-radius: var(--skyra-radius-md, 10px);
   outline: none;
+  box-sizing: border-box;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .search-input:focus {
-  border-color: var(--color-primary-500, #3b82f6);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: var(--skyra-primary, #0A58CA);
+  box-shadow: var(--skyra-focus-ring, 0 0 0 3px rgba(10, 88, 202, 0.12));
 }
 
 .control-group {
@@ -53,24 +55,25 @@
 .control-label {
   font-size: 12px;
   font-weight: 500;
-  color: var(--color-text-muted, #7e8ba0);
+  color: var(--skyra-text-muted, #64748b);
 }
 
 .control-select {
   height: 38px;
   padding: 0 28px 0 10px;
   font-size: 13px;
-  color: var(--color-text-primary, #ffffff);
-  background-color: var(--color-bg-primary, #0b0f17);
-  border: 1px solid var(--color-border-default, #2a364f);
-  border-radius: var(--radius-md, 6px);
+  color: var(--skyra-text, #0f172a);
+  background-color: var(--skyra-bg, #f4f7fc);
+  border: 1px solid var(--skyra-border, #e2e8f0);
+  border-radius: var(--skyra-radius-md, 10px);
   outline: none;
   cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .control-select:focus {
-  border-color: var(--color-primary-500, #3b82f6);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: var(--skyra-primary, #0A58CA);
+  box-shadow: var(--skyra-focus-ring, 0 0 0 3px rgba(10, 88, 202, 0.12));
 }
 
 .actions-group {
@@ -79,42 +82,10 @@
   gap: 8px;
 }
 
-.search-btn, .cancel-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 38px;
-  padding: 0 16px;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: var(--radius-md, 6px);
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.05s ease;
-}
-
-.search-btn {
-  background-color: var(--color-primary-600, #2563eb);
-  color: #ffffff;
-}
-
-.search-btn:hover {
-  background-color: var(--color-primary-500, #3b82f6);
-}
-
-.cancel-btn {
-  background-color: #ef4444;
-  color: #ffffff;
-}
-
-.cancel-btn:hover {
-  background-color: #dc2626;
-}
-
 .query-progress-bar {
   width: 100%;
   height: 3px;
-  background-color: var(--color-bg-tertiary, #182030);
+  background-color: var(--skyra-border, #e2e8f0);
   border-radius: 2px;
   overflow: hidden;
   margin-top: 4px;
@@ -123,7 +94,7 @@
 .progress-indicator {
   width: 30%;
   height: 100%;
-  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  background: linear-gradient(90deg, var(--skyra-primary, #0A58CA), var(--skyra-cyan, #00A3E0));
   animation: indeterminate 1.5s infinite ease-in-out;
 }
 
@@ -150,8 +121,7 @@
   .actions-group {
     width: 100%;
   }
-  .search-btn, .cancel-btn {
+  .actions-group skyra-button {
     width: 100%;
-    justify-content: center;
   }
 }

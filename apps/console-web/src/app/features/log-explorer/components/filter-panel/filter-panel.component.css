@@ -3,9 +3,10 @@
   flex-direction: column;
   gap: 12px;
   padding: 12px 16px;
-  background-color: var(--color-bg-secondary, #121721);
-  border: 1px solid var(--color-border-subtle, #1e2638);
-  border-radius: var(--radius-lg, 10px);
+  background-color: var(--skyra-surface, #ffffff);
+  border: 1px solid var(--skyra-border, #e2e8f0);
+  border-radius: var(--skyra-radius-lg, 14px);
+  box-shadow: var(--skyra-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
 }
 
 .chips-row {
@@ -14,7 +15,7 @@
   gap: 8px;
   flex-wrap: wrap;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--color-border-subtle, #1e2638);
+  border-bottom: 1px solid var(--skyra-border, #e2e8f0);
 }
 
 .chips-label {
@@ -22,7 +23,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-muted, #7e8ba0);
+  color: var(--skyra-text-muted, #64748b);
 }
 
 .chips-list {
@@ -38,17 +39,17 @@
   gap: 4px;
   padding: 2px 8px;
   font-size: 12px;
-  font-family: var(--font-mono, monospace);
-  background-color: var(--color-bg-tertiary, #182030);
-  color: var(--color-primary-400, #60a5fa);
-  border: 1px solid var(--color-border-default, #2a364f);
-  border-radius: 12px;
+  font-family: var(--skyra-font-mono, monospace);
+  background-color: var(--skyra-bg, #f4f7fc);
+  color: var(--skyra-primary, #0A58CA);
+  border: 1px solid var(--skyra-border, #e2e8f0);
+  border-radius: var(--skyra-radius-full, 9999px);
 }
 
 .chip-remove-btn {
   background: none;
   border: none;
-  color: var(--color-text-muted, #7e8ba0);
+  color: var(--skyra-text-muted, #64748b);
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
@@ -56,13 +57,13 @@
 }
 
 .chip-remove-btn:hover {
-  color: #ef4444;
+  color: var(--skyra-danger, #dc2626);
 }
 
 .clear-all-btn {
   background: none;
   border: none;
-  color: var(--color-text-muted, #7e8ba0);
+  color: var(--skyra-text-muted, #64748b);
   font-size: 11px;
   cursor: pointer;
   text-decoration: underline;
@@ -70,7 +71,7 @@
 }
 
 .clear-all-btn:hover {
-  color: var(--color-text-primary, #ffffff);
+  color: var(--skyra-text, #0f172a);
 }
 
 .facets-sections {
@@ -89,7 +90,7 @@
 .facet-title {
   font-size: 12px;
   font-weight: 500;
-  color: var(--color-text-muted, #7e8ba0);
+  color: var(--skyra-text-muted, #64748b);
   min-width: 80px;
 }
 
@@ -105,35 +106,35 @@
   gap: 6px;
   padding: 4px 10px;
   font-size: 12px;
-  background-color: var(--color-bg-primary, #0b0f17);
-  color: var(--color-text-secondary, #a4b1c7);
-  border: 1px solid var(--color-border-subtle, #1e2638);
-  border-radius: 14px;
+  background-color: var(--skyra-bg, #f4f7fc);
+  color: var(--skyra-text-muted, #64748b);
+  border: 1px solid var(--skyra-border, #e2e8f0);
+  border-radius: var(--skyra-radius-full, 9999px);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .facet-pill:hover {
-  border-color: var(--color-border-default, #2a364f);
-  color: var(--color-text-primary, #ffffff);
+  border-color: var(--skyra-primary, #0A58CA);
+  color: var(--skyra-text, #0f172a);
 }
 
 .facet-pill.active {
-  background-color: rgba(59, 130, 246, 0.15);
-  border-color: var(--color-primary-500, #3b82f6);
-  color: var(--color-primary-400, #60a5fa);
+  background-color: var(--skyra-primary-light, rgba(10, 88, 202, 0.1));
+  border-color: var(--skyra-primary, #0A58CA);
+  color: var(--skyra-primary, #0A58CA);
   font-weight: 600;
 }
 
 .facet-count {
   font-size: 10px;
   padding: 1px 5px;
-  background-color: var(--color-bg-tertiary, #182030);
-  border-radius: 8px;
-  color: var(--color-text-muted, #7e8ba0);
+  background-color: var(--skyra-surface, #ffffff);
+  border-radius: var(--skyra-radius-full, 9999px);
+  color: var(--skyra-text-muted, #64748b);
 }
 
 .facet-pill.active .facet-count {
-  background-color: rgba(59, 130, 246, 0.3);
+  background-color: var(--skyra-primary, #0A58CA);
   color: #ffffff;
 }

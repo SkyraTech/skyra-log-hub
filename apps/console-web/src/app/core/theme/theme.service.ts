@@ -61,5 +61,6 @@ export class ThemeService {
 
     this._resolvedTheme.set(target);
     document.documentElement.setAttribute('data-theme', target);
+    document.documentElement.classList.toggle('dark', target === 'dark');
   }
 }

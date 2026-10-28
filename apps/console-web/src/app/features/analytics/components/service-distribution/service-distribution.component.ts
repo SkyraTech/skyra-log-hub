@@ -48,13 +48,14 @@ import { DistributionItem } from '../../domain/analytics-metric.model';
   `,
   styles: [`
     .service-card {
-      background: var(--color-surface-card);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-md);
-      padding: var(--space-4);
+      background: var(--skyra-surface, #ffffff);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-md, 10px);
+      padding: var(--space-4, 16px);
       display: flex;
       flex-direction: column;
-      gap: var(--space-3);
+      gap: var(--space-3, 12px);
+      box-shadow: var(--skyra-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
     }
 
     .card-header {
@@ -64,22 +65,23 @@ import { DistributionItem } from '../../domain/analytics-metric.model';
     }
 
     .card-title {
-      font-size: var(--font-size-md);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
+      font-family: var(--skyra-font-display, 'Outfit', sans-serif);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--skyra-text, #0f172a);
       margin: 0;
     }
 
     .card-subtitle {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-secondary);
+      font-size: 11px;
+      color: var(--skyra-text-muted, #64748b);
       margin: 0;
     }
 
     .services-list {
       display: flex;
       flex-direction: column;
-      gap: var(--space-2);
+      gap: var(--space-2, 8px);
     }
 
     .service-row {
@@ -87,22 +89,22 @@ import { DistributionItem } from '../../domain/analytics-metric.model';
       flex-direction: column;
       gap: 4px;
       padding: 6px 8px;
-      border-radius: var(--radius-sm);
+      border-radius: var(--skyra-radius-sm, 6px);
       background: none;
       border: 1px solid transparent;
       cursor: pointer;
       text-align: left;
       width: 100%;
-      transition: all var(--transition-fast);
+      transition: all 150ms ease;
     }
 
     .service-row:hover {
-      background: var(--color-surface-hover);
-      border-color: var(--color-border-subtle);
+      background: var(--skyra-bg, #f4f7fc);
+      border-color: var(--skyra-border, #e2e8f0);
     }
 
     .service-row:focus-visible {
-      outline: 2px solid var(--color-brand-primary);
+      outline: 2px solid var(--skyra-primary, #0A58CA);
       outline-offset: 2px;
     }
 
@@ -110,13 +112,13 @@ import { DistributionItem } from '../../domain/analytics-metric.model';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: var(--space-2);
+      gap: var(--space-2, 8px);
     }
 
     .service-name {
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-medium);
-      color: var(--color-text-primary);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--skyra-text, #0f172a);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -124,31 +126,31 @@ import { DistributionItem } from '../../domain/analytics-metric.model';
     }
 
     .service-count {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-secondary);
+      font-size: 11px;
+      color: var(--skyra-text-muted, #64748b);
       flex-shrink: 0;
     }
 
     .progress-track {
       height: 6px;
       width: 100%;
-      background: var(--color-surface-hover);
-      border-radius: var(--radius-sm);
+      background: var(--skyra-bg, #f4f7fc);
+      border-radius: var(--skyra-radius-full, 9999px);
       overflow: hidden;
     }
 
     .progress-fill {
       height: 100%;
-      background: var(--color-brand-primary);
-      border-radius: var(--radius-sm);
-      transition: width var(--transition-fast);
+      background: var(--skyra-cyan, #00A3E0);
+      border-radius: var(--skyra-radius-full, 9999px);
+      transition: width 150ms ease;
     }
 
     .empty-state {
-      padding: var(--space-6);
+      padding: var(--space-6, 24px);
       text-align: center;
-      color: var(--color-text-tertiary);
-      font-size: var(--font-size-xs);
+      color: var(--skyra-text-muted, #64748b);
+      font-size: 11px;
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,

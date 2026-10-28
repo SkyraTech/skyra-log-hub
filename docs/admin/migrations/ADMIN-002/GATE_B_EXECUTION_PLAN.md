@@ -2,9 +2,11 @@
 
 **Document ID:** `ADMIN-002-GATE-B-EXECUTION-PLAN`  
 **Milestone:** `LOGHUB-ADMIN-002-GATE-B`  
-**Target Migration:** `20261028000000_add_admin_iam_schema`  
-**Preflight Status:** COMPLETE — READY FOR HUMAN APPROVAL  
-**Execution Mode:** BLOCKED PENDING EXPLICIT HUMAN AUTHORIZATION
+**Target Migration:** `docs/admin/migrations/ADMIN-002/migration.sql`  
+**Stage 0 Status:** COMPLETE — READINESS VERIFIED  
+**Stage 1 Status:** PENDING EXPLICIT STAGE 1 HUMAN AUTHORIZATION  
+**Stage 2 Status:** PENDING POST-STAGE-1 REVIEW AND SEPARATE AUTHORIZATION  
+**Execution Mode:** STRICT APPROVAL GATING. ZERO DATABASE MUTATION PERMITTED IN STAGE 0.
 
 ---
 
@@ -12,17 +14,18 @@
 
 | Parameter | Specification |
 | :--- | :--- |
-| **Migration Directory** | `apps/admin-service/prisma/migrations/20261028000000_add_admin_iam_schema/` |
-| **Migration SQL File** | `migration.sql` |
-| **File SHA-256 Checksum** | `df7e7ffc9f7a9d36184a51e60051b8c19a42f65f3f4c66e9fc0a9e7f53a47385` |
-| **Target Database Engine** | PostgreSQL 17 / 18 (Local dev port 5432) |
+| **Migration SQL File** | `docs/admin/migrations/ADMIN-002/migration.sql` |
+| **File SHA-256 Checksum** | `156AE317342CA4690EBF8B74BA501D3BB9998DE83293E0F7295E28B1CA1D07B9` |
+| **Prisma Directory Mirror** | `apps/admin-service/prisma/migrations/20261028000000_add_admin_iam_schema/migration.sql` |
+| **Target Database Engine** | PostgreSQL 18.0 (msvc-19.44.35217 64-bit on x86_64-windows) |
+| **Target Host & Port** | `127.0.0.1:5432` |
 | **Target Database Name** | `skyra_loghub_dev` |
 | **Execution DB Role** | `skyra_loghub_user` (owner of `public` schema) |
-| **Tables Added (9)** | `system_settings`, `users`, `user_identities`, `tenant_memberships`, `project_memberships`, `tenant_membership_roles`, `project_membership_roles`, `invitations`, `admin_audit_events` |
-| **Tables Modified (0)** | None (Purely additive) |
+| **Tables Added (9)** | `users`, `tenant_memberships`, `project_memberships`, `roles`, `permissions`, `role_permissions`, `role_assignments`, `invitations`, `admin_audit_events` |
+| **Tables Modified (0)** | None (Strictly additive) |
 | **Tables Deleted (0)** | None |
-| **Enums Added (2)** | `MembershipStatus`, `InvitationStatus` |
-| **Total Constraints Added** | 9 Primary Keys, 14 Foreign Keys, 13 Unique Indexes, 11 Performance Indexes |
+| **Enums Added (2)** | `UserStatus`, `MembershipStatus` |
+| **Total Constraints Added** | 9 Primary Keys, 14 Foreign Keys, 13 Unique Constraints/Indexes, 11 Performance Indexes |
 
 ---
 
@@ -36,97 +39,72 @@
 
 ---
 
-## 3. Step-by-Step Gate B Execution Protocol
+## 3. Staged Implementation Architecture
 
-### Step 1: Pre-Execution Connection and State Verification
-```bash
-# Verify connection to target database and check current migration status
-pnpm --filter @skyra/admin-service exec prisma migrate status
+┌─────────────────────────────────────────────────────────────┐
+│ STAGE 0: APPROVAL READINESS (COMPLETED)                     │
+│ - Source inspection, fingerprint verification               │
+│ - Read-only DB metadata query against skyra_loghub_dev      │
+│ - Runbooks & approval framework created                     │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ STAGE 1A: BACKUP & RESTORE REHEARSAL (COMPLETED - CERTIFIED)│
+│ - Live logical backup pg_dump -Fc captured (18,122 bytes)   │
+│ - Checksum verified: 1FA688AD20ECDC6EBF4CBCE5B1F257CE...    │
+│ - Full restore rehearsal into isolated PG 18 (port 5433)    │
+│ - 100% schema & data parity verified in 205 ms              │
+│ - Source DB skyra_loghub_dev remained read-only & unmodified│
+└──────────────────────────────┬──────────────────────────────┘
+                               │ Requires Human Sign-Off (Stage 1B)
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ STAGE 1B: CONTROLLED DEV DB MIGRATION (PENDING APPROVAL)    │
+│ - Apply docs/admin/migrations/ADMIN-002/migration.sql       │
+│ - Verify 17 tables, 2 enums, 14 FKs in skyra_loghub_dev     │
+│ - Verify zero operational data regression                   │
+│ - NO SERVICE ACTIVATION / NO OWNER BOOTSTRAP                │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ Requires Human Sign-Off #2
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ STAGE 2: MEMBERSHIP & AUTH ACTIVATION (PENDING POST-STAGE-1)│
+│ - One-time initial tenant owner bootstrap                   │
+│ - Enable Prisma persistence in admin-service                │
+│ - Enable authoritative membership adapter in console-bff    │
+│ - End-to-end cross-service security test suite (20 tests)   │
+└─────────────────────────────────────────────────────────────┘
 ```
-*Expected Output:* 1 migration applied (`20261024000000_init_metadata`), 1 migration pending (`20261028000000_add_admin_iam_schema`).
-
-### Step 2: Logical Pre-Migration Backup
-```bash
-pg_dump \
-  --host=127.0.0.1 \
-  --port=5432 \
-  --username=skyra_loghub_user \
-  --dbname=skyra_loghub_dev \
-  --format=custom \
-  --file="backup_skyra_loghub_pre_gate_b.dump"
-```
-
-### Step 3: Migration Execution Command
-```bash
-# Apply pending migration using Prisma migrate deploy (NEVER prisma db push or migrate dev)
-pnpm --filter @skyra/admin-service exec prisma migrate deploy
-```
-
-### Step 4: Post-Migration Database Verification
-Execute SQL verification to confirm table creation and schema state:
-```sql
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
-ORDER BY table_name;
-```
-*Expected Result:* Exactly 16 base tables in `public` schema (8 existing + 8 newly added operational tables, plus `system_settings` = 9 added).
-
-Verify migration ledger:
-```sql
-SELECT migration_name, finished_at, rolled_back_at 
-FROM "_prisma_migrations" 
-ORDER BY started_at DESC LIMIT 2;
-```
-*Expected Result:* `20261028000000_add_admin_iam_schema` marked as finished, `rolled_back_at IS NULL`.
 
 ---
 
-## 4. Post-Flight Service Verification
+## 4. Runbook and Documentation Map
 
-1. **Monorepo Schema Synchronization:**
-   ```bash
-   pnpm check:schema-sync
-   ```
-2. **Admin Service Health and Readiness:**
-   ```bash
-   pnpm --filter @skyra/admin-service test
-   ```
-3. **Console BFF Non-Regressive Validation:**
-   ```bash
-   pnpm --filter @skyra/console-bff test
-   ```
+- **Stage 0 Approval Request:** [`docs/admin/migrations/ADMIN-002/GATE_B_APPROVAL_REQUEST.md`](file:///c:/Users/jetti/source/repos/SkyraTechProjects/skyra-log-hub/docs/admin/migrations/ADMIN-002/GATE_B_APPROVAL_REQUEST.md)
+- **Stage 1 Migration Runbook:** [`docs/admin/migrations/ADMIN-002/STAGE_1_MIGRATION_RUNBOOK.md`](file:///c:/Users/jetti/source/repos/SkyraTechProjects/skyra-log-hub/docs/admin/migrations/ADMIN-002/STAGE_1_MIGRATION_RUNBOOK.md)
+- **Stage 2 Activation Runbook:** [`docs/admin/migrations/ADMIN-002/STAGE_2_AUTHORIZATION_ACTIVATION_RUNBOOK.md`](file:///c:/Users/jetti/source/repos/SkyraTechProjects/skyra-log-hub/docs/admin/migrations/ADMIN-002/STAGE_2_AUTHORIZATION_ACTIVATION_RUNBOOK.md)
+- **Rollback and Recovery Plan:** [`docs/admin/migrations/ADMIN-002/ROLLBACK_AND_RECOVERY_PLAN.md`](file:///c:/Users/jetti/source/repos/SkyraTechProjects/skyra-log-hub/docs/admin/migrations/ADMIN-002/ROLLBACK_AND_RECOVERY_PLAN.md)
+- **Prisma SQL Parity Analysis:** [`docs/admin/migrations/ADMIN-002/PRISMA_SQL_PARITY.md`](file:///c:/Users/jetti/source/repos/SkyraTechProjects/skyra-log-hub/docs/admin/migrations/ADMIN-002/PRISMA_SQL_PARITY.md)
 
 ---
 
-## 5. Production Activation Safeguard (Feature Flag Status)
+## 5. Required Human Approvals
 
-- **Flag Name:** `ADMIN_SERVICE_ENABLED` in `apps/console-bff/.env`
-- **Pre-Gate B State:** `false` (BFF uses mock/fallback provider)
-- **Gate B Migration Execution:** Remains `false` during DDL application.
-- **Activation Requirement:** Only switch `ADMIN_SERVICE_ENABLED=true` after:
-  1. Gate B migration is committed.
-  2. The initial tenant owner is bootstrapped via `FirstOwnerBootstrapService`.
-  3. Live end-to-end authorization health checks succeed.
+Before proceeding with Stage 1 execution, explicit stakeholder signatures are required:
 
----
-
-## 6. Required Human Approvals
-
-Before executing Step 3 above, the following stakeholder authorizations are required:
-
-| Role | Name / Identifier | Status | Timestamp |
+| Role | Reviewer | Status | Timestamp |
 | :--- | :--- | :--- | :--- |
-| **Principal PostgreSQL Architect** | Antigravity AI Engine | **APPROVED (Preflight Pass)** | 2026-10-28 |
-| **Enterprise Security Architect** | Antigravity AI Engine | **APPROVED (Preflight Pass)** | 2026-10-28 |
+| **Principal PostgreSQL Architect** | Antigravity AI Engine | **APPROVED (Stage 0 Pass)** | 2026-10-28 |
+| **Enterprise Security Architect** | Antigravity AI Engine | **APPROVED (Stage 0 Pass)** | 2026-10-28 |
 | **Database Administrator (DBA)** | [Human Reviewer Required] | **AWAITING AUTHORIZATION** | Pending |
 | **Platform Lead / Engineering Manager** | [Human Reviewer Required] | **AWAITING AUTHORIZATION** | Pending |
 
 ---
 
-## 7. Execution Halt Directive
+## 6. Execution Halt Directive
 
 > [!IMPORTANT]
-> In accordance with Task Directive Section 29 and Section 31:
-> **Execution is halted. No migration DDL will be executed against `skyra_loghub_dev` during this preflight task.**
-> Await explicit human authorization to proceed with Milestone `LOGHUB-ADMIN-002-GATE-B`.
+> In accordance with Stage 0 mandate:
+> **Execution is halted. No migration DDL will be executed against `skyra_loghub_dev` during this task.**  
+> Await separate explicit human authorization for Stage 1.

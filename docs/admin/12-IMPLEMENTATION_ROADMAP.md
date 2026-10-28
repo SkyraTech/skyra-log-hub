@@ -62,15 +62,12 @@ LOGHUB-CONSOLE-008: Phase 4 Final Operational Acceptance
   - Automated test suite: 48 tests passing in `apps/admin-service`, 54 tests passing in `apps/console-bff`, 802 total monorepo tests passing.
 - **Invariants:** Zero database changes made against `skyra_loghub_dev`. Active Prisma schema untouched.
 
-### LOGHUB-ADMIN-002-GATE-B: Approved Database Migration Execution & Live Integration (PENDING APPROVAL)
-- **Prerequisite:** Explicit human authorization of `docs/admin/migrations/ADMIN-002/APPROVAL_CHECKLIST.md`.
-- **Target:** Execute additive migration on `skyra_loghub_dev`.
-- **Scope:**
-  - Execute `docs/admin/migrations/ADMIN-002/migration.sql` via `psql`.
-  - Append additive models to active Prisma schemas and run `prisma generate`.
-  - Seed system roles and permissions.
-  - Bootstrap initial tenant owner.
-  - Activate `BFF_USE_AUTHORITATIVE_MEMBERSHIP=true` in `apps/console-bff`.
+### LOGHUB-ADMIN-002-GATE-B: Controlled Database Migration & Live Integration (STAGE 1A PASSED — STAGE 1B PENDING)
+- **Status:** **STAGE 1A VERIFIED (Backup & Restore Certified) — PENDING STAGE 1B HUMAN AUTHORIZATION.**
+- **Stage 0 (Completed):** Exact migration fingerprint (`156AE317342CA4690EBF8B74BA501D3BB9998DE83293E0F7295E28B1CA1D07B9`) verified. Read-only target database inspection of `skyra_loghub_dev` on `127.0.0.1:5432` completed. Baseline compatibility confirmed.
+- **Stage 1A (Completed):** Live logical backup created via `pg_dump -Fc` (18,122 bytes, SHA-256 `1FA688AD20ECDC6EBF4CBCE5B1F257CEE3BE0DD08F76412FB32ACA83955D7CA2`). Restored into isolated PostgreSQL 18 instance on port 5433 with 100% schema and data parity in 205 ms. Source database `skyra_loghub_dev` remained strictly read-only and unmodified.
+- **Stage 1B (Pending Explicit Human Approval):** Apply `docs/admin/migrations/ADMIN-002/migration.sql` to `skyra_loghub_dev`. Verify 9 new tables, 2 enums, 14 foreign keys. Zero operational disruption.
+- **Stage 2 (Pending Post-Stage-1B Review):** One-time initial owner bootstrap, activate Prisma persistence in `apps/admin-service`, activate `ADMIN_SERVICE_ENABLED=true` in `apps/console-bff`, run 20-scenario cross-service security test suite.
 
 ### LOGHUB-ADMIN-003: Tenant, Project & Membership Management APIs
 - **Target:** Deliver core organizational REST APIs.

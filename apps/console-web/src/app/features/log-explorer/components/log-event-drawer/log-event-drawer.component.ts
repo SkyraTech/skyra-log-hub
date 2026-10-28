@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  CUSTOM_ELEMENTS_SCHEMA,
   HostListener,
   input,
   output,
@@ -17,6 +18,7 @@ type DrawerTab = 'summary' | 'ecs' | 'raw';
   selector: 'skyra-log-event-drawer',
   standalone: true,
   imports: [CommonModule, SeverityBadgeComponent, JsonInspectorComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './log-event-drawer.component.html',
   styleUrl: './log-event-drawer.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

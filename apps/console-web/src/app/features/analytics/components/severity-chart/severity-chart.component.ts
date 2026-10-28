@@ -63,13 +63,14 @@ import { DistributionItem } from '../../domain/analytics-metric.model';
   `,
   styles: [`
     .distribution-card {
-      background: var(--color-surface-card);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-md);
-      padding: var(--space-4);
+      background: var(--skyra-surface, #ffffff);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-md, 10px);
+      padding: var(--space-4, 16px);
       display: flex;
       flex-direction: column;
-      gap: var(--space-3);
+      gap: var(--space-3, 12px);
+      box-shadow: var(--skyra-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
     }
 
     .card-header {
@@ -79,30 +80,31 @@ import { DistributionItem } from '../../domain/analytics-metric.model';
     }
 
     .card-title {
-      font-size: var(--font-size-md);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
+      font-family: var(--skyra-font-display, 'Outfit', sans-serif);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--skyra-text, #0f172a);
       margin: 0;
     }
 
     .card-subtitle {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-secondary);
+      font-size: 11px;
+      color: var(--skyra-text-muted, #64748b);
       margin: 0;
     }
 
     .stacked-bar {
       height: 8px;
       width: 100%;
-      border-radius: var(--radius-sm);
+      border-radius: var(--skyra-radius-full, 9999px);
       display: flex;
       overflow: hidden;
-      background: var(--color-surface-hover);
+      background: var(--skyra-bg, #f4f7fc);
     }
 
     .bar-segment {
       height: 100%;
-      transition: width var(--transition-fast);
+      transition: width 150ms ease;
     }
 
     .items-list {
@@ -116,29 +118,29 @@ import { DistributionItem } from '../../domain/analytics-metric.model';
       align-items: center;
       justify-content: space-between;
       padding: 6px 8px;
-      border-radius: var(--radius-sm);
+      border-radius: var(--skyra-radius-sm, 6px);
       background: none;
       border: 1px solid transparent;
       cursor: pointer;
       text-align: left;
       width: 100%;
-      transition: all var(--transition-fast);
+      transition: all 150ms ease;
     }
 
     .item-row:hover {
-      background: var(--color-surface-hover);
-      border-color: var(--color-border-subtle);
+      background: var(--skyra-bg, #f4f7fc);
+      border-color: var(--skyra-border, #e2e8f0);
     }
 
     .item-row:focus-visible {
-      outline: 2px solid var(--color-brand-primary);
+      outline: 2px solid var(--skyra-primary, #0A58CA);
       outline-offset: 2px;
     }
 
     .item-left {
       display: flex;
       align-items: center;
-      gap: var(--space-2);
+      gap: var(--space-2, 8px);
     }
 
     .color-dot {
@@ -149,43 +151,43 @@ import { DistributionItem } from '../../domain/analytics-metric.model';
     }
 
     .item-label {
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--skyra-text, #0f172a);
     }
 
     .item-right {
       display: flex;
       align-items: center;
-      gap: var(--space-2);
+      gap: var(--space-2, 8px);
     }
 
     .item-count {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-primary);
-      font-weight: var(--font-weight-medium);
+      font-size: 11px;
+      color: var(--skyra-text, #0f172a);
+      font-weight: 600;
     }
 
     .item-pct {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-tertiary);
+      font-size: 11px;
+      color: var(--skyra-text-muted, #64748b);
     }
 
     .arrow-icon {
-      color: var(--color-text-tertiary);
-      transition: transform var(--transition-fast);
+      color: var(--skyra-text-muted, #64748b);
+      transition: transform 150ms ease;
     }
 
     .item-row:hover .arrow-icon {
       transform: translateX(2px);
-      color: var(--color-brand-primary);
+      color: var(--skyra-primary, #0A58CA);
     }
 
     .empty-state {
-      padding: var(--space-6);
+      padding: var(--space-6, 24px);
       text-align: center;
-      color: var(--color-text-tertiary);
-      font-size: var(--font-size-xs);
+      color: var(--skyra-text-muted, #64748b);
+      font-size: 11px;
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,

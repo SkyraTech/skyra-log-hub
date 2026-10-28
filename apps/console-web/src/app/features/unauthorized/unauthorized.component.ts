@@ -60,48 +60,49 @@ import { AuthService } from '../../core/auth/auth.service';
     .unauth-card {
       max-width: 520px;
       width: 100%;
-      background: var(--skyra-bg-surface, #1e293b);
-      border: 1px solid rgba(239, 68, 68, 0.2);
-      border-radius: 1rem;
+      background: var(--skyra-surface, #ffffff);
+      border: 1px solid rgba(220, 38, 38, 0.25);
+      border-radius: var(--skyra-radius-lg, 14px);
       padding: 2.5rem;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 1.25rem;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+      box-shadow: var(--skyra-shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.15));
     }
 
     .icon-wrap {
       width: 72px;
       height: 72px;
       border-radius: 50%;
-      background: rgba(239, 68, 68, 0.1);
-      color: #ef4444;
+      background: rgba(220, 38, 38, 0.1);
+      color: var(--skyra-danger, #dc2626);
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .title {
+      font-family: var(--skyra-font-display, 'Outfit', sans-serif);
       font-size: 1.5rem;
       font-weight: 700;
-      color: var(--skyra-text-primary, #f8fafc);
+      color: var(--skyra-text, #0f172a);
       margin: 0;
     }
 
     .description {
       font-size: 0.9375rem;
       line-height: 1.5;
-      color: var(--skyra-text-secondary, #94a3b8);
+      color: var(--skyra-text-muted, #64748b);
       margin: 0;
     }
 
     .details-panel {
       width: 100%;
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--skyra-border-subtle, rgba(255, 255, 255, 0.05));
-      border-radius: 0.5rem;
+      background: var(--skyra-bg, #f4f7fc);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-sm, 6px);
       padding: 1rem;
       text-align: left;
       font-size: 0.8125rem;
@@ -120,7 +121,7 @@ import { AuthService } from '../../core/auth/auth.service';
     }
 
     .value {
-      color: var(--skyra-text-primary, #f1f5f9);
+      color: var(--skyra-text, #0f172a);
       font-weight: 500;
     }
 
@@ -134,7 +135,7 @@ import { AuthService } from '../../core/auth/auth.service';
     .btn {
       flex: 1;
       padding: 0.75rem 1rem;
-      border-radius: 0.5rem;
+      border-radius: var(--skyra-radius-sm, 6px);
       font-size: 0.875rem;
       font-weight: 600;
       cursor: pointer;
@@ -142,23 +143,24 @@ import { AuthService } from '../../core/auth/auth.service';
     }
 
     .btn-primary {
-      background: #4f46e5;
+      background: var(--skyra-primary, #0A58CA);
       color: #ffffff;
       border: none;
     }
 
     .btn-primary:hover {
-      background: #4338ca;
+      background: var(--skyra-primary-hover, #0847a8);
     }
 
     .btn-secondary {
-      background: transparent;
-      color: var(--skyra-text-secondary, #cbd5e1);
-      border: 1px solid var(--skyra-border-subtle, rgba(255, 255, 255, 0.15));
+      background: var(--skyra-bg, #f4f7fc);
+      color: var(--skyra-text, #0f172a);
+      border: 1px solid var(--skyra-border, #e2e8f0);
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--skyra-surface, #ffffff);
+      border-color: var(--skyra-primary, #0A58CA);
     }
   `]
 })

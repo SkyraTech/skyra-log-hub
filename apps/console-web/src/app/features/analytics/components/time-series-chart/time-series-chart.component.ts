@@ -35,7 +35,6 @@ interface BarData {
             type="button"
             class="toggle-view-btn"
             [attr.aria-expanded]="showTable()"
-            aria-label="Toggle accessible tabular data view"
             (click)="toggleTable()"
           >
             {{ showTable() ? 'Chart View' : 'Table View' }}
@@ -144,50 +143,52 @@ interface BarData {
   `,
   styles: [`
     .time-series-card {
-      background: var(--color-surface-card);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-md);
-      padding: var(--space-4);
+      background: var(--skyra-surface, #ffffff);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-md, 10px);
+      padding: var(--space-4, 16px);
       display: flex;
       flex-direction: column;
-      gap: var(--space-3);
+      gap: var(--space-3, 12px);
+      box-shadow: var(--skyra-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
     }
 
     .chart-header {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: var(--space-2);
+      gap: var(--space-2, 8px);
     }
 
     .chart-title {
-      font-size: var(--font-size-md);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
+      font-family: var(--skyra-font-display, 'Outfit', sans-serif);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--skyra-text, #0f172a);
       margin: 0;
     }
 
     .chart-subtitle {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-secondary);
+      font-size: 11px;
+      color: var(--skyra-text-muted, #64748b);
       margin: 2px 0 0 0;
     }
 
     .toggle-view-btn {
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-medium);
-      color: var(--color-text-secondary);
-      background: var(--color-surface-hover);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--skyra-text-muted, #64748b);
+      background: var(--skyra-bg, #f4f7fc);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-sm, 6px);
       padding: 4px 8px;
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: all 150ms ease;
     }
 
     .toggle-view-btn:hover {
-      color: var(--color-text-primary);
-      border-color: var(--color-border-strong);
+      color: var(--skyra-text, #0f172a);
+      border-color: var(--skyra-primary, #0A58CA);
     }
 
     .svg-wrapper {
@@ -203,27 +204,27 @@ interface BarData {
     }
 
     .grid-line {
-      stroke: var(--color-border-subtle);
+      stroke: var(--skyra-border, #e2e8f0);
       stroke-dasharray: 3, 3;
       stroke-width: 1;
     }
 
     .axis-line {
-      stroke: var(--color-border-strong);
+      stroke: var(--skyra-border, #e2e8f0);
       stroke-width: 1;
     }
 
     .axis-text {
       font-size: 10px;
-      fill: var(--color-text-tertiary);
-      font-family: var(--font-family-mono);
+      fill: var(--skyra-text-muted, #64748b);
+      font-family: var(--skyra-font-mono, monospace);
     }
 
     .chart-bar {
-      fill: var(--color-brand-primary);
+      fill: var(--skyra-primary, #0A58CA);
       opacity: 0.85;
       cursor: pointer;
-      transition: opacity var(--transition-fast), fill var(--transition-fast);
+      transition: opacity 150ms ease, fill 150ms ease;
       rx: 2;
     }
 
@@ -231,22 +232,22 @@ interface BarData {
     .chart-bar.active,
     .chart-bar:focus-visible {
       opacity: 1;
-      fill: #1D4ED8;
+      fill: var(--skyra-primary-hover, #0847a8);
       outline: none;
     }
 
     .chart-bar:focus-visible {
-      stroke: var(--color-text-primary);
+      stroke: var(--skyra-text, #0f172a);
       stroke-width: 2;
     }
 
     .chart-tooltip {
       position: absolute;
-      background: var(--color-surface-card);
-      border: 1px solid var(--color-border-strong);
-      border-radius: var(--radius-sm);
+      background: var(--skyra-surface, #ffffff);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-sm, 6px);
       padding: 6px 10px;
-      box-shadow: var(--shadow-md);
+      box-shadow: var(--skyra-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
       pointer-events: none;
       z-index: 10;
       white-space: nowrap;
@@ -255,8 +256,8 @@ interface BarData {
     }
 
     .tooltip-time {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-secondary);
+      font-size: 11px;
+      color: var(--skyra-text-muted, #64748b);
       margin-bottom: 2px;
     }
 
@@ -267,19 +268,19 @@ interface BarData {
     }
 
     .count-value {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text-primary);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--skyra-text, #0f172a);
     }
 
     .count-label {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-secondary);
+      font-size: 11px;
+      color: var(--skyra-text-muted, #64748b);
     }
 
     .tooltip-hint {
       font-size: 10px;
-      color: var(--color-brand-primary);
+      color: var(--skyra-primary, #0A58CA);
       margin-top: 2px;
     }
 
@@ -290,15 +291,15 @@ interface BarData {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: var(--space-2);
-      color: var(--color-text-tertiary);
+      gap: var(--space-2, 8px);
+      color: var(--skyra-text-muted, #64748b);
     }
 
     .spinner {
       width: 20px;
       height: 20px;
-      border: 2px solid var(--color-border-subtle);
-      border-top-color: var(--color-brand-primary);
+      border: 2px solid var(--skyra-border, #e2e8f0);
+      border-top-color: var(--skyra-primary, #0A58CA);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
@@ -308,39 +309,39 @@ interface BarData {
     }
 
     .empty-title {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-medium);
-      color: var(--color-text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--skyra-text-muted, #64748b);
     }
 
     .empty-desc {
-      font-size: var(--font-size-xs);
+      font-size: 11px;
     }
 
     .table-container {
       max-height: 200px;
       overflow-y: auto;
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-sm);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-sm, 6px);
     }
 
     .data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: var(--font-size-xs);
+      font-size: 11px;
     }
 
     .data-table th,
     .data-table td {
       padding: 6px 12px;
       text-align: left;
-      border-bottom: 1px solid var(--color-border-subtle);
+      border-bottom: 1px solid var(--skyra-border, #e2e8f0);
     }
 
     .data-table th {
-      background: var(--color-surface-hover);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-secondary);
+      background: var(--skyra-bg, #f4f7fc);
+      font-weight: 600;
+      color: var(--skyra-text-muted, #64748b);
       position: sticky;
       top: 0;
     }
@@ -350,8 +351,8 @@ interface BarData {
     }
 
     .table-drilldown-btn {
-      font-size: var(--font-size-xs);
-      color: var(--color-brand-primary);
+      font-size: 11px;
+      color: var(--skyra-primary, #0A58CA);
       background: none;
       border: none;
       padding: 0;

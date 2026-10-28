@@ -1,15 +1,12 @@
-@if (isOpen() && log(); as item) {
-  <div class="drawer-backdrop" (click)="onClose()" aria-hidden="true"></div>
-
-  <aside
-    class="event-drawer"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="drawer-title"
-    tabindex="-1"
+@if (log(); as item) {
+  <skyra-tech-drawer
+    [attr.open]="isOpen() ? '' : null"
+    position="right"
+    size="lg"
+    (close)="onClose()"
   >
     <!-- Drawer Header -->
-    <div class="drawer-header">
+    <div slot="header" class="drawer-header-custom">
       <div class="header-info">
         <h2 id="drawer-title" class="drawer-title">Log Event Details</h2>
         <div class="header-badges">
@@ -20,7 +17,7 @@
       </div>
       <button
         type="button"
-        class="close-btn"
+        class="close-btn drawer-close"
         (click)="onClose()"
         aria-label="Close event detail drawer"
       >
@@ -207,5 +204,5 @@
         }
       }
     </div>
-  </aside>
+  </skyra-tech-drawer>
 }
