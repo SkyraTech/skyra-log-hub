@@ -828,7 +828,22 @@ Always start by reading this file, `05-PROJECT_TASKS.md`, relevant ADR and task 
     - 45/45 tests passing in `@skyra/contracts`.
     - 748 total tests passing across all active monorepo suites (0 failures).
     - Angular strict typecheck & production AOT build pass with 0 errors.
-- **Next Task:** `LOGHUB-CONSOLE-006` — Project, Workspace, Membership & Ingestion Credential Administration.
+- **Next Task:** `LOGHUB-ADMIN-001` — Secure Multi-Tenant Administration Backend Architecture, RBAC, Authoritative Membership, Credential Lifecycle & Management API Contracts.
+
+### Task LOGHUB-ADMIN-001: Secure Multi-Tenant Administration Backend Architecture, RBAC, Authoritative Membership, Credential Lifecycle & Management API Contracts (2026-10-28)
+- **Status:** COMPLETED (PASS — Architecture Ready).
+- **Core Architecture & Contract Accomplishments:**
+  - **Service Ownership & Topological Boundaries (ADR-027):** Evaluated and selected dedicated `apps/admin-service` topology to isolate write-heavy administrative transactions from high-throughput WAL ingestion and read-only DuckDB analytics.
+  - **Authoritative Identity & Membership Model (ADR-028):** Modeled external OIDC integration anchoring user identity strictly to composite key `@@unique([issuer, subject])`, completely preventing cross-issuer subject collisions. Designed first-login invitation matching with fail-closed default.
+  - **Hierarchical RBAC & Anti-Escalation Engine (ADR-029):** Designed 5-tier role hierarchy (`OrgOwner`, `OrgAdmin`, `ProjectAdmin`, `Developer`, `Viewer`) with 22 granular permissions. Enforced deny-by-default, self-escalation rejection, last-owner removal protection, and server-side authorization gates.
+  - **Cross-Service Authorization Consistency (ADR-030):** Unified trust boundary across Console BFF, Admin Service, and Query Service. Scoped internal JWT assertions bound to 60s TTL; immediate BFF session invalidation on revocation; bounded $\le 60\text{s}$ cross-service propagation delay.
+  - **Ingestion Credential Lifecycle & Gateway Backward Compatibility (ADR-031):** Preserved 100% compatibility with `apps/ingestion-gateway` SHA-256 verifier (`key_hash`). Formatted tokens as `skyra_live_[a-f0-9]{64}`, revealed raw secret exactly once, supported 7-day zero-downtime rotation overlap, and immediate revocation.
+  - **Immutable Administrative Audit Trails (ADR-032):** Designed append-only `admin_audit_events` with transactional failure rollback (`Atomic Audit Invariant`).
+  - **Additive Database Schema Migration Proposal (ADR-033):** Produced zero-disruption Prisma schema extension proposal for 9 new entities (`User`, `TenantMembership`, `ProjectMembership`, `Role`, `Permission`, `RolePermission`, `RoleAssignment`, `Invitation`, `AdminAuditEvent`). Enforced that no migrations run during ADMIN-001.
+  - **Versioned API Contracts (`contracts/admin/v1/`):** Delivered complete OpenAPI 3.1.0 specification and 14 JSON Schema Draft 2020-12 specifications with RFC 7807 Problem Details.
+  - **Automated Verification:** Added `tests/contracts/admin-contracts.test.ts` passing 7/7 tests (52/52 total contract tests in monorepo).
+- **Next Task:** `LOGHUB-ADMIN-002` — Administration Backend Implementation & Approved Database Migration.
+
 
 
 

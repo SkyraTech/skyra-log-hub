@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/membership-response.schema.json",
+  "title": "MembershipResponseV1",
+  "description": "User membership representation within a tenant.",
+  "type": "object",
+  "required": ["id", "tenantId", "userId", "email", "displayName", "role", "status", "createdAt"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Membership unique identifier."
+    },
+    "tenantId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "userId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": ["OrgOwner", "OrgAdmin", "ProjectAdmin", "Developer", "Viewer"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PENDING_INVITE", "ACTIVE", "SUSPENDED", "REVOKED"]
+    },
+    "assignedProjects": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of explicit project IDs accessible to this member."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

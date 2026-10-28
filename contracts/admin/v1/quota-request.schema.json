@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/quota-request.schema.json",
+  "title": "ProjectQuotaUpdateRequestV1",
+  "description": "Payload for adjusting project admission quotas.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "maxBatchSize": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5000,
+      "description": "Maximum number of log events admitted in a single batch envelope."
+    },
+    "maxPayloadBytes": {
+      "type": "integer",
+      "minimum": 1048576,
+      "maximum": 52428800,
+      "description": "Maximum batch request payload size in bytes (1 MiB to 50 MiB)."
+    },
+    "maxEventsPerSec": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 50000,
+      "description": "Admission rate limit ceiling in events per second."
+    }
+  }
+}

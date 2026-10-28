@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/error.schema.json",
+  "title": "SkyraAdminErrorResponseV1",
+  "description": "Standardized machine-readable RFC 7807 problem details error response for Skyra LogHub Administration Service v1.",
+  "type": "object",
+  "required": ["type", "title", "status", "detail", "code", "requestId"],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "type": "string",
+      "format": "uri",
+      "description": "URI reference identifying problem type."
+    },
+    "title": {
+      "type": "string",
+      "description": "Short human-readable summary of problem."
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 400,
+      "maximum": 599,
+      "description": "HTTP status code."
+    },
+    "detail": {
+      "type": "string",
+      "description": "Human-readable explanation specific to this occurrence."
+    },
+    "instance": {
+      "type": "string",
+      "description": "URI reference identifying specific request occurrence."
+    },
+    "code": {
+      "type": "string",
+      "enum": [
+        "UNAUTHORIZED",
+        "FORBIDDEN",
+        "CROSS_TENANT_VIOLATION",
+        "PROJECT_NOT_FOUND",
+        "TENANT_NOT_FOUND",
+        "CREDENTIAL_NOT_FOUND",
+        "MEMBERSHIP_NOT_FOUND",
+        "LAST_OWNER_REMOVAL_BLOCKED",
+        "SELF_ESCALATION_BLOCKED",
+        "INVALID_REQUEST",
+        "CONFLICT",
+        "RATE_LIMIT_EXCEEDED",
+        "INTERNAL_ERROR"
+      ],
+      "description": "Stable machine-readable classification code."
+    },
+    "requestId": {
+      "type": "string",
+      "description": "Unique trace/request correlation ID."
+    },
+    "invalidParams": {
+      "type": "array",
+      "description": "Validation parameter error breakdown.",
+      "items": {
+        "type": "object",
+        "required": ["name", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/retention-response.schema.json",
+  "title": "RetentionResponseV1",
+  "description": "Project archive retention policy representation.",
+  "type": "object",
+  "required": ["id", "tenantId", "projectId", "retentionDays", "enableParquetPurge", "isLegalHold", "updatedAt"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenantId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "projectId": {
+      "type": "string"
+    },
+    "retentionDays": {
+      "type": "integer"
+    },
+    "enableParquetPurge": {
+      "type": "boolean"
+    },
+    "isLegalHold": {
+      "type": "boolean"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

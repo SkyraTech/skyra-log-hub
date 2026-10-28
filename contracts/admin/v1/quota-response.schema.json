@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/quota-response.schema.json",
+  "title": "ProjectQuotaResponseV1",
+  "description": "Project admission quota representation.",
+  "type": "object",
+  "required": ["id", "tenantId", "projectId", "maxBatchSize", "maxPayloadBytes", "maxEventsPerSec", "updatedAt"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenantId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "projectId": {
+      "type": "string"
+    },
+    "maxBatchSize": {
+      "type": "integer"
+    },
+    "maxPayloadBytes": {
+      "type": "integer"
+    },
+    "maxEventsPerSec": {
+      "type": "integer"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

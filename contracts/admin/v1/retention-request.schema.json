@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/retention-request.schema.json",
+  "title": "RetentionUpdateRequestV1",
+  "description": "Payload for modifying project archive retention policy.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "retentionDays": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365,
+      "description": "Retention window duration in days."
+    },
+    "enableParquetPurge": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether expired derived Parquet caches should be purged alongside raw JSONL."
+    },
+    "isLegalHold": {
+      "type": "boolean",
+      "default": false,
+      "description": "Legal hold flag. When true, all automated archive deletions are suspended."
+    }
+  }
+}

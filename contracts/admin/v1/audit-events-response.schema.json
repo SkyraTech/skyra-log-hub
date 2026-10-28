@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/audit-events-response.schema.json",
+  "title": "AdminAuditEventsResponseV1",
+  "description": "Paginated list of administrative audit events.",
+  "type": "object",
+  "required": ["events", "totalReturned", "hasMore"],
+  "additionalProperties": false,
+  "properties": {
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "tenantId", "actorEmail", "action", "targetType", "targetId", "details", "createdAt"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "format": "uuid" },
+          "actorUserId": { "type": ["string", "null"], "format": "uuid" },
+          "actorEmail": { "type": "string" },
+          "action": { "type": "string" },
+          "targetType": { "type": "string" },
+          "targetId": { "type": "string" },
+          "details": { "type": "object" },
+          "ipAddress": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "totalReturned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "hasMore": {
+      "type": "boolean"
+    },
+    "nextCursor": {
+      "type": ["string", "null"]
+    }
+  }
+}

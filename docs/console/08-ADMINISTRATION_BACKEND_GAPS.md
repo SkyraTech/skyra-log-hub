@@ -56,29 +56,32 @@ The PostgreSQL database currently contains four metadata tables in `apps/ingesti
 3. **`project_quotas`:** Ingestion throughput and payload limits (`maxBatchSize`, `maxPayloadBytes`, `maxEventsPerSec`).
 4. **`ingestion_credentials`:** Machine tokens for shippers and SDKs (`keyHash`, `keyPrefix`, `allowedProjects`, `allowedEnvironments`, `rateLimitPerMin`, `expiresAt`, `isRevoked`).
 
-### Architectural Recommendation: Milestone `LOGHUB-ADMIN-001`
-Before enabling the Project Administration (`/projects`) and Ingestion Credentials (`/ingestion`) screens in the Web Console, a dedicated backend milestone **`LOGHUB-ADMIN-001`** must be executed to expose secure RESTful CRUD controllers backed by these existing tables.
+### Architectural Resolution: Milestone `LOGHUB-ADMIN-001` (Complete — PASS)
+The architectural foundation, security threat modeling, RBAC permission hierarchy, OpenAPI 3.1 contracts (`contracts/admin/v1/`), and additive Prisma schema migration proposal have been delivered in **`LOGHUB-ADMIN-001`**.
 
 ---
 
-## 4. Completely Missing Models (Requiring Future Database Migrations)
+## 4. Completely Missing Models (Addressed in Proposed Schema Migration)
 
-The following capabilities require new database migrations and backend modules before UI implementation:
+The proposed schema extension in `docs/admin/10-DATABASE_MIGRATION_PROPOSAL.md` resolves these missing capabilities without breaking existing tables:
 
 1. **User Identity & Multi-Tenant Membership:**
-   - Currently, user identity is extracted entirely from incoming JWT claims. There is no `users` or `memberships` table in PostgreSQL.
-   - Enabling Team & Access Management (`/team`) requires creating `users`, `user_tenants`, and `project_memberships` tables with foreign keys to `tenants` and `projects`.
-2. **Saved Searches & Dashboards:**
-   - Requires a `saved_searches` table (`id`, `tenant_id`, `project_id`, `user_id`, `name`, `query_text`, `filters_json`, `created_at`).
+   - Adds `users`, `tenant_memberships`, and `project_memberships` tables with `(issuer, subject)` composite uniqueness.
+   - Enables Team & Access Management (`/team`) backed by authoritative PostgreSQL relational queries.
+2. **Fine-Grained RBAC & Anti-Escalation:**
+   - Adds `roles`, `permissions`, `role_permissions`, and `role_assignments` tables with 5 baseline system roles.
 3. **Human Administrative Audit Trails:**
-   - Query Service currently logs operational query events to stdout/audit service. Persistent UI audit inspection requires an `audit_logs` database table.
+   - Adds `admin_audit_events` with atomic transactional rollback guarantees.
 
 ---
 
-## 5. Phased Frontend Delivery Strategy
+## 5. Phased Delivery Strategy
 
-To avoid shipping broken or unbacked UI screens, Phase 4 frontend features are strictly sequenced:
+To avoid shipping broken or unbacked UI screens, Phase 4 features are strictly sequenced:
 
-- **Milestone CONSOLE-002 through CONSOLE-005:** Focus exclusively on **verified Query APIs** (Log Explorer, Event Detail Drawer, Overview Dashboard, Analytics Histograms, and Dynamic Facets). These screens are 100% backed by working Phase 3 backend code.
-- **Milestone CONSOLE-006:** Activated only after backend milestone `LOGHUB-ADMIN-001` delivers working Project and Ingestion Credential REST APIs.
+- **Milestone CONSOLE-002 through CONSOLE-005:** Focused exclusively on **verified Query APIs** (Log Explorer, Event Detail Drawer, Overview Dashboard, Analytics Histograms, and Dynamic Facets). **[COMPLETE — PASS]**
+- **Milestone LOGHUB-ADMIN-001:** Administration backend architecture, RBAC, domain modeling, and OpenAPI contracts. **[COMPLETE — PASS]**
+- **Milestone LOGHUB-ADMIN-002 through ADMIN-005:** Backend database migration, IAM foundation, Admin Service implementation, and security hardening.
+- **Milestone CONSOLE-006:** Activated only after backend milestone `LOGHUB-ADMIN-004` delivers verified REST APIs.
 - **Milestone CONSOLE-007:** Hardening, security, accessibility, and E2E verification.
+

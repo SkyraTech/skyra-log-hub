@@ -33,8 +33,14 @@ Each ADR is a *proposal* until the owner approves it. Record context, alternativ
 | ADR-022 | Angular 19 Standalone Web Console Architecture & Workspace Layout | Proposed |
 | ADR-023 | Token-Driven Dual-Theme Design System & WCAG 2.2 AA Accessibility | Proposed |
 | ADR-024 | Backend-for-Frontend (BFF) Session Architecture & OIDC PKCE Authentication | Proposed |
-| ADR-025 | Keyset Pagination State Management & URL-Driven Navigation | Proposed |
 | ADR-026 | Administrative API Gateway Boundary & Phased Schema Strategy | Proposed |
+| ADR-027 | Dedicated Administration Service Topology & Workload Isolation | Proposed |
+| ADR-028 | Authoritative Multi-Tenant Identity and Composite Key Model | Proposed |
+| ADR-029 | Hierarchical Role-Based Access Control (RBAC) & Anti-Escalation | Proposed |
+| ADR-030 | Cross-Service Authorization Consistency & Revocation Propagation | Proposed |
+| ADR-031 | Ingestion Credential Storage, Rotation Overlap & Revocation | Proposed |
+| ADR-032 | Immutable Administrative Audit Trail Persistence & Failure Semantics | Proposed |
+| ADR-033 | Additive Database Schema Evolution & Safe Bootstrap Strategy | Proposed |
 
 ## ADR-001 — Monorepo and repo boundaries
 **Context:** All operational apps, SDKs, UI and MCP must be coordinated and documented. Existing Skyra Platform focuses on Web Components and cannot own Python/server runtime distribution cleanly. **Decision:** Keep all LogHub-related code under renamed `skyra-loghub`; continue consuming Skyra Platform packages and authoritative service contracts by version. **Consequence:** Multi-language CI orchestration required; publish SDKs independently. **Alternative:** separate `skyra-logging` repo (less toolchain coupling, more coordination).
@@ -277,6 +283,101 @@ Identity provider, exact design token palette, regulatory retention requirements
   - *Merging backend admin API development into frontend tasks:* Rejected to maintain clean separation of concerns and rigorous API contract-first design.
 - **Security Impact:** Guarantees all administrative operations are authenticated, authorized, and audited server-side.
 - **Implementation Dependencies:** `LOGHUB-ADMIN-001`, `LOGHUB-CONSOLE-006`.
+
+
+## ADR-027 — Dedicated Administration Service Topology & Workload Isolation (new proposal, 2026-10-28)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Administrative operations (project lifecycle, user onboarding, role management, machine credential provisioning, and quota configuration) perform write-heavy transactional operations on PostgreSQL metadata. Combining this with high-throughput ingestion in `ingestion-gateway` or analytical queries in `query-service` violates clean separation of concerns and least-privilege database isolation.
+- **Decision:** Establish a dedicated NestJS backend service `apps/admin-service` binding to internal network interfaces (port 3300). The service owns administrative domain aggregates, writes to PostgreSQL via an isolated database role (`skyra_admin`), and exposes versioned `/admin/v1` REST APIs fronted by `apps/console-bff`.
+- **Alternatives Rejected:**
+  - *Embedding admin controllers in `ingestion-gateway`:* Rejected due to risk of ingestion pipeline starvation and bloated runtime memory footprint.
+  - *Embedding admin controllers in `query-service`:* Rejected because query service operates in a strictly read-only analytical posture; giving it elevated database write access violates the Principle of Least Privilege.
+- **Security Impact:** Enforces least privilege, limits blast radius of administrative vulnerabilities, and preserves independent scalability.
+- **Implementation Dependencies:** `LOGHUB-ADMIN-001`, `LOGHUB-ADMIN-002`, `LOGHUB-ADMIN-003`.
+
+
+## ADR-028 — Authoritative Multi-Tenant Identity and Composite Key Model (new proposal, 2026-10-28)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Skyra LogHub delegates user authentication to enterprise OpenID Connect (OIDC) identity providers. Anchoring accounts solely on email or plain subject strings exposes the system to identity collisions across independent corporate tenants and account hijacking if corporate emails change.
+- **Decision:** Anchor all human user identities in PostgreSQL to the composite unique key `@@unique([issuer, subject])`. The system never stores user passwords or MFA secrets. New user onboarding requires an explicit, active invitation or pre-provisioned `TenantMembership` (no open self-registration). In the absence of an active membership, authentication fails closed (`403 Forbidden`).
+- **Alternatives Rejected:**
+  - *Email-as-primary-key:* Rejected due to corporate email mutability and lack of cryptographic guarantee across distinct IdPs.
+  - *Automatic tenant owner creation for new SSO users:* Rejected to prevent unauthorized tenant takeovers.
+- **Security Impact:** Eliminates cross-issuer subject collisions and enforces deterministic user identity resolution.
+- **Implementation Dependencies:** `LOGHUB-ADMIN-001`, `LOGHUB-ADMIN-002`.
+
+
+## ADR-029 — Hierarchical Role-Based Access Control (RBAC) & Anti-Escalation (new proposal, 2026-10-28)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** The Web Console and Administration backend require fine-grained authorization spanning tenant governance, project administration, credential rotation, and log exploration.
+- **Decision:** Implement a 5-tier role hierarchy (`OrgOwner`, `OrgAdmin`, `ProjectAdmin`, `Developer`, `Viewer`) enforcing deny-by-default, server-side permission gates:
+  1. Requests without matching permission grants fail with `403 Forbidden`.
+  2. Users cannot assign roles higher than their own effective role.
+  3. Users cannot assign roles to themselves (self-escalation rejection).
+  4. Demoting or deleting the last remaining `OrgOwner` of a tenant is strictly prohibited at the domain policy layer.
+  5. Angular route guards serve only as presentation UX conveniences; domain access enforcement is performed independently on every backend mutation.
+- **Alternatives Rejected:**
+  - *Hardcoded global superuser:* Rejected to prevent single-point-of-failure cross-tenant breaches.
+  - *Attribute-Based Access Control (ABAC) dynamic engine:* Rejected as over-engineered for current enterprise requirements; RBAC provides transparent, auditable access boundaries.
+- **Security Impact:** Guarantees strict least privilege and mathematical immunity against self-escalation and tenant abandonment.
+- **Implementation Dependencies:** `LOGHUB-ADMIN-001`, `LOGHUB-ADMIN-002`, `LOGHUB-ADMIN-003`.
+
+
+## ADR-030 — Cross-Service Authorization Consistency & Revocation Propagation (new proposal, 2026-10-28)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** When an administrator revokes a user's membership or suspends a project, downstream services (`apps/console-bff`, `apps/query-service`, `apps/admin-service`) must not continue serving authorized data under stale cached tokens.
+- **Decision:** Adopt an authoritative assertion architecture with aggressive bounds:
+  1. Internal scoped JWTs minted by the BFF have a maximum Time-to-Live (TTL) of **60 seconds**.
+  2. Membership revocations in `apps/admin-service` trigger immediate local session invalidation in `apps/console-bff` (0 seconds propagation delay for new user requests).
+  3. Downstream services independently verify token expiration on every request. Maximum revocation window for in-flight tokens is bounded to $\le 60$ seconds without requiring distributed cache locks.
+  4. If metadata storage is partitioned, membership resolution fails closed (`503 Service Unavailable`).
+- **Alternatives Rejected:**
+  - *Long-lived JWTs with real-time revocation blacklists in Redis:* Rejected due to operational complexity and external dependency failure modes during outages.
+  - *Permanent internal tokens without expiration:* Strictly forbidden by enterprise security standards.
+- **Security Impact:** Prevents zombie access grants and guarantees cross-service authorization convergence within 60 seconds.
+- **Implementation Dependencies:** `LOGHUB-ADMIN-001`, `LOGHUB-ADMIN-002`, `LOGHUB-ADMIN-003`.
+
+
+## ADR-031 — Ingestion Credential Storage, Rotation Overlap & Revocation (new proposal, 2026-10-28)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Log shippers and SDKs require durable machine bearer credentials to push logs to `apps/ingestion-gateway`. Credential generation, rotation, and revocation must maintain 100% backward compatibility with the existing Ingestion Gateway SHA-256 verifier.
+- **Decision:**
+  1. Generate machine credentials with format `skyra_live_[a-f0-9]{64}`.
+  2. The raw token secret is revealed to the administrator **exactly once** upon creation or rotation; subsequent GET endpoints return only safe metadata (`id`, `keyPrefix`, `allowedProjects`, `expiresAt`).
+  3. Store only the SHA-256 hex digest in `ingestion_credentials.key_hash`, matching `apps/ingestion-gateway/src/auth/auth.service.ts`.
+  4. Rotation provides an atomic zero-downtime grace period (default 7 days) during which both old and new credentials authenticate simultaneously.
+  5. Revocation sets `is_revoked = true` immediately, blocking subsequent gateway requests.
+- **Alternatives Rejected:**
+  - *Storing plaintext or reversible encrypted tokens:* Strictly rejected as a critical security vulnerability.
+  - *Immediate rotation without overlap:* Rejected because it induces log drops across distributed server fleets during deployment.
+- **Security Impact:** Prevents credential harvesting from database dumps and guarantees zero-downtime fleet token rotations.
+- **Implementation Dependencies:** `LOGHUB-ADMIN-001`, `LOGHUB-ADMIN-004`.
+
+
+## ADR-032 — Immutable Administrative Audit Trail Persistence & Failure Semantics (new proposal, 2026-10-28)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Regulatory compliance (SOC 2, ISO 27001) and security forensics require an unalterable history of all administrative actions (project creation, role modifications, credential rotations, quota alterations).
+- **Decision:** Persist administrative audit records to an append-only PostgreSQL table `admin_audit_events`. Audit persistence is executed within the same database transaction as the administrative mutation. If the audit record fails to persist, the entire administrative transaction rolls back (`Atomic Audit Invariant`). Sensitive fields (raw tokens, passwords, private keys) are strictly scrubbed before persistence.
+- **Alternatives Rejected:**
+  - *Asynchronous fire-and-forget audit emission to message queues:* Rejected because a message queue partition could cause unrecorded administrative mutations.
+  - *Application log file scraping:* Rejected due to risk of log rotation truncation and lack of structured queryability.
+- **Security Impact:** Guarantees non-repudiation and provides complete audit integrity across all tenant configuration changes.
+- **Implementation Dependencies:** `LOGHUB-ADMIN-001`, `LOGHUB-ADMIN-002`, `LOGHUB-ADMIN-003`.
+
+
+## ADR-033 — Additive Database Schema Evolution & Safe Bootstrap Strategy (new proposal, 2026-10-28)
+- **Status:** PROPOSED (Pending Review Gate)
+- **Context:** Introducing IAM, memberships, and administrative models must not destabilize existing Phase 2 and Phase 3 database schemas (`tenants`, `projects`, `ingestion_credentials`, `project_quotas`, `archive_segments`). Furthermore, the initial system must be securely bootstrapped without hardcoding default admin credentials.
+- **Decision:**
+  1. All Prisma schema changes are strictly additive. No existing columns are renamed or dropped.
+  2. No migrations are executed during `LOGHUB-ADMIN-001`. A comprehensive migration proposal is reviewed for execution in `LOGHUB-ADMIN-002`.
+  3. Tenant bootstrapping utilizes an explicit, audited CLI command or configuration script requiring environment variable verification (`SKYRA_BOOTSTRAP_OWNER_EMAIL`, `SKYRA_BOOTSTRAP_TENANT_CODE`). This provisions the initial `OrgOwner` without hardcoding credentials in seed scripts.
+- **Alternatives Rejected:**
+  - *Hardcoding 'admin@skyra.internal / password' seed script:* Rejected as an unacceptable security risk in production environments.
+  - *Executing migrations directly in architecture milestone:* Rejected to maintain strict quality gates and review boundaries.
+- **Security Impact:** Protects production database stability and prevents pre-seeded default credential backdoors.
+- **Implementation Dependencies:** `LOGHUB-ADMIN-001`, `LOGHUB-ADMIN-002`.
+
 
 
 

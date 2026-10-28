@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/tenant-request.schema.json",
+  "title": "TenantUpdateRequestV1",
+  "description": "Payload for updating enterprise tenant metadata.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 255,
+      "description": "Enterprise tenant display name."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ACTIVE", "SUSPENDED", "DECOMMISSIONED"],
+      "description": "Administrative status of tenant."
+    }
+  }
+}

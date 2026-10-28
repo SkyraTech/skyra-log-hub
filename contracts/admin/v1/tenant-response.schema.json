@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/tenant-response.schema.json",
+  "title": "TenantResponseV1",
+  "description": "Tenant metadata representation.",
+  "type": "object",
+  "required": ["id", "code", "name", "status", "createdAt", "updatedAt"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Tenant unique identifier."
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Canonical tenant slug code (e.g. skyra-internal)."
+    },
+    "name": {
+      "type": "string",
+      "description": "Tenant display title."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ACTIVE", "SUSPENDED", "DECOMMISSIONED"]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

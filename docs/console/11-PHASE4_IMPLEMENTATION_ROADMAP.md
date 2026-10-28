@@ -28,7 +28,10 @@ LOGHUB-CONSOLE-004 (Log Explorer & Canonical Event Drawer)     [PASS]
 LOGHUB-CONSOLE-005 (Observability Overview & Analytics Dashboards) [PASS]
          │
          ▼
-[Backend Prerequisite: LOGHUB-ADMIN-001 — REST APIs for Projects & Credentials]
+LOGHUB-ADMIN-001 (Administration Backend Architecture & Contracts) [PASS]
+         │
+         ▼
+[Backend Milestones: LOGHUB-ADMIN-002 -> ADMIN-005]
          │
          ▼
 LOGHUB-CONSOLE-006 (Project & Ingestion Credential Administration) [NEXT]
@@ -89,14 +92,24 @@ LOGHUB-CONSOLE-008 (Phase 4 Final Functional & Operational Acceptance)
   - Enforce monotonic query cancellation and cross-tenant state wiping.
 - **Verification:** Unit tests, component tests, facade state tests, BFF aggregation integration tests, and full monorepo regressions (748/748 passing).
 
-### [Backend Milestone] LOGHUB-ADMIN-001: Administration REST APIs
-- **Target:** Expose RESTful management endpoints in backend services.
-- **Scope:** CRUD endpoints for `projects`, `project_quotas`, and `ingestion_credentials` using existing PostgreSQL schema.
-- **Deliverables:** OpenAPI contracts in `contracts/admin/v1/`, NestJS controllers, and Prisma repository adapters.
+### [Backend Milestone] LOGHUB-ADMIN-001: Administration Backend Architecture & Contracts
+- **Status:** Complete (PASS — Architecture Ready).
+- **Target:** Architecture, security threat modeling, RBAC hierarchy, OpenAPI 3.1 contracts, and additive database migration proposal.
+- **Scope:**
+  - Author 12 specifications in `docs/admin/`.
+  - Author 7 new ADRs (ADR-027 through ADR-033).
+  - Versioned OpenAPI 3.1 & JSON Schemas in `contracts/admin/v1/`.
+  - Automated contract verification suite passing 7/7 tests (52/52 monorepo contract tests).
+
+### [Backend Milestones] LOGHUB-ADMIN-002 through ADMIN-005
+- **ADMIN-002:** Approved Prisma Migration, IAM Entities & Authoritative Membership Provider.
+- **ADMIN-003:** Tenant, Project & Membership REST APIs.
+- **ADMIN-004:** Ingestion Credential, Quota & Retention APIs.
+- **ADMIN-005:** Administration Security Hardening & Acceptance.
 
 ### LOGHUB-CONSOLE-006: Project & Ingestion Credential Administration
-- **Target:** Administrative management screens.
-- **Prerequisite:** Completion of `LOGHUB-ADMIN-001`.
+- **Target:** Administrative management screens (`/projects`, `/ingestion`, `/team`).
+- **Prerequisite:** Completion of `LOGHUB-ADMIN-004`.
 - **Scope:**
   - Project listing and quota editing view.
   - Ingestion credential generation with secure one-time secret display and revocation modal.

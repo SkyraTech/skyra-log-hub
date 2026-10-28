@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/project-response.schema.json",
+  "title": "ProjectResponseV1",
+  "description": "Observability project representation.",
+  "type": "object",
+  "required": ["id", "tenantId", "name", "status", "createdAt", "updatedAt"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Project canonical identifier (e.g. auth-service)."
+    },
+    "tenantId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Owning tenant UUID."
+    },
+    "name": {
+      "type": "string",
+      "description": "Project display title."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ACTIVE", "SUSPENDED", "ARCHIVED"]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

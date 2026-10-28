@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/membership-request.schema.json",
+  "title": "MembershipInviteUpdateRequestV1",
+  "description": "Payload for inviting a user or updating a membership.",
+  "type": "object",
+  "required": ["email", "role"],
+  "additionalProperties": false,
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "User corporate email address."
+    },
+    "role": {
+      "type": "string",
+      "enum": ["OrgOwner", "OrgAdmin", "ProjectAdmin", "Developer", "Viewer"],
+      "description": "Assigned security role."
+    },
+    "projectIds": {
+      "type": "array",
+      "description": "Optional specific project grants for ProjectAdmin, Developer, or Viewer.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ACTIVE", "SUSPENDED", "REVOKED"],
+      "description": "Membership status update."
+    }
+  }
+}

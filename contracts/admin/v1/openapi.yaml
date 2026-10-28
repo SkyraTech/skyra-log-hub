@@ -1,0 +1,541 @@
+openapi: 3.1.0
+info:
+  title: Skyra LogHub Administration API
+  description: >-
+    Authoritative Multi-Tenant Administration, Project Management, User Membership,
+    RBAC Authorization, Ingestion Credential Lifecycle, and Audit API for Skyra LogHub.
+  version: 1.0.0
+  contact:
+    name: Skyra Platform Architecture Team
+    url: https://github.com/skyra-tech/skyra-log-hub
+
+servers:
+  - url: http://127.0.0.1:3300
+    description: Local Development Administration Service
+  - url: https://admin.skyra.internal
+    description: Internal Production Administration Gateway
+
+security:
+  - AdminBearerAuth: []
+
+paths:
+  /admin/v1/tenants:
+    get:
+      summary: List Authorized Tenants
+      operationId: listTenants
+      responses:
+        '200':
+          description: List of tenants accessible to caller.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './tenant-response.schema.json'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/v1/tenants/{tenantId}:
+    get:
+      summary: Get Tenant Details
+      operationId: getTenant
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+      responses:
+        '200':
+          description: Tenant metadata.
+          content:
+            application/json:
+              schema:
+                $ref: './tenant-response.schema.json'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      summary: Update Tenant Metadata
+      operationId: updateTenant
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './tenant-request.schema.json'
+      responses:
+        '200':
+          description: Tenant updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: './tenant-response.schema.json'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/v1/tenants/{tenantId}/projects:
+    get:
+      summary: List Projects in Tenant
+      operationId: listProjects
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+      responses:
+        '200':
+          description: Projects list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './project-response.schema.json'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Provision New Project
+      operationId: createProject
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './project-request.schema.json'
+      responses:
+        '201':
+          description: Project created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: './project-response.schema.json'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /admin/v1/tenants/{tenantId}/projects/{projectId}:
+    get:
+      summary: Get Project Details
+      operationId: getProject
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+        - $ref: '#/components/parameters/ProjectIdParam'
+      responses:
+        '200':
+          description: Project details.
+          content:
+            application/json:
+              schema:
+                $ref: './project-response.schema.json'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      summary: Update Project
+      operationId: updateProject
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+        - $ref: '#/components/parameters/ProjectIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './project-request.schema.json'
+      responses:
+        '200':
+          description: Project updated.
+          content:
+            application/json:
+              schema:
+                $ref: './project-response.schema.json'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/v1/tenants/{tenantId}/members:
+    get:
+      summary: List Tenant Members
+      operationId: listMembers
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+      responses:
+        '200':
+          description: List of tenant members.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './membership-response.schema.json'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Invite Member
+      operationId: inviteMember
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './membership-request.schema.json'
+      responses:
+        '201':
+          description: Member invited.
+          content:
+            application/json:
+              schema:
+                $ref: './membership-response.schema.json'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /admin/v1/tenants/{tenantId}/members/{membershipId}:
+    patch:
+      summary: Update Member Role or Status
+      operationId: updateMember
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+        - name: membershipId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './membership-request.schema.json'
+      responses:
+        '200':
+          description: Member updated.
+          content:
+            application/json:
+              schema:
+                $ref: './membership-response.schema.json'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      summary: Revoke Membership
+      operationId: revokeMember
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+        - name: membershipId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Membership revoked.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /admin/v1/projects/{projectId}/credentials:
+    get:
+      summary: List Project Machine Credentials
+      operationId: listCredentials
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      responses:
+        '200':
+          description: Machine credentials metadata. Plaintext tokens are omitted.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './credential-response.schema.json'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Generate Machine Credential
+      description: Issues a new machine bearer token. The raw secret is returned EXACTLY ONCE.
+      operationId: createCredential
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './credential-request.schema.json'
+      responses:
+        '201':
+          description: Credential generated. Raw token present in response.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+          content:
+            application/json:
+              schema:
+                $ref: './credential-created-response.schema.json'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/v1/projects/{projectId}/credentials/{credentialId}/rotate:
+    post:
+      summary: Rotate Machine Credential
+      description: Issues a replacement credential and starts a grace overlap window for the existing credential.
+      operationId: rotateCredential
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+        - name: credentialId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: New credential issued with raw token.
+          content:
+            application/json:
+              schema:
+                $ref: './credential-created-response.schema.json'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/v1/projects/{projectId}/credentials/{credentialId}/revoke:
+    post:
+      summary: Immediately Revoke Credential
+      operationId: revokeCredential
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+        - name: credentialId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Credential revoked immediately.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/v1/projects/{projectId}/quotas:
+    get:
+      summary: Get Project Quotas
+      operationId: getQuotas
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      responses:
+        '200':
+          description: Quota configuration.
+          content:
+            application/json:
+              schema:
+                $ref: './quota-response.schema.json'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    patch:
+      summary: Update Project Quotas
+      operationId: updateQuotas
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './quota-request.schema.json'
+      responses:
+        '200':
+          description: Quotas updated.
+          content:
+            application/json:
+              schema:
+                $ref: './quota-response.schema.json'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/v1/projects/{projectId}/retention:
+    get:
+      summary: Get Project Retention Policy
+      operationId: getRetention
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      responses:
+        '200':
+          description: Retention policy details.
+          content:
+            application/json:
+              schema:
+                $ref: './retention-response.schema.json'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    patch:
+      summary: Update Retention Policy
+      operationId: updateRetention
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './retention-request.schema.json'
+      responses:
+        '200':
+          description: Retention policy updated.
+          content:
+            application/json:
+              schema:
+                $ref: './retention-response.schema.json'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/v1/tenants/{tenantId}/audit-events:
+    get:
+      summary: Query Administrative Audit Events
+      operationId: queryAuditEvents
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+      responses:
+        '200':
+          description: Paginated audit records.
+          content:
+            application/json:
+              schema:
+                $ref: './audit-events-response.schema.json'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    AdminBearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Scoped internal JWT assertion issued by Console BFF.
+
+  parameters:
+    TenantIdParam:
+      name: tenantId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Target tenant unique identifier.
+
+    ProjectIdParam:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Canonical project kebab-case identifier.
+
+  responses:
+    BadRequest:
+      description: Malformed JSON or invalid schema parameters.
+      content:
+        application/json:
+          schema:
+            $ref: './error.schema.json'
+
+    Unauthorized:
+      description: Missing or expired session token.
+      content:
+        application/json:
+          schema:
+            $ref: './error.schema.json'
+
+    Forbidden:
+      description: Access denied for requested action or tenant scope.
+      content:
+        application/json:
+          schema:
+            $ref: './error.schema.json'
+
+    NotFound:
+      description: Resource not found within tenant scope.
+      content:
+        application/json:
+          schema:
+            $ref: './error.schema.json'
+
+    Conflict:
+      description: Concurrency conflict, duplicate resource, or last owner removal violation.
+      content:
+        application/json:
+          schema:
+            $ref: './error.schema.json'
