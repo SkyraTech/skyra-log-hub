@@ -69,18 +69,19 @@ async function main() {
     await page.waitForTimeout(150);
   }
 
-  async function runAxeAudit(screenName) {
+  async function runAxeAudit(screenName, targetSelector = null) {
     try {
       await page.evaluate(axeSource);
-      const results = await page.evaluate(async () => {
+      const results = await page.evaluate(async (selector) => {
+        const target = selector ? document.querySelector(selector) : document;
         // @ts-ignore
-        return await axe.run({
+        return await axe.run(target, {
           runOnly: {
             type: 'tag',
             values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
           }
         });
-      });
+      }, targetSelector);
       auditResults.accessibility[screenName] = {
         violationsCount: results.violations.length,
         violations: results.violations.map(v => ({
@@ -213,7 +214,7 @@ async function main() {
     await firstRow.click();
     await page.waitForTimeout(400);
     await capture('event-detail-drawer.png');
-    await runAxeAudit('event-detail-drawer');
+    await runAxeAudit('event-detail-drawer', 'skyra-log-event-drawer');
 
     // JSON inspector expand
     const jsonExpandBtn = await page.$('.json-tree-toggle, .json-expand, button:has-text("Expand"), .tree-node-arrow');

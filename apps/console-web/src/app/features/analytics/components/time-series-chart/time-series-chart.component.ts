@@ -1,12 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  CUSTOM_ELEMENTS_SCHEMA,
   computed,
   input,
   output,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import '@skyra-tech-platform/loader';
 import { TimeSeriesPoint } from '../../domain/analytics-metric.model';
 
 interface BarData {
@@ -21,6 +23,7 @@ interface BarData {
   selector: 'skyra-time-series-chart',
   standalone: true,
   imports: [CommonModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <div class="time-series-card">
       <div class="chart-header">
@@ -44,8 +47,7 @@ interface BarData {
 
       @if (loading()) {
         <div class="chart-loading" role="status" aria-label="Loading chart data">
-          <div class="spinner"></div>
-          <span>Loading telemetry trend...</span>
+          <skyra-tech-spinner size="md" label="Loading telemetry trend..." show-label></skyra-tech-spinner>
         </div>
       } @else if (points().length === 0) {
         <div class="chart-empty">

@@ -2258,11 +2258,11 @@ packages:
     engines: {node: ^18.17.0 || >=20.5.0}
 
   '@skyra-tech-platform/app-shell@file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz':
-    resolution: {integrity: sha512-FQq5vtcLCoK3h3CG+0ZdKAZtIUA+B/RdGh7Jv02PhibcHO1i3kKbM3ap1awj9muwjhyjvlp1i1w0ouqV9symCw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz}
+    resolution: {integrity: sha512-15PEMqC5gYM+3qR3tJNJsPdM7WeAtpc2Dv3mo10mcmtxW9cYomVjv8vVzhi4ZWOs6Z5vFBrNsfBNyV2C8Vg5ZQ==, tarball: file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/badge@file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz':
-    resolution: {integrity: sha512-KEXvpqKPWxwR45D0pmG8Vqvw278wCiZk47B6juHmUcNFpGiWSZOEJnYnGsqcYUFHBDZfW8i6ywcpExiteunt/Q==, tarball: file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz}
+    resolution: {integrity: sha512-SDGy5QEiwcHRF3GvqfaBrf3d/lMZtIWN2Jb+9868UBQicNCWdEUMmjfxdLuh5Ej/7QJn+iYlqNyPBkF1sEIuJw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/button@file:artifacts/platform-packages/skyra-tech-platform-button-0.1.0.tgz':
@@ -2274,7 +2274,7 @@ packages:
     version: 0.1.0
 
   '@skyra-tech-platform/data-export@file:artifacts/platform-packages/skyra-tech-platform-data-export-0.1.0.tgz':
-    resolution: {integrity: sha512-gySHcdMgchwDojIzVStOhU6xtBzRXFJmSBiEFw32N/LCcE1Y/ImXDy8yiVAmaiAQUsKlYjCMWYugrgXrEjAqFA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-data-export-0.1.0.tgz}
+    resolution: {integrity: sha512-OeT3g7drULXteOhC7cfXE4qUqvoWce9K4KyfCVZNwc2ROq7gL6/QOrxPCvpIfum6Mzv3j52rQMlXE1pFtMve/Q==, tarball: file:artifacts/platform-packages/skyra-tech-platform-data-export-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/data-table@file:artifacts/platform-packages/skyra-tech-platform-data-table-0.1.0.tgz':
@@ -2286,7 +2286,7 @@ packages:
     version: 0.1.0
 
   '@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz':
-    resolution: {integrity: sha512-Jz6HW1A/dFpk/bfHiGEujZ27eEnI6lBaQolUCx78LsL8FrHbYKnaF6tSGjWSVcwR6TueN8J0KqzQXo7KCxbbRg==, tarball: file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz}
+    resolution: {integrity: sha512-p0qhmGBH0kInFKnIkH90cimBrrS5xmDYFDIdxbEb96/xdl5wdeNY4PStQlB512vpUEJKQQO9v/0oQ5hvquk6OQ==, tarball: file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/dialog@file:artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz':
@@ -2294,7 +2294,7 @@ packages:
     version: 0.1.0
 
   '@skyra-tech-platform/drawer@file:artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz':
-    resolution: {integrity: sha512-mlbjtRjeL+jbv6faYr8vtls7XtjCHq8vewF2K/tYJLooW+1s5u8PbdHcy/mjBsoUgiHESeiakKFWrN05LzjxNw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz}
+    resolution: {integrity: sha512-rQIw7G+vd6QvtUJ1Ciw/1+y++GYMX5zuwo+vdg0QZ+r9RT3J5ptOmqAzgH/fzHJ/Au+yOOQ+qAAkSjLwxV2YnA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/dropdown-menu@file:artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz':
@@ -2307,7 +2307,7 @@ packages:
         optional: true
 
   '@skyra-tech-platform/empty-state@file:artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz':
-    resolution: {integrity: sha512-11b3w9api7UjeL2RyMMoIZvNPb8IauRFFiHitsLD0a7ZIzUXfpbkG69vmZYxDrbYn6OxuPWiqTREVKHjuBCIHA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz}
+    resolution: {integrity: sha512-br9ULwTtCGti7UJ+J8khAXOTb6PRGuM70zXTYeLEW/xt13DO2T01c3LcO8kdFvcL4KwSiCnePvSYNnAoYZcnjA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/input@file:artifacts/platform-packages/skyra-tech-platform-input-0.1.0.tgz':
@@ -2315,7 +2315,7 @@ packages:
     version: 0.1.0
 
   '@skyra-tech-platform/loader@file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.0.tgz':
-    resolution: {integrity: sha512-331bc6+PIqWZdmWvgchN84F+CyaYxqC3Nr3OMtEm6awSCQ7il5vmtglN4FPXGxr1SkD+aYL2xuT8XOUt5Ws/9g==, tarball: file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.0.tgz}
+    resolution: {integrity: sha512-VEMor2RDG9CigxwLex7K1xvjzwqh6XJ5aKHae7WkG5jRPeRhcewd+qunblezg8YehpmI7uczSP65EUwgybzZQQ==, tarball: file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/notification@file:artifacts/platform-packages/skyra-tech-platform-notification-0.1.0.tgz':
@@ -2336,7 +2336,7 @@ packages:
     version: 0.1.0
 
   '@skyra-tech-platform/tabs@file:artifacts/platform-packages/skyra-tech-platform-tabs-0.1.0.tgz':
-    resolution: {integrity: sha512-Cr6TddUeFMnKFPVPnIiC4ZlYGJJ7jE+xKHsMKBvKY+ercfoADyWSUZw7+RQh9fzr+25TlwGvdhml8z21LPlBxA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-tabs-0.1.0.tgz}
+    resolution: {integrity: sha512-IiON4taSDphfdGSPkh+y2027QtJNTefFAdFO3WnxwRnWUzvILPgnmk4FH6qMg5GoktghkDkKuCQ6qM2Ky3Apng==, tarball: file:artifacts/platform-packages/skyra-tech-platform-tabs-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/toast@file:artifacts/platform-packages/skyra-tech-platform-toast-0.1.0.tgz':
@@ -2344,7 +2344,7 @@ packages:
     version: 0.1.0
 
   '@skyra-tech-platform/utils@file:artifacts/platform-packages/skyra-tech-platform-utils-0.1.0.tgz':
-    resolution: {integrity: sha512-/vPFRpLMKObx1GhFQmnJqqxe22zIyhKLA2S2WhSIu1yGzMgB6hGwo5kyAsNGHGAKUha7E62iEnn3Ft08D7yJsw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-utils-0.1.0.tgz}
+    resolution: {integrity: sha512-GfYcMWhmsu5j1QVD42V298S4JkufCvm+dWkaDOhRLSExlGJSDZhO20h0FRmwGpnV7kV7RiCGAeUcjXmw+3RJFA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-utils-0.1.0.tgz}
     version: 0.1.0
 
   '@swc/helpers@0.5.15':

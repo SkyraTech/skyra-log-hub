@@ -15,10 +15,10 @@
 
 .scope-tag {
   font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  background: var(--color-surface-hover);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
+  color: var(--skyra-text-muted, #64748b);
+  background: var(--skyra-bg-muted, #f1f5f9);
+  border: 1px solid var(--skyra-border, #e2e8f0);
+  border-radius: var(--skyra-radius-sm, 6px);
   padding: 4px 8px;
 }
 
@@ -60,9 +60,9 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   color: var(--color-sev-fatal-text, #991B1B);
-  background: var(--color-surface-default, #FFFFFF);
+  background: var(--skyra-surface, #FFFFFF);
   border: 1px solid var(--color-sev-fatal-border, #FCA5A5);
-  border-radius: var(--radius-sm);
+  border-radius: var(--skyra-radius-sm, 6px);
   padding: 4px 10px;
   cursor: pointer;
   transition: all var(--transition-fast);

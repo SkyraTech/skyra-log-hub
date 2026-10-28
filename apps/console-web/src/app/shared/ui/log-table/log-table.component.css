@@ -43,7 +43,7 @@
   padding: var(--space-1) var(--space-2);
   font-size: var(--text-xs);
   font-weight: var(--font-medium);
-  color: var(--color-text-secondary, #334155);
+  color: var(--skyra-text-muted, #334155);
   cursor: pointer;
   transition: all var(--transition-fast);
 }

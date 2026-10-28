@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import '@skyra-tech-platform/tabs';
 import { SeverityBadgeComponent } from '../../../../shared/ui/severity-badge/severity-badge.component';
 import { JsonInspectorComponent } from '../json-inspector/json-inspector.component';
 import { LogExplorerRow } from '../../domain/log-event.model';
@@ -44,6 +45,13 @@ export class LogEventDrawerComponent {
 
   setTab(tab: DrawerTab): void {
     this.activeTab.set(tab);
+  }
+
+  onTabsChange(event: Event): void {
+    const custom = event as CustomEvent<{ value: DrawerTab }>;
+    if (custom.detail?.value) {
+      this.activeTab.set(custom.detail.value);
+    }
   }
 
   onClose(): void {

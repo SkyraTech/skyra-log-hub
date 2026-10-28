@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-28T10:32:06.066Z",
+  "timestamp": "2026-10-28T11:40:42.917Z",
   "totalScreens": 27,
   "results": [
     {
@@ -67,8 +67,8 @@
       "width": 1440,
       "height": 900,
       "totalPixels": 1296000,
-      "diffPixels": 74862,
-      "diffPercent": 5.78,
+      "diffPixels": 72407,
+      "diffPercent": 5.59,
       "status": "INTENTIONAL_REFINEMENT",
       "diffPath": "diff-event-detail-drawer.png"
     },
@@ -77,8 +77,8 @@
       "width": 1440,
       "height": 900,
       "totalPixels": 1296000,
-      "diffPixels": 74862,
-      "diffPercent": 5.78,
+      "diffPixels": 72407,
+      "diffPercent": 5.59,
       "status": "INTENTIONAL_REFINEMENT",
       "diffPath": "diff-json-inspector-expanded.png"
     },
@@ -247,7 +247,7 @@
       "width": 768,
       "height": 1024,
       "totalPixels": 786432,
-      "diffPixels": 79938,
+      "diffPixels": 79937,
       "diffPercent": 10.16,
       "status": "INTENTIONAL_REFINEMENT",
       "diffPath": "diff-tablet-shell.png"

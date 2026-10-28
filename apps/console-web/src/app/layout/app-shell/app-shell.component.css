@@ -15,7 +15,7 @@ skyra-tech-app-shell {
   flex: 1;
   overflow-y: auto;
   outline: none;
-  background-color: var(--color-bg-base, var(--skyra-bg, #F4F7FC));
+  background-color: var(--skyra-bg, #F4F7FC);
   padding: 0;
   box-sizing: border-box;
 }

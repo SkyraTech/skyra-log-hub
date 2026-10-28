@@ -53,6 +53,17 @@
   background-color: var(--skyra-bg, #f4f7fc);
 }
 
+.drawer-tabs-wrapper {
+  margin: -20px -20px 20px -20px;
+  background-color: var(--skyra-surface, #ffffff);
+  border-bottom: 1px solid var(--skyra-border, #e2e8f0);
+  padding: 0 16px;
+}
+
+.drawer-platform-tabs {
+  width: 100%;
+}
+
 .drawer-tabs {
   display: flex;
   border-bottom: 1px solid var(--skyra-border, #e2e8f0);

@@ -28,38 +28,18 @@
       </button>
     </div>
 
-    <!-- Navigation Tabs -->
-    <div class="drawer-tabs" role="tablist">
-      <button
-        type="button"
-        role="tab"
-        class="tab-btn"
-        [class.active]="activeTab() === 'summary'"
-        [attr.aria-selected]="activeTab() === 'summary'"
-        (click)="setTab('summary')"
+    <!-- Navigation Tabs using @skyra-tech-platform/tabs -->
+    <div class="drawer-tabs-wrapper">
+      <skyra-tech-tabs
+        [attr.value]="activeTab()"
+        variant="line"
+        class="drawer-platform-tabs"
+        (skyra-tabs-change)="onTabsChange($event)"
       >
-        Summary
-      </button>
-      <button
-        type="button"
-        role="tab"
-        class="tab-btn"
-        [class.active]="activeTab() === 'ecs'"
-        [attr.aria-selected]="activeTab() === 'ecs'"
-        (click)="setTab('ecs')"
-      >
-        ECS Metadata
-      </button>
-      <button
-        type="button"
-        role="tab"
-        class="tab-btn"
-        [class.active]="activeTab() === 'raw'"
-        [attr.aria-selected]="activeTab() === 'raw'"
-        (click)="setTab('raw')"
-      >
-        Raw Canonical JSON
-      </button>
+        <skyra-tech-tab slot="tab" value="summary" (click)="setTab('summary')">Summary</skyra-tech-tab>
+        <skyra-tech-tab slot="tab" value="ecs" (click)="setTab('ecs')">ECS Metadata</skyra-tech-tab>
+        <skyra-tech-tab slot="tab" value="raw" (click)="setTab('raw')">Raw Canonical JSON</skyra-tech-tab>
+      </skyra-tech-tabs>
     </div>
 
     <!-- Drawer Body -->

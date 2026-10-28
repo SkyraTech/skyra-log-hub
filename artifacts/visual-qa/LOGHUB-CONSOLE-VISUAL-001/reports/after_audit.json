@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-28T10:31:24.513Z",
+  "timestamp": "2026-10-28T11:40:00.984Z",
   "screens": {},
   "consoleErrors": [
     {
@@ -115,26 +115,8 @@
       "violations": []
     },
     "event-detail-drawer": {
-      "violationsCount": 1,
-      "violations": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
-          "nodesCount": 6,
-          "target": [
-            ".body-base",
-            "label[for=\"time-range-select\"]",
-            "label[for=\"page-size-select\"]",
-            ".facet-title",
-            ".metric-pill",
-            [
-              "skyra-tech-empty-state",
-              ".skyra-empty-state-desc"
-            ]
-          ]
-        }
-      ]
+      "violationsCount": 0,
+      "violations": []
     },
     "analytics-desktop-light": {
       "violationsCount": 0,

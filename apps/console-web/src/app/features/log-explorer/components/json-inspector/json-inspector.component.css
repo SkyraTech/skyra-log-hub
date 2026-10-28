@@ -1,11 +1,11 @@
 .json-inspector {
   display: flex;
   flex-direction: column;
-  background-color: var(--color-bg-secondary, #121721);
-  border: 1px solid var(--color-border-subtle, #1e2638);
-  border-radius: var(--radius-md, 8px);
+  background-color: var(--skyra-surface, #121721);
+  border: 1px solid var(--skyra-border, #1e2638);
+  border-radius: var(--skyra-radius-md, 8px);
   overflow: hidden;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--skyra-font-mono, monospace);
   font-size: 12px;
 }
 
@@ -14,14 +14,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 6px 12px;
-  background-color: var(--color-bg-tertiary, #182030);
-  border-bottom: 1px solid var(--color-border-subtle, #1e2638);
+  background-color: var(--skyra-bg-muted, #182030);
+  border-bottom: 1px solid var(--skyra-border, #1e2638);
 }
 
 .json-badge {
   font-size: 11px;
   font-weight: 600;
-  color: var(--color-text-muted, #7e8ba0);
+  color: var(--skyra-text-muted, #7e8ba0);
   letter-spacing: 0.05em;
 }
 
@@ -31,23 +31,23 @@
   gap: 6px;
   padding: 4px 8px;
   font-size: 11px;
-  font-family: var(--font-sans, sans-serif);
-  color: var(--color-text-secondary, #a4b1c7);
-  background-color: var(--color-bg-secondary, #121721);
-  border: 1px solid var(--color-border-subtle, #1e2638);
-  border-radius: var(--radius-sm, 4px);
+  font-family: var(--skyra-font-body, sans-serif);
+  color: var(--skyra-text-muted, #a4b1c7);
+  background-color: var(--skyra-surface, #121721);
+  border: 1px solid var(--skyra-border, #1e2638);
+  border-radius: var(--skyra-radius-sm, 4px);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .copy-btn:hover {
-  color: var(--color-text-primary, #ffffff);
-  border-color: var(--color-border-default, #2a364f);
-  background-color: var(--color-bg-tertiary, #182030);
+  color: var(--skyra-text, #ffffff);
+  border-color: var(--skyra-border-focus, #2a364f);
+  background-color: var(--skyra-bg-muted, #182030);
 }
 
 .copy-btn:focus-visible {
-  outline: 2px solid var(--color-primary-500, #3b82f6);
+  outline: 2px solid var(--skyra-primary, #0A58CA);
   outline-offset: 1px;
 }
 
@@ -56,11 +56,10 @@
   max-height: 480px;
   overflow: auto;
   line-height: 1.5;
-  color: var(--color-text-primary, #e2e8f0);
+  color: var(--skyra-text, #e2e8f0);
 }
 
-.json-pre {
-  margin: 0;
+.json-line {
   white-space: pre-wrap;
   word-break: break-all;
 }

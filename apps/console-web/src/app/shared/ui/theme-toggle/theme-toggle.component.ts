@@ -60,9 +60,9 @@ import { ThemeService, ThemeMode } from '../../../core/theme/theme.service';
     .theme-toggle-group {
       display: inline-flex;
       align-items: center;
-      background: var(--color-bg-base);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-sm);
+      background: var(--skyra-bg, #f4f7fc);
+      border: 1px solid var(--skyra-border, #e2e8f0);
+      border-radius: var(--skyra-radius-sm, 6px);
       padding: 2px;
       gap: 2px;
     }
@@ -72,18 +72,21 @@ import { ThemeService, ThemeMode } from '../../../core/theme/theme.service';
       justify-content: center;
       width: 26px;
       height: 26px;
-      border-radius: var(--radius-xs);
-      color: var(--color-text-secondary);
-      transition: all var(--transition-fast);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: var(--skyra-radius-sm, 4px);
+      color: var(--skyra-text-muted, #64748b);
+      transition: all 150ms ease;
     }
     .toggle-btn:hover {
-      color: var(--color-text-primary);
-      background: var(--color-surface-hover);
+      color: var(--skyra-text, #0f172a);
+      background: var(--skyra-bg-muted, #f1f5f9);
     }
     .toggle-btn.active {
-      background: var(--color-surface-default);
-      color: var(--color-brand-primary);
-      box-shadow: var(--shadow-sm);
+      background: var(--skyra-surface, #ffffff);
+      color: var(--skyra-primary, #0A58CA);
+      box-shadow: var(--skyra-shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
     }
   `]
 })

@@ -1,12 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  CUSTOM_ELEMENTS_SCHEMA,
   input,
   output,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import '@skyra-tech-platform/loader';
 import { TimeRangePreset } from '../../../log-explorer/domain/log-search.model';
 import { BucketInterval } from '../../domain/analytics-metric.model';
 
@@ -14,6 +16,7 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
   selector: 'skyra-analytics-toolbar',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <div class="toolbar-container">
       <div class="toolbar-top">
@@ -133,10 +136,10 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
         </div>
       }
 
-      <!-- Indeterminate Progress Bar during in-flight queries -->
+      <!-- Indeterminate Progress Bar during in-flight queries using @skyra-tech-platform/loader -->
       @if (loading() || refreshing()) {
-        <div class="progress-bar-container" role="progressbar" aria-label="Loading query telemetry">
-          <div class="progress-bar-indicator"></div>
+        <div class="progress-bar-container">
+          <skyra-tech-progress size="sm" variant="primary" aria-label="Loading query telemetry"></skyra-tech-progress>
         </div>
       }
 

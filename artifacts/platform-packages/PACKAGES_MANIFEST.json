@@ -1,0 +1,512 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-10-28T11:31:41.500Z",
+  "platformCommit": "9e9b4a55beebd1e5b0b76fd36e4abb42d1ba538d",
+  "packageCount": 31,
+  "packages": [
+    {
+      "name": "@skyra-tech-platform/accordion",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-accordion-0.1.0.tgz",
+      "sizeBytes": 8883,
+      "sha256": "c81fed9cf7ea4a3421555f8081122dac420242040e6dffe0784f736f3e1f5267",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:42.049Z"
+    },
+    {
+      "name": "@skyra-tech-platform/app-shell",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-app-shell-0.1.0.tgz",
+      "sizeBytes": 6790,
+      "sha256": "744908faa0bbf1b7ebb86c94bcd3edd24e1e4199d579bc3dbacf386694edfb24",
+      "exports": {
+        "./styles.css": "./src/styles.css",
+        ".": {
+          "require": "./dist/index.cjs",
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:42.641Z"
+    },
+    {
+      "name": "@skyra-tech-platform/badge",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-badge-0.1.0.tgz",
+      "sizeBytes": 4472,
+      "sha256": "e9a97f8a3d0a84cc9fbc9e57e220d1aa00eb429d337011e5a651adcc1eab8f53",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:43.145Z"
+    },
+    {
+      "name": "@skyra-tech-platform/button",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-button-0.1.0.tgz",
+      "sizeBytes": 11230,
+      "sha256": "b1f88b3cc02cd8f2c1b6e58136c411d858d3ff6f8dc7cda88e0dad1b8ef2a20c",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:43.711Z"
+    },
+    {
+      "name": "@skyra-tech-platform/checkbox",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-checkbox-0.1.0.tgz",
+      "sizeBytes": 10745,
+      "sha256": "23e34c346980314ed329cc671697aa969dc7bb7337f617ca2c4ca490b789bb41",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:44.353Z"
+    },
+    {
+      "name": "@skyra-tech-platform/collapsible",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-collapsible-0.1.0.tgz",
+      "sizeBytes": 4815,
+      "sha256": "a97d78f2e76f56b17651d7f45f258724523b9036274c68e9a63fe6a46aa2bd9e",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:44.839Z"
+    },
+    {
+      "name": "@skyra-tech-platform/command-palette",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-command-palette-0.1.0.tgz",
+      "sizeBytes": 34482,
+      "sha256": "354c8ddddd1342e8deaa908fe7a314fe4a51fb700138509d48689db419871e68",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:45.451Z"
+    },
+    {
+      "name": "@skyra-tech-platform/context-menu",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-context-menu-0.1.0.tgz",
+      "sizeBytes": 41233,
+      "sha256": "ac2f04670d8459de6b7210e36df76b090a860783d06f9b60d927bd50ce6d847a",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:46.037Z"
+    },
+    {
+      "name": "@skyra-tech-platform/data-export",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-data-export-0.1.0.tgz",
+      "sizeBytes": 9775,
+      "sha256": "7a82922a907d1a39e7a4f2731938cea18f0e422d6f53b2ed930e6cebe3ea4b97",
+      "exports": {
+        ".": {
+          "require": "./dist/index.cjs",
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:46.766Z"
+    },
+    {
+      "name": "@skyra-tech-platform/data-table",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-data-table-0.1.0.tgz",
+      "sizeBytes": 47238,
+      "sha256": "637c5ce856505aaabfce9233836477172e17e28920d6fec2f747cf0bdbb2263a",
+      "exports": {
+        ".": {
+          "require": "./dist/index.cjs",
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:47.407Z"
+    },
+    {
+      "name": "@skyra-tech-platform/date-time",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-date-time-0.1.0.tgz",
+      "sizeBytes": 58856,
+      "sha256": "62bf861321e05a8a771274995a25b3148156122ac801cae58a28fcc0b40dee45",
+      "exports": {
+        ".": {
+          "require": "./dist/index.cjs",
+          "import": "./dist/index.js",
+          "types": "./dist/index.d.ts"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:48.078Z"
+    },
+    {
+      "name": "@skyra-tech-platform/design-tokens",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-design-tokens-0.1.0.tgz",
+      "sizeBytes": 6674,
+      "sha256": "28e500c3393449cab16d774533a3b65a1d790191e68d5f2655f0dc310be00fbd",
+      "exports": {
+        "./reset.css": "./src/reset.css",
+        "./tokens.css": "./src/tokens.css",
+        ".": {
+          "require": "./dist/index.cjs",
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:48.630Z"
+    },
+    {
+      "name": "@skyra-tech-platform/dialog",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-dialog-0.1.0.tgz",
+      "sizeBytes": 7709,
+      "sha256": "c7381d7ca4d320aab28a1013914c154de668affcd505f28ba0194d817f39c749",
+      "exports": {
+        ".": {
+          "require": "./dist/index.cjs",
+          "import": "./dist/index.js",
+          "types": "./dist/index.d.ts"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:49.221Z"
+    },
+    {
+      "name": "@skyra-tech-platform/drawer",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-drawer-0.1.0.tgz",
+      "sizeBytes": 6882,
+      "sha256": "a72d57ef66f0e840afaf98f796b473e77636cdbf7b7b0f8823ccdf2727774b7f",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:49.743Z"
+    },
+    {
+      "name": "@skyra-tech-platform/dropdown-menu",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-dropdown-menu-0.1.0.tgz",
+      "sizeBytes": 38986,
+      "sha256": "1a34b4c8c0ca9a9db36822dabb0abce6fd497dfac7c72356a204e9828644a7a2",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:50.305Z"
+    },
+    {
+      "name": "@skyra-tech-platform/dynamic-form",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-dynamic-form-0.1.0.tgz",
+      "sizeBytes": 53502,
+      "sha256": "5c71844e67079fb6ddef829e00458e3f7462914a4fb92772afdd668e4192f6fb",
+      "exports": {
+        ".": {
+          "require": "./dist/index.cjs",
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:50.923Z"
+    },
+    {
+      "name": "@skyra-tech-platform/dynamic-select",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-dynamic-select-0.1.0.tgz",
+      "sizeBytes": 57547,
+      "sha256": "be34a1d85082890d6b827992ff3e9d9515e866bcdcf1bffdca2fc61721ec10f6",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:51.671Z"
+    },
+    {
+      "name": "@skyra-tech-platform/empty-state",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-empty-state-0.1.0.tgz",
+      "sizeBytes": 4468,
+      "sha256": "5f812efccbde1cc9a964112170ad4b522cf85b8df956a4294d7e72a065fb7db7",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:52.220Z"
+    },
+    {
+      "name": "@skyra-tech-platform/input",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-input-0.1.0.tgz",
+      "sizeBytes": 22189,
+      "sha256": "e5a18391fc229592f14c6b5230019c73d6b25f6f4c0a2e0afa48cb166eef0656",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:53.059Z"
+    },
+    {
+      "name": "@skyra-tech-platform/loader",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-loader-0.1.0.tgz",
+      "sizeBytes": 21648,
+      "sha256": "deef5df07dac0ccdf19161da4f8bb0cd91456b877ce22b94a782d9cf431961f8",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:53.761Z"
+    },
+    {
+      "name": "@skyra-tech-platform/notification",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-notification-0.1.0.tgz",
+      "sizeBytes": 7904,
+      "sha256": "86d7a2c9b52dece45a2c33a5956ecbd337660bff733dbe6858247b4653cba3cf",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:54.924Z"
+    },
+    {
+      "name": "@skyra-tech-platform/pdf-viewer",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-pdf-viewer-0.1.0.tgz",
+      "sizeBytes": 40985,
+      "sha256": "2b4a648e20d7e7fd6611b9850109095b862b5d0e8f03b2108add3d8ec110c13b",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:55.734Z"
+    },
+    {
+      "name": "@skyra-tech-platform/popover",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-popover-0.1.0.tgz",
+      "sizeBytes": 20554,
+      "sha256": "e79effdbe28df154b96730bf396085f7e50d7361ac0a0b5309ad292f06ce4b70",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:56.323Z"
+    },
+    {
+      "name": "@skyra-tech-platform/qr",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-qr-0.1.0.tgz",
+      "sizeBytes": 20656,
+      "sha256": "722f047972e405409f8b79a93885eaa6e4f0f01258230c7b70a8dd51271d58d0",
+      "exports": {
+        ".": {
+          "require": "./dist/core.cjs",
+          "types": "./dist/core.d.ts",
+          "import": "./dist/core.js"
+        },
+        "./web-component": {
+          "require": "./dist/skyra-tech-qr-code.cjs",
+          "types": "./dist/skyra-tech-qr-code.d.ts",
+          "import": "./dist/skyra-tech-qr-code.js"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:57.087Z"
+    },
+    {
+      "name": "@skyra-tech-platform/radio",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-radio-0.1.0.tgz",
+      "sizeBytes": 11508,
+      "sha256": "a7d3187ac839b943bfb600a659ef6c03ca4aa646683127f13fdd131fb2ab2cd2",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:57.826Z"
+    },
+    {
+      "name": "@skyra-tech-platform/switch",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-switch-0.1.0.tgz",
+      "sizeBytes": 13198,
+      "sha256": "77e0c457d96888ed18a1f863fef3bf3bdb5573b584fb54c1c6cbdb7831da0912",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:58.786Z"
+    },
+    {
+      "name": "@skyra-tech-platform/tabs",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-tabs-0.1.0.tgz",
+      "sizeBytes": 9823,
+      "sha256": "1a518eef0634604a0aca5f0eecc6cd95094ab42cc71505958e18c2ec9ba5f3cb",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:31:59.747Z"
+    },
+    {
+      "name": "@skyra-tech-platform/textarea",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-textarea-0.1.0.tgz",
+      "sizeBytes": 19467,
+      "sha256": "94c0a1bff4cbe8483abba774d085a9a6d6138e8c2891a04f4814fb8ce066ec32",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:32:00.352Z"
+    },
+    {
+      "name": "@skyra-tech-platform/toast",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-toast-0.1.0.tgz",
+      "sizeBytes": 8079,
+      "sha256": "90cb54037662191118a1b58d5b9d97c2b8fe4d2de845aa08d74e66c6d9746b06",
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:32:00.911Z"
+    },
+    {
+      "name": "@skyra-tech-platform/utils",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-utils-0.1.0.tgz",
+      "sizeBytes": 28976,
+      "sha256": "191925ff29c32813bb7081402a8df28643252e9bd5e8c4382a36f16f1e8d9fda",
+      "exports": {
+        ".": {
+          "require": "./dist/index.cjs",
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:32:01.583Z"
+    },
+    {
+      "name": "@skyra-tech-platform/validation",
+      "version": "0.1.0",
+      "archive": "skyra-tech-platform-validation-0.1.0.tgz",
+      "sizeBytes": 7676,
+      "sha256": "5b564aac60acaa24ba6885c1a5cb10b55a57a2a6091af8f004763f91b38590be",
+      "exports": {
+        ".": {
+          "require": "./dist/index.cjs",
+          "types": "./dist/index.d.ts",
+          "import": "./dist/index.js"
+        }
+      },
+      "sideEffects": true,
+      "lastModified": "2026-10-28T11:32:02.181Z"
+    }
+  ]
+}
