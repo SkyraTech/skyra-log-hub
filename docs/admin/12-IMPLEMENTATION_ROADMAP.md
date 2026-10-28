@@ -49,14 +49,28 @@ LOGHUB-CONSOLE-008: Phase 4 Final Operational Acceptance
 - **Scope:** 12 architectural specifications in `docs/admin/`, 7 new ADRs (ADR-027 to ADR-033), OpenAPI 3.1 contracts in `contracts/admin/v1/`, contract verification test suite, and implementation report.
 - **Invariants:** Zero database changes, zero CRUD endpoints implemented.
 
-### LOGHUB-ADMIN-002: Approved Schema Migration & Membership Foundation
-- **Prerequisite:** Approval of `docs/admin/10-DATABASE_MIGRATION_PROPOSAL.md`.
-- **Target:** Execute additive Prisma migration in `apps/ingestion-gateway` and `apps/query-service`.
+### LOGHUB-ADMIN-002: Authoritative Identity, Membership Foundation & Gate A Preparation (COMPLETED — PASS)
+- **Status:** **PASS — Gate A Ready for Approval.**
+- **Scope Completed:**
+  - Initialized dedicated `apps/admin-service` microservice on port 3300 following Clean Architecture.
+  - Implemented authoritative `IdentityService` anchored to `(issuer, subject)`.
+  - Implemented `EffectivePermissionResolver` with 5-tier RBAC, 22 capabilities, anti-escalation, and last-owner protection.
+  - Implemented `MembershipService` and `BootstrapService` for auditable tenant onboarding.
+  - Implemented `TrustedAssertionGuard` for 60s bounded internal assertion verification.
+  - Added `AuthoritativeMembershipAdapter` in `apps/console-bff` behind `useAuthoritativeMembership` configuration gate.
+  - Prepared reviewed migration package in `docs/admin/migrations/ADMIN-002/` (`migration.sql`, `MIGRATION_REVIEW.md`, `APPROVAL_CHECKLIST.md`).
+  - Automated test suite: 48 tests passing in `apps/admin-service`, 54 tests passing in `apps/console-bff`, 802 total monorepo tests passing.
+- **Invariants:** Zero database changes made against `skyra_loghub_dev`. Active Prisma schema untouched.
+
+### LOGHUB-ADMIN-002-GATE-B: Approved Database Migration Execution & Live Integration (PENDING APPROVAL)
+- **Prerequisite:** Explicit human authorization of `docs/admin/migrations/ADMIN-002/APPROVAL_CHECKLIST.md`.
+- **Target:** Execute additive migration on `skyra_loghub_dev`.
 - **Scope:**
-  - Create tables: `users`, `tenant_memberships`, `project_memberships`, `roles`, `permissions`, `role_permissions`, `role_assignments`, `invitations`, `admin_audit_events`.
-  - Seed baseline system roles (`OrgOwner`, `OrgAdmin`, `ProjectAdmin`, `Developer`, `Viewer`) and permissions.
-  - Implement PostgreSQL-backed `MembershipService` in `apps/console-bff` replacing development fixtures.
-- **Verification:** Unit tests for user identity resolution, membership state machine, and fail-closed behavior.
+  - Execute `docs/admin/migrations/ADMIN-002/migration.sql` via `psql`.
+  - Append additive models to active Prisma schemas and run `prisma generate`.
+  - Seed system roles and permissions.
+  - Bootstrap initial tenant owner.
+  - Activate `BFF_USE_AUTHORITATIVE_MEMBERSHIP=true` in `apps/console-bff`.
 
 ### LOGHUB-ADMIN-003: Tenant, Project & Membership Management APIs
 - **Target:** Deliver core organizational REST APIs.

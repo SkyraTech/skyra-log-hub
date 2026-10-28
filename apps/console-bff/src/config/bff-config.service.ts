@@ -55,6 +55,8 @@ export class BffConfigService {
         process.env['OIDC_REDIRECT_URI'] ?? 'http://127.0.0.1:3200/bff/auth/callback',
       oidcScopes: ['openid', 'profile', 'email'],
       mockOidcEnabled: !isProduction && process.env['ENABLE_MOCK_OIDC'] !== 'false',
+      adminServiceUrl: process.env['ADMIN_SERVICE_URL'] ?? 'http://127.0.0.1:3300',
+      useAuthoritativeMembership: process.env['BFF_USE_AUTHORITATIVE_MEMBERSHIP'] === 'true',
     };
   }
 
@@ -144,5 +146,13 @@ export class BffConfigService {
 
   get mockOidcEnabled(): boolean {
     return this.config.mockOidcEnabled;
+  }
+
+  get adminServiceUrl(): string {
+    return this.config.adminServiceUrl;
+  }
+
+  get useAuthoritativeMembership(): boolean {
+    return this.config.useAuthoritativeMembership;
   }
 }

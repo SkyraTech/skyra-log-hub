@@ -1,16 +1,24 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import type { IMembershipProvider } from '../domain/membership-provider.port.js';
 import type { WorkspaceMembership } from '../domain/session.model.js';
 import { BffConfigService } from '../../../config/bff-config.service.js';
 import { MembershipProviderUnavailableException } from '../../../common/errors/bff.errors.js';
+import { AuthoritativeMembershipAdapter } from './authoritative-membership.adapter.js';
 
 @Injectable()
 export class MembershipService implements IMembershipProvider {
   private readonly logger = new Logger(MembershipService.name);
 
-  constructor(private readonly config: BffConfigService) {}
+  constructor(
+    private readonly config: BffConfigService,
+    @Optional() private readonly authoritativeAdapter?: AuthoritativeMembershipAdapter,
+  ) {}
 
   public async resolveMemberships(userId: string, email: string): Promise<WorkspaceMembership[]> {
+    if (this.config.useAuthoritativeMembership && this.authoritativeAdapter) {
+      return this.authoritativeAdapter.resolveMemberships(userId, email);
+    }
+
     if (this.config.isProduction) {
       // In production mode, we must fail closed unless an enterprise directory or IAM provider is connected
       this.logger.error(

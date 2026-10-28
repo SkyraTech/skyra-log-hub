@@ -8,6 +8,7 @@ import { QueryTokenService } from './application/query-token.service.js';
 import { SessionAuthGuard } from './guards/session-auth.guard.js';
 import { CsrfGuard } from './guards/csrf.guard.js';
 import { BffConfigService } from '../../config/bff-config.service.js';
+import { AuthoritativeMembershipAdapter } from './application/authoritative-membership.adapter.js';
 
 @Module({
   controllers: [AuthController],
@@ -16,6 +17,7 @@ import { BffConfigService } from '../../config/bff-config.service.js';
     SessionStoreService,
     CsrfService,
     OidcService,
+    AuthoritativeMembershipAdapter,
     MembershipService,
     QueryTokenService,
     SessionAuthGuard,
@@ -26,6 +28,7 @@ import { BffConfigService } from '../../config/bff-config.service.js';
     SessionStoreService,
     CsrfService,
     OidcService,
+    AuthoritativeMembershipAdapter,
     MembershipService,
     QueryTokenService,
     SessionAuthGuard,

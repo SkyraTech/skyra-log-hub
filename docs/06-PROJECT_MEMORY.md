@@ -844,6 +844,30 @@ Always start by reading this file, `05-PROJECT_TASKS.md`, relevant ADR and task 
   - **Automated Verification:** Added `tests/contracts/admin-contracts.test.ts` passing 7/7 tests (52/52 total contract tests in monorepo).
 - **Next Task:** `LOGHUB-ADMIN-002` — Administration Backend Implementation & Approved Database Migration.
 
+### Task LOGHUB-ADMIN-002: Authoritative Identity, Tenant Membership, RBAC Persistence & Gate A Preparation (2026-10-28)
+- **Status:** COMPLETED (PASS — Gate A Ready for Approval).
+- **Execution Mode:** GATE A ONLY — Non-destructive implementation and offline verification. Zero database modifications performed against `skyra_loghub_dev`.
+- **Core Engineering Accomplishments:**
+  - **Dedicated Administration Backend (`apps/admin-service`):** Built foundational NestJS & Fastify microservice on internal port 3300 conforming strictly to Clean Architecture (`API → Application → Domain ← Infrastructure`).
+  - **Authoritative Identity Domain & OIDC Tuple Resolution:** Implemented `IdentityService` enforcing immutable `(issuer, subject)` uniqueness, trusted corporate issuer allowlists, and deny-by-default for non-active (`SUSPENDED`/`DEACTIVATED`) users.
+  - **Hierarchical RBAC Policy Engine:** Implemented `EffectivePermissionResolver` evaluating 5-tier role hierarchy (`OrgOwner`, `OrgAdmin`, `ProjectAdmin`, `Developer`, `Viewer`) against 22 granular capabilities. Enforced deny-by-default, self-escalation rejection, cross-tenant grant rejection, and atomic last-owner protection.
+  - **Tenant & Project Membership Domain:** Implemented `MembershipService` managing tenant and project-scoped memberships, role assignments, cascading revocations, and owner counts.
+  - **Bounded Revocation Consistency & Token Verification:** Implemented `TrustedAssertionGuard` with HS256 algorithm allowlisting, signature verification, audience/issuer validation, and 60-second assertion lifetime bounding.
+  - **Atomic Transactional Auditing & PII Redaction:** Implemented `InMemoryAuditRepository` and `PrismaAuditRepository` (gated). Proved transactional rollback: administrative mutations abort and roll back if audit persistence fails. Built `sanitizeAuditDetails` redacting credentials, tokens, and passwords.
+  - **First-Owner Bootstrap Architecture:** Implemented `BootstrapService` enabling idempotent, auditable setup of the initial tenant owner without creating hardcoded global superusers. Rejects repeat execution.
+  - **Console BFF Integration Adapter:** Added `AuthoritativeMembershipAdapter` in `apps/console-bff` behind `useAuthoritativeMembership` configuration gate, preserving fail-closed behavior in production and development fixtures when disabled.
+  - **Gate B Reviewable Migration Artifacts:** Prepared approval-ready migration package in `docs/admin/migrations/ADMIN-002/`:
+    - `migration.sql`: 9 additive tables, enums, composite unique constraints, indexes, and composite foreign keys.
+    - `MIGRATION_REVIEW.md`: Structural analysis, zero breaking changes guarantee, performance impact, and rollback SQL.
+    - `APPROVAL_CHECKLIST.md`: Formal preflight checklist, safety checks, execution plan, and rollback procedures.
+  - **Automated Test Matrix Verification:**
+    - Authored 48 unit, security, and API tests in `apps/admin-service` covering all 45 scenarios in Section 20 (48/48 passing).
+    - Added BFF integration tests in `apps/console-bff` (54/54 passing).
+    - Full monorepo regression gate: **802 / 802 tests passing across 126 test suites with 0 failures**.
+    - Strict TypeScript typecheck passing across all 11 monorepo packages. Zero schema drift.
+- **Next Task:** `LOGHUB-ADMIN-002-GATE-B` — Explicitly Approved Migration Execution & Live Integration.
+
+
 
 
 

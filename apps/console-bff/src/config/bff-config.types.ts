@@ -20,4 +20,6 @@ export interface BffConfig {
   oidcRedirectUri: string;
   oidcScopes: string[];
   mockOidcEnabled: boolean;
+  adminServiceUrl: string;
+  useAuthoritativeMembership: boolean;
 }
