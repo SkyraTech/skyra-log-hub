@@ -99,3 +99,18 @@ Users with vestibular motion sensitivity are respected via standard media querie
 }
 ```
 Event drawer and modal transitions snap immediately into place when reduced motion is preferred.
+
+---
+
+## 3. LOGHUB-CONSOLE-004 Verification & Threat Mitigation Evidence
+
+In milestone `LOGHUB-CONSOLE-004`, the frontend security invariants were audited and verified across all newly implemented components:
+
+1. **Zero `[innerHTML]` Policy:** Verified across `LogExplorerComponent`, `SearchToolbarComponent`, `FilterPanelComponent`, `QueryStatusComponent`, `LogEventDrawerComponent`, and `JsonInspectorComponent`. All log messages, stack traces, and arbitrary JSON keys/values are rendered via Angular text interpolation `{{ ... }}` or safe text nodes.
+2. **Text-Only JSON Inspector:** The recursive tree in `JsonInspectorComponent` parses arbitrary JSON into structured node primitives (`string`, `number`, `boolean`, `null`, `object`, `array`). All primitive values are sanitized and rendered as pure text; prototype-polluting payloads (`__proto__`, `constructor`) are safely formatted without execution.
+3. **Workspace Isolation & Stale-Response Immunity:** `LogExplorerFacade` tracks a monotonic `queryGeneration` counter. When switching workspaces, active HTTP requests are cancelled via RxJS `takeUntil(this.cancelActiveQuery$)` and current rows are wiped immediately, preventing cross-tenant data flashes.
+4. **WCAG 2.2 AA Compliance:** 
+   - Interactive dialog in `LogEventDrawerComponent` implements `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, focus trapping, and `Escape` key listeners.
+   - Keyset pagination controls announce current page state truthfully without fabricating total count.
+   - Query status uses `role="status"` with `aria-live="polite"` for non-disruptive screen reader updates.
+

@@ -41,8 +41,9 @@ export class QueryProxyController {
     @Body() body: Record<string, unknown>,
   ): Promise<void> {
     const session = req.session!;
+    const projectFromList = Array.isArray(body['projects']) && body['projects'].length > 0 ? (body['projects'][0] as string) : undefined;
     const tenantId = (body['tenantId'] as string) || session.activeTenantId;
-    const projectId = (body['projectId'] as string) || session.activeProjectId;
+    const projectId = (body['projectId'] as string) || projectFromList || session.activeProjectId;
 
     if (!tenantId || !projectId) {
       throw new InvalidArgumentException(
@@ -56,8 +57,14 @@ export class QueryProxyController {
       projectId,
     );
 
-    const upstreamUrl = `${this.config.queryServiceUrl}/v1/query/search`;
-    await this.forwardRequest(req, reply, 'POST', upstreamUrl, scopedToken, body);
+    // Sanitize envelope keys to conform strictly with search-request.schema.json
+    const { tenantId: _t, projectId: _p, ...cleanBody } = body;
+    if (!cleanBody['projects']) {
+      cleanBody['projects'] = [projectId];
+    }
+
+    const upstreamUrl = `${this.config.queryServiceUrl}/query/v1/logs/search`;
+    await this.forwardRequest(req, reply, 'POST', upstreamUrl, scopedToken, cleanBody);
   }
 
   @Get('events/:eventId')
@@ -86,10 +93,16 @@ export class QueryProxyController {
     );
 
     const qs = new URLSearchParams();
-    if (timestamp) qs.set('timestamp', timestamp);
-    const queryString = qs.toString() ? `?${qs.toString()}` : '';
+    qs.set('projectId', projectId);
+    if (timestamp) {
+      const dateHint = timestamp.substring(0, 10);
+      if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dateHint)) {
+        qs.set('date', dateHint);
+      }
+    }
+    const queryString = `?${qs.toString()}`;
 
-    const upstreamUrl = `${this.config.queryServiceUrl}/v1/query/events/${encodeURIComponent(eventId)}${queryString}`;
+    const upstreamUrl = `${this.config.queryServiceUrl}/query/v1/logs/${encodeURIComponent(eventId)}${queryString}`;
     await this.forwardRequest(req, reply, 'GET', upstreamUrl, scopedToken);
   }
 
@@ -101,8 +114,9 @@ export class QueryProxyController {
     @Body() body: Record<string, unknown>,
   ): Promise<void> {
     const session = req.session!;
+    const projectFromList = Array.isArray(body['projects']) && body['projects'].length > 0 ? (body['projects'][0] as string) : undefined;
     const tenantId = (body['tenantId'] as string) || session.activeTenantId;
-    const projectId = (body['projectId'] as string) || session.activeProjectId;
+    const projectId = (body['projectId'] as string) || projectFromList || session.activeProjectId;
 
     if (!tenantId || !projectId) {
       throw new InvalidArgumentException(
@@ -116,8 +130,13 @@ export class QueryProxyController {
       projectId,
     );
 
-    const upstreamUrl = `${this.config.queryServiceUrl}/v1/query/aggregate`;
-    await this.forwardRequest(req, reply, 'POST', upstreamUrl, scopedToken, body);
+    const { tenantId: _t, projectId: _p, ...cleanBody } = body;
+    if (!cleanBody['projects']) {
+      cleanBody['projects'] = [projectId];
+    }
+
+    const upstreamUrl = `${this.config.queryServiceUrl}/query/v1/logs/aggregate`;
+    await this.forwardRequest(req, reply, 'POST', upstreamUrl, scopedToken, cleanBody);
   }
 
   @Post('facets')
@@ -128,8 +147,9 @@ export class QueryProxyController {
     @Body() body: Record<string, unknown>,
   ): Promise<void> {
     const session = req.session!;
+    const projectFromList = Array.isArray(body['projects']) && body['projects'].length > 0 ? (body['projects'][0] as string) : undefined;
     const tenantId = (body['tenantId'] as string) || session.activeTenantId;
-    const projectId = (body['projectId'] as string) || session.activeProjectId;
+    const projectId = (body['projectId'] as string) || projectFromList || session.activeProjectId;
 
     if (!tenantId || !projectId) {
       throw new InvalidArgumentException(
@@ -143,8 +163,13 @@ export class QueryProxyController {
       projectId,
     );
 
-    const upstreamUrl = `${this.config.queryServiceUrl}/v1/query/facets`;
-    await this.forwardRequest(req, reply, 'POST', upstreamUrl, scopedToken, body);
+    const { tenantId: _t, projectId: _p, ...cleanBody } = body;
+    if (!cleanBody['projects']) {
+      cleanBody['projects'] = [projectId];
+    }
+
+    const upstreamUrl = `${this.config.queryServiceUrl}/query/v1/logs/facets`;
+    await this.forwardRequest(req, reply, 'POST', upstreamUrl, scopedToken, cleanBody);
   }
 
   private async forwardRequest(

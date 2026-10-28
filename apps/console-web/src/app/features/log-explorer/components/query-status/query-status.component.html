@@ -1,0 +1,76 @@
+<div class="query-status-container">
+  @if (error()) {
+    <div class="error-banner" role="alert" aria-live="polite">
+      <div class="error-content">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="error-icon">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <div class="error-text">
+          <span class="error-title">Query Error:</span>
+          <span class="error-message">{{ error() }}</span>
+          @if (correlationId()) {
+            <span class="correlation-tag font-mono">Correlation ID: {{ correlationId() }}</span>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="status-bar">
+    <!-- Execution Metrics -->
+    <div class="metrics-row">
+      <span class="metric-pill">
+        Showing <strong>{{ pagination().totalReturned }}</strong> events
+      </span>
+
+      @if (statistics(); as stats) {
+        <span class="metric-item font-mono">
+          <span class="metric-label">Execution:</span>
+          <strong>{{ stats.execution_time_ms.toFixed(1) }}ms</strong>
+        </span>
+        <span class="metric-item font-mono">
+          <span class="metric-label">Scanned:</span>
+          <strong>{{ formatBytes(stats.scanned_bytes) }}</strong>
+          ({{ stats.scanned_segments }} segs)
+        </span>
+      }
+    </div>
+
+    <!-- Keyset Pagination Controls -->
+    <div class="pagination-controls" role="navigation" aria-label="Query Keyset Pagination">
+      <button
+        id="btn-prev-page"
+        type="button"
+        class="pagination-btn"
+        [disabled]="!pagination().canPrev || loading()"
+        (click)="onPrev()"
+        aria-label="Previous Page"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        <span>Previous</span>
+      </button>
+
+      <span class="page-indicator font-mono">
+        Page {{ pagination().currentPageIndex }}
+      </span>
+
+      <button
+        id="btn-next-page"
+        type="button"
+        class="pagination-btn"
+        [disabled]="!pagination().canNext || loading()"
+        (click)="onNext()"
+        aria-label="Next Page"
+      >
+        <span>Next</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

@@ -13,19 +13,19 @@
 Phase 4 delivers the complete web-based observability workstation for Skyra LogHub. Tasks are structured sequentially to ensure foundational design systems and verified Query APIs are implemented first, while clearly cordoning administrative screens behind required backend API milestones:
 
 ```text
-LOGHUB-CONSOLE-001 (Architecture, Design System & Contracts)  [CURRENT - PASS]
+LOGHUB-CONSOLE-001 (Architecture, Design System & Contracts)  [PASS]
          │
          ▼
-LOGHUB-CONSOLE-002 (Angular Foundation, Shell & Design Tokens)
+LOGHUB-CONSOLE-002 (Angular Foundation, Shell & Design Tokens) [PASS]
          │
          ▼
-LOGHUB-CONSOLE-003 (Core API Client, Session & Workspace Context)
+LOGHUB-CONSOLE-003 (Core API Client, Session & Workspace Context) [PASS]
          │
          ▼
-LOGHUB-CONSOLE-004 (Log Explorer & Canonical Event Drawer)
+LOGHUB-CONSOLE-004 (Log Explorer & Canonical Event Drawer)     [PASS]
          │
          ▼
-LOGHUB-CONSOLE-005 (Observability Overview & Analytics Dashboards)
+LOGHUB-CONSOLE-005 (Observability Overview & Analytics Dashboards) [NEXT]
          │
          ▼
 [Backend Prerequisite: LOGHUB-ADMIN-001 — REST APIs for Projects & Credentials]
@@ -67,13 +67,15 @@ LOGHUB-CONSOLE-008 (Phase 4 Final Functional & Operational Acceptance)
 - **Verification:** Contract tests mocking Query Service endpoints and verifying DTO serialization.
 
 ### LOGHUB-CONSOLE-004: Log Explorer & Canonical Event Drawer
+- **Status:** Complete (PASS).
 - **Target:** Primary incident investigation workstation.
 - **Scope:**
   - Implement structured query input with debounced execution and validation.
   - Implement high-density log table with millisecond timestamps and ECS severity badges.
-  - Implement bidirectional keyset cursor pagination (`pagination.next_cursor` stack).
-  - Implement slide-out Event Detail Drawer with Formatted Fields, Raw JSON syntax viewer, and trace correlation actions.
-- **Verification:** Component tests, cursor pagination state tests, and XSS sanitization checks.
+  - Implement bidirectional keyset cursor pagination (`pagination.next_cursor` stack with in-memory previous page history).
+  - Implement dynamic facets for log level, service name, and environment.
+  - Implement slide-out Event Detail Drawer with Formatted Fields, Raw JSON syntax viewer (zero innerHTML), and trace correlation actions.
+- **Verification:** Unit tests, component tests, cursor pagination state tests, BFF query proxy integration tests, and full monorepo regressions (729/729 passing).
 
 ### LOGHUB-CONSOLE-005: Observability Overview & Analytics Dashboards
 - **Target:** Operational KPI metrics, date histograms, and dynamic facets.

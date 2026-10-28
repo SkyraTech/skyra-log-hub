@@ -78,6 +78,16 @@ export interface SearchLogsResponseDto {
     has_more: boolean;
     next_cursor?: string | null;
   };
+  statistics?: {
+    scanned_bytes: number;
+    scanned_segments: number;
+    execution_time_ms: number;
+    archive_watermark: string;
+  };
+  scope?: {
+    tenant_id: string;
+    searched_projects: string[];
+  };
 }
 ```
 

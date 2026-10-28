@@ -1,157 +1,85 @@
 <div class="explorer-container">
+  <!-- Page Header with Active Workspace Context -->
   <skyra-page-header
     title="Log Explorer"
-    description="Real-time investigation workstation with structured filtering and column inspection."
+    description="Real-time live log investigation workstation with keyset pagination, dynamic facets, and deep inspection."
   >
-    <div header-actions class="header-actions">
-      <div class="time-range-group" role="group" aria-label="Time range selector">
-        <button
-          type="button"
-          class="time-btn"
-          [class.active]="selectedTimeRange() === '15m'"
-          (click)="setTimeRange('15m')"
-        >
-          15m
-        </button>
-        <button
-          type="button"
-          class="time-btn"
-          [class.active]="selectedTimeRange() === '1h'"
-          (click)="setTimeRange('1h')"
-        >
-          1h
-        </button>
-        <button
-          type="button"
-          class="time-btn"
-          [class.active]="selectedTimeRange() === '24h'"
-          (click)="setTimeRange('24h')"
-        >
-          24h
-        </button>
-        <button
-          type="button"
-          class="time-btn"
-          [class.active]="selectedTimeRange() === '7d'"
-          (click)="setTimeRange('7d')"
-        >
-          7d
-        </button>
-      </div>
+    <div header-actions class="header-context-tags">
+      @if (context(); as ctx) {
+        <span class="context-badge font-mono" title="Active Tenant">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          </svg>
+          {{ ctx.tenantId }}
+        </span>
+        <span class="context-badge font-mono project-badge" title="Active Project">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+          </svg>
+          {{ ctx.projectId }}
+        </span>
+      }
     </div>
   </skyra-page-header>
 
-  <!-- Search Toolbar & Filter Bar -->
-  <div class="search-toolbar-card">
-    <div class="search-bar">
-      <div class="search-input-wrapper">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input
-          type="search"
-          class="search-input font-mono"
-          placeholder="Filter logs by keyword, service.name, or trace.id (e.g. status:>=500 OR service.name:auth)"
-          [value]="searchQuery()"
-          (input)="searchQuery.set($any($event.target).value)"
-          aria-label="Search and filter logs"
-        />
-      </div>
-      <skyra-button variant="primary" size="md">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="5 3 19 12 5 21 5 3"/>
-        </svg>
-        Run Query
-      </skyra-button>
-    </div>
+  <!-- Search Toolbar -->
+  <skyra-search-toolbar
+    [queryText]="queryText()"
+    [timeRange]="timeRange()"
+    [pageSize]="pagination().pageSize"
+    [loading]="loading()"
+    (queryTextChange)="onQueryTextChange($event)"
+    (timeRangeChange)="onTimeRangeChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    (search)="onSearch()"
+    (cancel)="onCancel()"
+  />
 
-    <!-- Severity Filter Chips & Status -->
-    <div class="filter-row">
-      <div class="severity-chips" role="group" aria-label="Filter by severity level">
-        @for (sev of severities; track sev.value) {
-          <button
-            type="button"
-            class="chip-btn"
-            [class.active]="selectedSeverity() === sev.value"
-            (click)="setSeverity(sev.value)"
-          >
-            {{ sev.label }}
-          </button>
-        }
-      </div>
+  <!-- Dynamic Filter & Facets Panel -->
+  <skyra-filter-panel
+    [facets]="facets()"
+    [selectedLevels]="selectedLevels()"
+    [selectedServices]="selectedServices()"
+    [selectedEnvironments]="selectedEnvironments()"
+    [filterChips]="filterChips()"
+    (levelToggle)="onLevelToggle($event)"
+    (serviceToggle)="onServiceToggle($event)"
+    (envToggle)="onEnvToggle($event)"
+    (chipRemove)="onChipRemove($event)"
+    (clearAll)="onClearAll()"
+    (refreshFacets)="onRefreshFacets()"
+  />
 
-      <div class="query-status">
-        <span class="status-indicator"></span>
-        <span class="status-text">Query engine ready • Search execution active in CONSOLE-004</span>
-      </div>
-    </div>
+  <!-- Query Status, Metrics & Pagination -->
+  <skyra-query-status
+    [statistics]="statistics()"
+    [pagination]="pagination()"
+    [loading]="loading()"
+    [error]="error()"
+    [correlationId]="errorCorrelationId()"
+    (prevPage)="onPrevPage()"
+    (nextPage)="onNextPage()"
+  />
+
+  <!-- Primary Results Area -->
+  <div class="results-wrapper">
+    <skyra-log-table
+      [logs]="rows()"
+      [loading]="loading()"
+      [density]="tableDensity()"
+      [selectedId]="selectedRow()?.id || null"
+      (rowSelect)="onRowSelect($event)"
+      (densityChange)="onDensityChange($event)"
+    />
   </div>
 
-  <!-- Primary Results & Detail Layout -->
-  <div class="results-layout" [class.has-detail]="selectedLog() !== null">
-    <!-- Log Table -->
-    <div class="table-area">
-      <skyra-log-table
-        [logs]="logs()"
-        [loading]="loading()"
-        [density]="tableDensity()"
-        [selectedId]="selectedLog()?.id || null"
-        (rowSelect)="onRowSelect($event)"
-        (densityChange)="onDensityChange($event)"
-      />
-    </div>
-
-    <!-- Event Detail Drawer -->
-    @if (selectedLog()) {
-      <aside class="detail-drawer" aria-label="Log Event Details">
-        <div class="drawer-header">
-          <div class="drawer-title-group">
-            <h3 class="drawer-title">Log Event Detail</h3>
-            <span class="event-id font-mono">{{ selectedLog()?.id }}</span>
-          </div>
-          <button
-            type="button"
-            class="close-btn"
-            (click)="closeDetail()"
-            aria-label="Close detail panel"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-
-        <div class="drawer-body">
-          <div class="meta-section">
-            <div class="meta-row">
-              <span class="meta-key">Timestamp</span>
-              <span class="meta-val font-mono">{{ selectedLog()?.timestamp }}</span>
-            </div>
-            <div class="meta-row">
-              <span class="meta-key">Severity</span>
-              <span class="meta-val">
-                <skyra-severity-badge [severity]="selectedLog()!.severity" />
-              </span>
-            </div>
-            <div class="meta-row">
-              <span class="meta-key">Service</span>
-              <span class="meta-val font-mono">{{ selectedLog()?.service }}</span>
-            </div>
-          </div>
-
-          <div class="message-section">
-            <span class="section-title">Message</span>
-            <div class="message-box font-mono">{{ selectedLog()?.message }}</div>
-          </div>
-
-          <div class="attributes-section">
-            <span class="section-title">Structured Attributes (ECS)</span>
-            <pre class="json-box font-mono">{{ formatJson(selectedLog()?.attributes) }}</pre>
-          </div>
-        </div>
-      </aside>
-    }
-  </div>
+  <!-- Event Detail Drawer -->
+  <skyra-log-event-drawer
+    [log]="selectedRow()"
+    [isOpen]="selectedRow() !== null"
+    [loading]="detailLoading()"
+    [error]="detailError()"
+    (close)="closeDrawer()"
+  />
 </div>

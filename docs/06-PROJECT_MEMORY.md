@@ -752,3 +752,52 @@ Always start by reading this file, `05-PROJECT_TASKS.md`, relevant ADR and task 
     - `SKYRA_LOGHUB_CONSOLE_002_FINAL_AUDIT.md`
 - **Next Task:** `LOGHUB-CONSOLE-003` — Authentication, BFF Integration & Dynamic Workspace Context.
 
+### Task LOGHUB-CONSOLE-003: Enterprise BFF Authentication, OIDC Integration, Secure Sessions, Workspace Context & Role-Aware Angular Routing (2026-10-27)
+- **Status:** COMPLETED (PASS).
+- **Git HEAD:** `03b6a7629f755d8a4f5931ecbea299cf52374f83`.
+- **Core Implementation Accomplishments:**
+  - **BFF Architecture (`apps/console-bff/`):** Production-grade NestJS/Fastify BFF establishing the secure perimeter between browser and internal cluster.
+  - **OIDC & PKCE Flow:** Implemented standard authorization code exchange with S256 code challenge, unguessable state/nonce generation, and strict token validation.
+  - **Secure Sessions:** Encrypted, signed `HttpOnly`, `SameSite=Lax`, `Path=/` session cookies with in-memory bounded eviction and session fixation protection.
+  - **Authoritative Membership:** `MembershipService` validating user tenant and project memberships server-side with fail-closed behavior in production.
+  - **Query Service JWT Minting:** Mints short-lived (60s) internal HMAC-SHA256 JWTs strictly scoped to authorized projects.
+  - **CSRF Defense:** Cryptographic per-session CSRF token validation and strict Origin/Referer verification on state-changing requests.
+  - **Angular Session & Workspace Integration:** Built `WorkspaceContextService` with multi-tenant context, reactive signals, and route guards (`AuthGuard`, `OrgAdminGuard`, `RoleGuard`).
+
+### Task LOGHUB-CONSOLE-004: Enterprise Live Log Explorer, Secure Search Integration, Dynamic Facets, Signed Cursor Pagination & Event Investigation (2026-10-28)
+- **Status:** COMPLETED (PASS).
+- **Core Implementation Accomplishments:**
+  - **Enterprise Feature Architecture (`apps/console-web/src/app/features/log-explorer/`):**
+    - Domain Layer (`domain/`): `log-search.model.ts`, `log-filter.model.ts`, `log-event.model.ts`, `pagination.model.ts` deriving contract-compliant types.
+    - Application Layer (`application/`): `LogExplorerFacade`, `FilterStateService`, and `CursorHistoryService`.
+    - Component Layer (`components/`): `SearchToolbarComponent`, `FilterPanelComponent`, `QueryStatusComponent`, `JsonInspectorComponent`, and `LogEventDrawerComponent`.
+  - **Live Search & BFF Integration:**
+    - Connected live Angular search through BFF proxy route `POST /bff/query/search` with authoritative project scoping.
+    - Sanitized query request envelopes to strictly adhere to `contracts/query/v1/search-request.schema.json` without leaking internal credentials.
+  - **Dynamic Facets (`POST /bff/query/facets`):**
+    - Populates service, environment, and log level filter pills with real backend cardinality counts.
+  - **Signed Keyset Cursor Pagination & Previous-Page History:**
+    - Opaque cursor handling preserving server HMAC signature.
+    - In-memory bounded stack in `CursorHistoryService` supporting deterministic backward navigation without client-side cursor decoding.
+    - Automatic cursor reset on search text, filter, time range, page size, or workspace changes.
+  - **Stale-Response Protection & Request Cancellation:**
+    - Monotonically increasing `queryGeneration` counter discarding slower out-of-order async responses.
+    - `takeUntil(cancelActiveQuery$)` and `AbortController` cancellation propagating upstream to BFF and Query Service.
+  - **Single-Event Lookup & Detail Drawer:**
+    - `GET /bff/query/events/:eventId` proxying to Query Service with project scope and date hint.
+    - Accessible side drawer with ARIA dialog semantics, Escape key listener, formatted UTC/local timestamps, ECS attributes, and error stack trace display.
+  - **Safe Text-Only JSON Inspector:**
+    - Untrusted keys and values rendered strictly via Angular text interpolation (0% `[innerHTML]`), preventing stored XSS.
+    - Interactive copy-to-clipboard action with visual confirmation.
+  - **Truthful Operational Status:**
+    - Never fabricates total record count. Displays exact count returned, execution duration in ms, scanned bytes, and scanned segments.
+  - **Comprehensive Quality Gates:**
+    - 50/50 tests passing in `@skyra/console-web` (100% pass rate).
+    - 50/50 tests passing in `@skyra/console-bff` (100% pass rate).
+    - 210/210 tests passing in `@skyra/query-service`.
+    - 45/45 tests passing in `@skyra/contracts`.
+    - 729 total tests passing across all monorepo packages.
+    - Angular strict production AOT build succeeded with 0 errors.
+- **Next Task:** `LOGHUB-CONSOLE-005` — Live Analytics & Observability Dashboard.
+
+

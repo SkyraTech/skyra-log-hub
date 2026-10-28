@@ -1,0 +1,97 @@
+<div class="filter-panel">
+  <!-- Active Filter Chips -->
+  @if (filterChips().length > 0) {
+    <div class="chips-row" role="region" aria-label="Active filters">
+      <span class="chips-label">Filters:</span>
+      <div class="chips-list">
+        @for (chip of filterChips(); track chip.id) {
+          <span class="filter-chip">
+            <span class="chip-text">{{ chip.label }}</span>
+            <button
+              type="button"
+              class="chip-remove-btn"
+              (click)="onChipRemove(chip)"
+              [attr.aria-label]="'Remove filter ' + chip.label"
+            >
+              &times;
+            </button>
+          </span>
+        }
+        <button
+          type="button"
+          class="clear-all-btn"
+          (click)="onClearAll()"
+          aria-label="Clear all applied filters"
+        >
+          Clear all
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Facets sections -->
+  <div class="facets-sections">
+    <!-- Severity Filters -->
+    <div class="facet-group">
+      <span class="facet-title">Severity:</span>
+      <div class="facet-pills">
+        @for (lvl of allSeverities; track lvl) {
+          <button
+            type="button"
+            class="facet-pill severity-pill"
+            [class.active]="isLevelSelected(lvl)"
+            (click)="onLevelClick(lvl)"
+            [attr.aria-pressed]="isLevelSelected(lvl)"
+          >
+            <skyra-severity-badge [severity]="lvl" />
+            @if (getLevelCount(lvl) !== null) {
+              <span class="facet-count">{{ getLevelCount(lvl) }}</span>
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Service Facets -->
+    @if (facets().services.length > 0) {
+      <div class="facet-group">
+        <span class="facet-title">Service:</span>
+        <div class="facet-pills">
+          @for (svc of facets().services; track svc.value) {
+            <button
+              type="button"
+              class="facet-pill font-mono"
+              [class.active]="isServiceSelected(svc.value)"
+              (click)="onServiceClick(svc.value)"
+              [attr.aria-pressed]="isServiceSelected(svc.value)"
+            >
+              <span>{{ svc.value }}</span>
+              <span class="facet-count">{{ svc.count }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Environment Facets -->
+    @if (facets().environments.length > 0) {
+      <div class="facet-group">
+        <span class="facet-title">Environment:</span>
+        <div class="facet-pills">
+          @for (env of facets().environments; track env.value) {
+            <button
+              type="button"
+              class="facet-pill font-mono"
+              [class.active]="isEnvSelected(env.value)"
+              (click)="onEnvClick(env.value)"
+              [attr.aria-pressed]="isEnvSelected(env.value)"
+            >
+              <span>{{ env.value }}</span>
+              <span class="facet-count">{{ env.count }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

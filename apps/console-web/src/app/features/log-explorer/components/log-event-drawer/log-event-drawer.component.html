@@ -1,0 +1,211 @@
+@if (isOpen() && log(); as item) {
+  <div class="drawer-backdrop" (click)="onClose()" aria-hidden="true"></div>
+
+  <aside
+    class="event-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="drawer-title"
+    tabindex="-1"
+  >
+    <!-- Drawer Header -->
+    <div class="drawer-header">
+      <div class="header-info">
+        <h2 id="drawer-title" class="drawer-title">Log Event Details</h2>
+        <div class="header-badges">
+          <skyra-severity-badge [severity]="item.severity" />
+          <span class="service-badge font-mono">{{ item.service }}</span>
+          <span class="env-badge font-mono">{{ item.environment }}</span>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="close-btn"
+        (click)="onClose()"
+        aria-label="Close event detail drawer"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="drawer-tabs" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        class="tab-btn"
+        [class.active]="activeTab() === 'summary'"
+        [attr.aria-selected]="activeTab() === 'summary'"
+        (click)="setTab('summary')"
+      >
+        Summary
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="tab-btn"
+        [class.active]="activeTab() === 'ecs'"
+        [attr.aria-selected]="activeTab() === 'ecs'"
+        (click)="setTab('ecs')"
+      >
+        ECS Metadata
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="tab-btn"
+        [class.active]="activeTab() === 'raw'"
+        [attr.aria-selected]="activeTab() === 'raw'"
+        (click)="setTab('raw')"
+      >
+        Raw Canonical JSON
+      </button>
+    </div>
+
+    <!-- Drawer Body -->
+    <div class="drawer-content">
+      @if (loading()) {
+        <div class="loading-state">
+          <span>Loading event detail...</span>
+        </div>
+      } @else if (error()) {
+        <div class="error-banner">
+          <span>{{ error() }}</span>
+        </div>
+      } @else {
+        <!-- Summary Tab -->
+        @if (activeTab() === 'summary') {
+          <div class="tab-panel">
+            <!-- Message section -->
+            <div class="field-section">
+              <span class="field-label">Message</span>
+              <div class="message-box font-mono">{{ item.message }}</div>
+            </div>
+
+            <!-- Key attributes grid -->
+            <div class="attributes-grid">
+              <div class="attribute-item">
+                <span class="attr-label">Timestamp (UTC)</span>
+                <span class="attr-val font-mono">{{ item.timestamp }}</span>
+              </div>
+              <div class="attribute-item">
+                <span class="attr-label">Timestamp (Local)</span>
+                <span class="attr-val font-mono">{{ formatTimestampLocal(item.timestamp) }}</span>
+              </div>
+              <div class="attribute-item">
+                <span class="attr-label">Event ID</span>
+                <div class="copyable-val">
+                  <span class="attr-val font-mono">{{ item.eventId }}</span>
+                  <button
+                    type="button"
+                    class="mini-copy-btn"
+                    (click)="copyToClipboard('eventId', item.eventId)"
+                    [attr.aria-label]="copiedKey() === 'eventId' ? 'Copied' : 'Copy event ID'"
+                  >
+                    {{ copiedKey() === 'eventId' ? 'Copied' : 'Copy' }}
+                  </button>
+                </div>
+              </div>
+              @if (item.traceId) {
+                <div class="attribute-item">
+                  <span class="attr-label">Trace ID</span>
+                  <div class="copyable-val">
+                    <span class="attr-val font-mono">{{ item.traceId }}</span>
+                    <button
+                      type="button"
+                      class="mini-copy-btn"
+                      (click)="copyToClipboard('traceId', item.traceId)"
+                      [attr.aria-label]="copiedKey() === 'traceId' ? 'Copied' : 'Copy trace ID'"
+                    >
+                      {{ copiedKey() === 'traceId' ? 'Copied' : 'Copy' }}
+                    </button>
+                  </div>
+                </div>
+              }
+              @if (item.spanId) {
+                <div class="attribute-item">
+                  <span class="attr-label">Span ID</span>
+                  <span class="attr-val font-mono">{{ item.spanId }}</span>
+                </div>
+              }
+              @if (item.action) {
+                <div class="attribute-item">
+                  <span class="attr-label">Event Action</span>
+                  <span class="attr-val font-mono">{{ item.action }}</span>
+                </div>
+              }
+              <div class="attribute-item">
+                <span class="attr-label">Project</span>
+                <span class="attr-val font-mono">{{ item.projectId }}</span>
+              </div>
+              <div class="attribute-item">
+                <span class="attr-label">Tenant</span>
+                <span class="attr-val font-mono">{{ item.tenantId }}</span>
+              </div>
+            </div>
+
+            <!-- Error section if present -->
+            @if (item.rawEvent.error; as err) {
+              <div class="error-detail-card">
+                <div class="error-detail-header">
+                  <span class="error-tag">{{ err.type }}</span>
+                  <span class="error-summary-msg">{{ err.message }}</span>
+                </div>
+                @if (err.stack_trace) {
+                  <pre class="stack-trace-box font-mono"><code>{{ err.stack_trace }}</code></pre>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ECS Metadata Tab -->
+        @if (activeTab() === 'ecs') {
+          <div class="tab-panel">
+            <div class="ecs-section">
+              <h3 class="section-title">ECS Properties</h3>
+              <div class="ecs-props-list">
+                <div class="ecs-row">
+                  <span class="ecs-key font-mono">ecs.version</span>
+                  <span class="ecs-val font-mono">{{ item.rawEvent.ecs.version }}</span>
+                </div>
+                <div class="ecs-row">
+                  <span class="ecs-key font-mono">service.name</span>
+                  <span class="ecs-val font-mono">{{ item.rawEvent.service.name }}</span>
+                </div>
+                @if (item.rawEvent.service.version) {
+                  <div class="ecs-row">
+                    <span class="ecs-key font-mono">service.version</span>
+                    <span class="ecs-val font-mono">{{ item.rawEvent.service.version }}</span>
+                  </div>
+                }
+                @if (item.rawEvent.http?.request?.method) {
+                  <div class="ecs-row">
+                    <span class="ecs-key font-mono">http.request.method</span>
+                    <span class="ecs-val font-mono">{{ item.rawEvent.http?.request?.method }}</span>
+                  </div>
+                }
+                @if (item.rawEvent.http?.response?.status_code) {
+                  <div class="ecs-row">
+                    <span class="ecs-key font-mono">http.response.status_code</span>
+                    <span class="ecs-val font-mono">{{ item.rawEvent.http?.response?.status_code }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Raw JSON Tab -->
+        @if (activeTab() === 'raw') {
+          <div class="tab-panel">
+            <skyra-json-inspector [data]="item.rawEvent" />
+          </div>
+        }
+      }
+    </div>
+  </aside>
+}

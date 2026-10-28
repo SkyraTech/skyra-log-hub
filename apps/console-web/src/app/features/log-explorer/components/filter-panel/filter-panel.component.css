@@ -1,0 +1,139 @@
+.filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: var(--color-bg-secondary, #121721);
+  border: 1px solid var(--color-border-subtle, #1e2638);
+  border-radius: var(--radius-lg, 10px);
+}
+
+.chips-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border-subtle, #1e2638);
+}
+
+.chips-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted, #7e8ba0);
+}
+
+.chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  background-color: var(--color-bg-tertiary, #182030);
+  color: var(--color-primary-400, #60a5fa);
+  border: 1px solid var(--color-border-default, #2a364f);
+  border-radius: 12px;
+}
+
+.chip-remove-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted, #7e8ba0);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.chip-remove-btn:hover {
+  color: #ef4444;
+}
+
+.clear-all-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted, #7e8ba0);
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 2px 6px;
+}
+
+.clear-all-btn:hover {
+  color: var(--color-text-primary, #ffffff);
+}
+
+.facets-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.facet-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.facet-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted, #7e8ba0);
+  min-width: 80px;
+}
+
+.facet-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.facet-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  background-color: var(--color-bg-primary, #0b0f17);
+  color: var(--color-text-secondary, #a4b1c7);
+  border: 1px solid var(--color-border-subtle, #1e2638);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.facet-pill:hover {
+  border-color: var(--color-border-default, #2a364f);
+  color: var(--color-text-primary, #ffffff);
+}
+
+.facet-pill.active {
+  background-color: rgba(59, 130, 246, 0.15);
+  border-color: var(--color-primary-500, #3b82f6);
+  color: var(--color-primary-400, #60a5fa);
+  font-weight: 600;
+}
+
+.facet-count {
+  font-size: 10px;
+  padding: 1px 5px;
+  background-color: var(--color-bg-tertiary, #182030);
+  border-radius: 8px;
+  color: var(--color-text-muted, #7e8ba0);
+}
+
+.facet-pill.active .facet-count {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: #ffffff;
+}

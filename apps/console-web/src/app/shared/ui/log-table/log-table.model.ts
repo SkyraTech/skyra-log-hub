@@ -5,8 +5,13 @@ export interface LogTableRow {
   timestamp: string;
   severity: LogSeverity;
   service: string;
+  environment?: string;
+  action?: string;
+  traceId?: string;
   message: string;
   attributes?: Record<string, unknown>;
+  rawEvent?: unknown;
 }
 
 export type TableDensity = 'compact' | 'comfortable';
+

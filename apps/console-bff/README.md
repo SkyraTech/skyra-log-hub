@@ -69,4 +69,5 @@ Test breakdown:
 - `tests/security/authorization.security.test.ts`: Workspace isolation, cross-tenant denial, production fail-closed (10 tests).
 - `tests/security/csrf-proxy.security.test.ts`: CSRF validation, origin checking, query token verification (10 tests).
 - `tests/integration/bff-http.test.ts`: Real HTTP end-to-end authentication lifecycle (3 tests).
-Total: 43 passing tests.
+- `tests/integration/bff-query-proxy.test.ts`: Query proxy search, facets, point lookup, CSRF, and tenant scoping (7 tests).
+Total: 50 passing tests.

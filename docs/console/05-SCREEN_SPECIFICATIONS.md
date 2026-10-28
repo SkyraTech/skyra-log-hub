@@ -67,67 +67,80 @@
 ## 3. Screen 3: Log Explorer
 
 - **Route:** `/logs`
-- **Primary Persona:** Software Engineers, Incident Responders.
-- **Purpose:** Fast, interactive search and structured query exploration across millions of archived records.
+- **Primary Persona:** Software Engineers, Incident Responders, SREs.
+- **Status:** **Implemented & Verified (LOGHUB-CONSOLE-004 — PASS)**
+- **Purpose:** Fast, interactive search and structured query exploration across millions of archived records backed by real DuckDB/JSONL/Parquet storage.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ Search: [ 🔍 service.name eq "auth-service" AND log.level in ["error", "fatal"]     ]│
-│ [ + Add Filter ]  [ Sev: Error, Fatal ✕ ]  [ Env: Production ✕ ]   [ ⏱ Last 1 Hour ▼ ]│
+│ Search: [ 🔍 auth-service failed                                      ] [ ⟳ Search ] │
+│ Time Range: [ Last 1 Hour ▼ ]  Limit: [ 50 ▼ ]                  [ ✕ Cancel Active ]   │
+│ [ ▇▇▇▇ Indeterminate Query Progress Bar (Active During In-Flight Queries) ▇▇▇▇▇▇▇▇ ]   │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ Histogram Overview: (1,842 events matching active filter)                              │
-│ [ ▇▇▆▅▄▃▂ ▂▃▄▅▆▇█ ] (Click and drag to zoom time interval)                             │
+│ Active Filters: [ service:auth-service ✕ ] [ level:error ✕ ]          [ Clear all ]   │
+│ Severities: [ FATAL (0) ] [ ERROR (12) ] [ WARN (3) ] [ INFO (145) ] [ DEBUG (8) ]     │
+│ Services:   [ auth-service (157) ] [ billing-gateway (11) ]                            │
+│ Environments: [ production (168) ]                                                     │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ Columns: [Time ▼] [Severity] [Service] [Message]                       [ ⚙ Display ]  │
+│ Showing 50 events | Scanned: 42.1 MB | Segments: 14 | Execution: 28ms                  │
+│ [ ← Previous Page ]   [ Page 1 (Keyset Cursor) ]   [ Next Page → ]                     │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ 15:42:01.234 [ERROR] auth-service     JWT signature verification failed for client... │
-│ 15:42:00.891 [ERROR] auth-service     User lockout threshold exceeded for ip 10.0.4.12│
-│ 15:41:59.120 [FATAL] auth-service     PostgreSQL metadata connection pool exhausted    │
+│ Columns: [Timestamp ▼] [Severity] [Service] [Environment] [Message]                    │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ Showing 1 - 50 of 1,842 records       [ ← Previous Page ]   [ Next Page (Cursor) → ]   │
+│ 2026-10-27T15:42:01.234Z [ERROR] auth-service  prod  JWT signature verification failed │
+│ 2026-10-27T15:42:00.891Z [ERROR] auth-service  prod  User lockout threshold exceeded   │
+│ 2026-10-27T15:41:59.120Z [FATAL] auth-service  prod  Metadata connection pool exhausted│
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
-- **Interactive Behavior:**
-  - Typing in search bar debounces for 300ms before executing.
-  - Clicking on any row opens the **Event Detail Drawer**.
-  - Clicking "Next Page" supplies `pagination.cursor` token; previous page pops the cursor stack.
-  - Histogram allows click-and-drag to narrow the active time boundary.
-- **Backend API:** `POST /query/v1/logs/search` (Search API) and `POST /query/v1/logs/aggregate` (Date Histogram).
+- **Interactive Behavior & Production Architecture:**
+  - **Live Search Execution:** Requests route from Angular through authenticated BFF proxy (`POST /api/v1/query/logs/search`) to Query Service (`POST /query/v1/logs/search`). BFF verifies session and workspace membership, minting an internal scoped JWT.
+  - **Dynamic Facets:** Populates live severity, service, and environment counts via `POST /api/v1/query/logs/facets`.
+  - **HMAC-Signed Keyset Pagination:** Angular treats tokens as opaque. Forward navigation uses `pagination.next_cursor`. Backward navigation pops from an in-memory `historyStack: PageRecord[]`. Cursors are strictly reset on filter, search text, time range, page size, or workspace change.
+  - **Stale-Response & Cancellation Protection:** Monotonic `queryGeneration` counter discards out-of-order stale responses. In-flight requests are aborted upon new query or workspace switch.
+  - **URL Investigation State:** Deep-links synchronize `q`, `range`, `levels`, `services`, and `eventId`.
+  - **Row Selection:** Clicking any row opens the accessible **Event Detail Drawer**.
+- **Backend API Mapping:**
+  - Search: `POST /api/v1/query/logs/search` $\rightarrow$ `POST /query/v1/logs/search`
+  - Facets: `POST /api/v1/query/logs/facets` $\rightarrow$ `POST /query/v1/logs/facets`
 
 ---
 
 ## 4. Screen 4: Event Detail Drawer
 
-- **Trigger:** Clicking any record in the Log Explorer or navigating to `/logs/:eventId`.
+- **Trigger:** Clicking any record in the Log Explorer or navigating with deep-link URL parameter `?eventId=...`.
 - **Primary Persona:** Software Engineers debugging exceptions.
+- **Status:** **Implemented & Verified (LOGHUB-CONSOLE-004 — PASS)**
 - **Purpose:** Full forensic inspection of canonical ECS fields, nested metadata, and trace correlation.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │ Event Detail: 7c9e6679-7425-40de-944b-e07fc1f90ae7                     [ ✕ Close (Esc)]│
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ Tabs: [ Formatted Fields ]  [ Raw ECS JSON ]  [ Trace & Context ]                      │
+│ Tabs: [ Summary Attributes ]  [ ECS Properties ]  [ Raw Canonical JSON ]               │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ Field Name                  │ Value                                                    │
-├─────────────────────────────┼──────────────────────────────────────────────────────────┤
-│ @timestamp                  │ 2026-10-27T15:42:01.234567Z                              │
-│ log.level                   │ error                                                    │
-│ service.name                │ auth-service                                             │
-│ service.environment         │ production                                               │
-│ service.version             │ 2.4.1                                                    │
-│ message                     │ JWT signature verification failed for user-8941          │
-│ error.type                  │ JsonWebTokenError                                        │
-│ error.message               │ invalid signature                                        │
-│ error.stack_trace           │ JsonWebTokenError: invalid signature at JWT.verify...    │
-│ http.request.method         │ POST                                                     │
-│ http.response.status_code   │ 401                                                      │
-│ trace.id                    │ 4bf92f3577b34da6a3ce929d0e0e4736                         │
-│ span.id                     │ 00f067aa0ba902b7                                         │
-├─────────────────────────────┴──────────────────────────────────────────────────────────┤
-│ Actions: [ 📋 Copy Event ID ]  [ 📋 Copy Raw JSON ]  [ 🔍 Search Matching Trace ID ]   │
+│ Summary Grid:                                                                          │
+│ • Timestamp:   2026-10-27T15:42:01.234Z     • Severity:  ERROR                         │
+│ • Service:     auth-service                 • Env:       production                    │
+│ • Event ID:    7c9e6679-7425-40de...        [ 📋 Copy Event ID ]                       │
+│ • Trace ID:    4bf92f3577b34da6a3ce92...    [ 📋 Copy Trace ID ]                       │
+│ • Message:     JWT signature verification failed for user-8941                         │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ Raw JSON Inspector:                                                                    │
+│ ▾ {                                                                                    │
+│     "@timestamp": "2026-10-27T15:42:01.234Z",                                          │
+│     "log.level": "error",                                                              │
+│     "service": { "name": "auth-service", "environment": "production" },                │
+│     "message": "JWT signature verification failed for user-8941"                       │
+│   }                                                                                    │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ Actions: [ 📋 Copy Full JSON ]                                          [ Close ]      │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
-- **Backend API:** `GET /query/v1/logs/:eventId?projectId=...&date=...`.
+- **Security & Accessibility Engineering:**
+  - **Zero `[innerHTML]` Rendering:** All untrusted message text and attributes render via Angular text interpolation `{{ ... }}`.
+  - **Safe JSON Inspector:** Recursive tree rendering uses text-only bounded nodes with expand/collapse and copy actions.
+  - **Keyboard Accessibility:** Traps focus inside drawer when open; handles `Escape` key to close; returns focus to triggering table row upon dismissal; full ARIA `role="dialog"` and `aria-modal="true"`.
+- **Backend API:** `GET /api/v1/query/logs/:eventId?projectId=...` $\rightarrow$ `GET /query/v1/logs/:eventId`.
 
 ---
 

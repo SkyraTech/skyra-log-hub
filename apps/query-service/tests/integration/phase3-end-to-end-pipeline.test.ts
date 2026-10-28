@@ -140,6 +140,7 @@ describe('LOGHUB-QUERY-008: Complete End-to-End System Pipeline Acceptance', () 
     // Ingested archive stamping: add tenant_id to skyra envelope as performed by Ingestion Gateway
     const stampedEvents = rawLines.map((line, idx) => {
       const parsed = JSON.parse(line);
+      parsed['@timestamp'] = `2026-10-27T10:00:0${idx}.000Z`;
       parsed.skyra = {
         ...parsed.skyra,
         tenant_id: tenantId,

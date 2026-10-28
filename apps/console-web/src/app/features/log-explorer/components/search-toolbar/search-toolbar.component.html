@@ -1,0 +1,94 @@
+<div class="search-toolbar">
+  <!-- Query input with search icon -->
+  <div class="search-input-wrapper">
+    <div class="search-icon" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+    </div>
+    <input
+      id="log-search-input"
+      type="search"
+      class="search-input font-mono"
+      [ngModel]="queryText()"
+      (ngModelChange)="onQueryInput($event)"
+      (keydown)="onKeyDown($event)"
+      placeholder="Search log messages (substring match)..."
+      aria-label="Search log messages"
+      autocomplete="off"
+      spellcheck="false"
+    />
+  </div>
+
+  <!-- Time Range Dropdown -->
+  <div class="control-group">
+    <label for="time-range-select" class="control-label">Range</label>
+    <select
+      id="time-range-select"
+      class="control-select font-mono"
+      [ngModel]="timeRange()"
+      (ngModelChange)="onTimeRangeSelect($event)"
+      aria-label="Query time range"
+    >
+      @for (preset of presets; track preset.id) {
+        <option [value]="preset.id">{{ preset.label }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Page Size Dropdown -->
+  <div class="control-group">
+    <label for="page-size-select" class="control-label">Rows</label>
+    <select
+      id="page-size-select"
+      class="control-select font-mono"
+      [ngModel]="pageSize()"
+      (ngModelChange)="onPageSizeSelect($event)"
+      aria-label="Result page size"
+    >
+      @for (size of pageSizes; track size) {
+        <option [value]="size">{{ size }} / page</option>
+      }
+    </select>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="actions-group">
+    @if (loading()) {
+      <button
+        id="btn-cancel-search"
+        type="button"
+        class="cancel-btn"
+        (click)="triggerCancel()"
+        aria-label="Cancel active search"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+        <span>Cancel</span>
+      </button>
+    } @else {
+      <button
+        id="btn-run-search"
+        type="button"
+        class="search-btn"
+        (click)="triggerSearch()"
+        aria-label="Execute search"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10" />
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+        </svg>
+        <span>Search</span>
+      </button>
+    }
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="query-progress-bar" role="progressbar" aria-valuetext="Executing search query" aria-busy="true">
+    <div class="progress-indicator"></div>
+  </div>
+}

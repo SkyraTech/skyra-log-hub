@@ -7,14 +7,35 @@ export interface StructuredFilter {
   values?: unknown[];
 }
 
+export interface SearchStatistics {
+  scanned_bytes: number;
+  scanned_segments: number;
+  execution_time_ms: number;
+  archive_watermark: string;
+}
+
+export interface SearchScope {
+  tenant_id: string;
+  searched_projects: string[];
+}
+
 export interface SearchLogsRequest {
   time_range: {
     start: string;
     end: string;
   };
-  projects: string[];
+  projects?: string[];
+  environments?: Array<'production' | 'staging' | 'development' | 'test' | 'local'>;
+  services?: string[];
+  levels?: Array<'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'>;
   query_text?: string;
+  trace_id?: string;
+  event_id?: string;
   filters?: StructuredFilter[];
+  sort?: {
+    field?: '@timestamp';
+    direction?: 'desc' | 'asc';
+  };
   sort_direction?: 'desc' | 'asc';
   limit?: number;
   cursor?: string;
@@ -43,6 +64,8 @@ export interface SearchLogsResponse {
     has_more: boolean;
     next_cursor?: string | null;
   };
+  statistics?: SearchStatistics;
+  scope?: SearchScope;
 }
 
 export interface AggregationDefinition {
@@ -70,11 +93,14 @@ export interface AggregateLogsResponse {
     type: 'date_histogram' | 'terms' | 'cardinality';
     buckets: AggregationBucket[];
   }>;
+  statistics?: SearchStatistics;
+  scope?: SearchScope;
 }
 
 export interface GetLogFacetsRequest {
   time_range: { start: string; end: string };
-  projects: string[];
+  projects?: string[];
+  environments?: Array<'production' | 'staging' | 'development' | 'test' | 'local'>;
   filters?: StructuredFilter[];
   facet_fields: Array<'service.name' | 'log.level' | 'event.action' | 'environment' | 'error.type'>;
 }
@@ -86,6 +112,8 @@ export interface FacetValueCount {
 
 export interface GetLogFacetsResponse {
   facets: Record<string, FacetValueCount[]>;
+  statistics?: SearchStatistics;
+  scope?: SearchScope;
 }
 
 export interface IQueryApiClient {

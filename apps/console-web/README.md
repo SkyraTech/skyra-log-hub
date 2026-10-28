@@ -127,11 +127,36 @@ To enable design review without connecting to live customer log streams, a dedic
 
 ---
 
-## 6. Known Milestones & Scope Roadmap
+## 6. Log Explorer Architecture & Query Lifecycle (CONSOLE-004)
+
+`@skyra/console-web` provides a production-grade Log Explorer located at `/logs`:
+
+- **Layered Clean Architecture**:
+  - `domain/`: Typed request/response models, time range presets, filter chips, and composite stable row identity (`timestamp_service_eventId_index`).
+  - `application/`: `LogExplorerFacade` coordinating `FilterStateService` and `CursorHistoryService`.
+  - `components/`: `SearchToolbarComponent`, `FilterPanelComponent`, `QueryStatusComponent`, `JsonInspectorComponent`, and `LogEventDrawerComponent`.
+- **Signed Keyset Cursor Pagination**:
+  - Treats server HMAC-signed keyset cursors as opaque.
+  - Implements bounded in-memory cursor history stack in `CursorHistoryService` for reliable backward navigation without client-side cursor decoding.
+  - Resets cursors on query text, filter, time range, page size, or project change.
+- **Dynamic Facets**:
+  - Discovers distinct values and cardinality hit counts for services, environments, and log levels via `POST /bff/query/facets`.
+- **Stale-Response & Cancellation Invariant**:
+  - Maintains monotonically increasing `queryGeneration` counter; out-of-order slow responses are silently dropped.
+  - Cancels active queries via `takeUntil` and propagates `AbortController` cancellation to BFF and Query Service.
+- **Secure Inspection**:
+  - Single-event lookup via `GET /bff/query/events/:eventId` with project scoping.
+  - Fly-out detail drawer with ARIA dialog semantics, Escape key listener, and focus management.
+  - Safe text-only JSON inspector with 0% `[innerHTML]`, bounded depth, and copy-to-clipboard.
+
+---
+
+## 7. Known Milestones & Scope Roadmap
 
 - **LOGHUB-CONSOLE-001**: Architecture & UI/UX Design (Reported PASS)
 - **LOGHUB-CONSOLE-002**: Angular Foundation, Responsive App Shell & Design System (Reported PASS)
-- **LOGHUB-CONSOLE-003**: Enterprise BFF Authentication, OIDC Integration, Secure Sessions, Workspace Context & Role-Aware Angular Routing (**THIS MILESTONE — PASS**)
-- **LOGHUB-CONSOLE-004**: Live Log Explorer & Authenticated Search Integration
+- **LOGHUB-CONSOLE-003**: Enterprise BFF Authentication, OIDC Integration, Secure Sessions, Workspace Context & Role-Aware Angular Routing (Reported PASS)
+- **LOGHUB-CONSOLE-004**: Enterprise Live Log Explorer, Secure Search Integration, Dynamic Facets, Signed Cursor Pagination & Event Investigation (**THIS MILESTONE — PASS**)
 - **LOGHUB-CONSOLE-005**: Analytical Dashboards, Cardinality Facets & Real-Time Aggregations
+
 

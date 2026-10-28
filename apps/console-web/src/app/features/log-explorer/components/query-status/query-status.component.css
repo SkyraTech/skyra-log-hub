@@ -1,0 +1,128 @@
+.query-status-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.error-banner {
+  padding: 10px 14px;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md, 8px);
+  color: #fca5a5;
+  font-size: 13px;
+}
+
+.error-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.error-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #ef4444;
+}
+
+.error-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.error-title {
+  font-weight: 600;
+  color: #ef4444;
+}
+
+.error-message {
+  color: #fca5a5;
+}
+
+.correlation-tag {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 12px;
+  background-color: var(--color-bg-secondary, #121721);
+  border: 1px solid var(--color-border-subtle, #1e2638);
+  border-radius: var(--radius-md, 8px);
+  font-size: 12px;
+}
+
+.metrics-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.metric-pill {
+  padding: 2px 8px;
+  background-color: var(--color-bg-tertiary, #182030);
+  border-radius: 4px;
+  color: var(--color-text-secondary, #a4b1c7);
+}
+
+.metric-pill strong {
+  color: var(--color-text-primary, #ffffff);
+}
+
+.metric-item {
+  color: var(--color-text-muted, #7e8ba0);
+}
+
+.metric-item strong {
+  color: var(--color-text-primary, #ffffff);
+}
+
+.metric-label {
+  margin-right: 4px;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #a4b1c7);
+  background-color: var(--color-bg-primary, #0b0f17);
+  border: 1px solid var(--color-border-subtle, #1e2638);
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  border-color: var(--color-border-default, #2a364f);
+  color: var(--color-text-primary, #ffffff);
+  background-color: var(--color-bg-tertiary, #182030);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-indicator {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+  padding: 0 4px;
+}
