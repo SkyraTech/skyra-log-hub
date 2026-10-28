@@ -111,7 +111,7 @@ export interface CanonicalLogEvent {
 }
 ```
 
-#### 3. Aggregations API (`POST /query/v1/logs/aggregate`)
+#### 3. Aggregations API (`POST /query/v1/logs/aggregate` via `POST /bff/query/aggregate`)
 ```typescript
 export interface AggregateLogsRequestDto {
   time_range: { start: string; end: string };
@@ -129,10 +129,29 @@ export interface AggregateLogsRequestDto {
 export interface AggregateLogsResponseDto {
   aggregations: Record<string, {
     type: 'date_histogram' | 'terms' | 'cardinality';
-    buckets: Array<{ key: string | number; count: number }>;
+    buckets?: Array<{ key: string | number; count: number; timestamp?: string }>;
+    value?: number;
   }>;
+  statistics?: {
+    scanned_bytes: number;
+    scanned_segments: number;
+    execution_time_ms: number;
+    archive_watermark: string;
+  };
 }
 ```
+
+#### 3.1 BFF Proxy & Resource Concurrency Limits
+- The BFF (`POST /bff/query/aggregate`) validates session cookies and workspace project membership before minting a short-lived internal JWT with `query:aggregate` scope.
+- Requests enforce the backend contract constraint of **maximum 5 aggregations per request batch**. Overview uses 4 (`volume_over_time`, `severity_distribution`, `top_services`, `active_services_count`) and Analytics uses 5 (`volume_over_time`, `severity_distribution`, `top_services`, `top_errors`, `event_actions`).
+- Bounded batch execution prevents analytical stampedes on DuckDB execution threads.
+
+#### 3.2 Secure Drilldown URL Contracts
+Dashboard charts link directly into the Log Explorer (`/logs`) using query-string state:
+- Severity drilldown: `?levels=error,fatal` or `?levels=<level>`
+- Service drilldown: `?services=<serviceName>`
+- Date histogram bucket drilldown: `?range=custom&start=<bucketStartUTC>&end=<bucketEndUTC>`
+- URL parameters never leak credentials, session identifiers, or signed cursors.
 
 #### 4. Facets API (`POST /query/v1/logs/facets`)
 ```typescript

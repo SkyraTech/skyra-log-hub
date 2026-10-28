@@ -84,15 +84,19 @@ export interface AggregateLogsRequest {
 }
 
 export interface AggregationBucket {
-  key: string | number;
+  key?: string | number;
+  timestamp?: string;
   count: number;
 }
 
+export interface AggregationResultItem {
+  type: 'date_histogram' | 'terms' | 'cardinality';
+  buckets?: AggregationBucket[];
+  value?: number;
+}
+
 export interface AggregateLogsResponse {
-  aggregations: Record<string, {
-    type: 'date_histogram' | 'terms' | 'cardinality';
-    buckets: AggregationBucket[];
-  }>;
+  aggregations: Record<string, AggregationResultItem>;
   statistics?: SearchStatistics;
   scope?: SearchScope;
 }

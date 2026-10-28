@@ -80,13 +80,15 @@ export class LogExplorerComponent implements OnInit {
     const params = this.route.snapshot.queryParamMap;
     const q = params.get('q');
     const range = params.get('range');
+    const start = params.get('start');
+    const end = params.get('end');
     const levels = params.get('levels');
     const services = params.get('services');
     const eventId = params.get('eventId');
 
     if (q) this.filterService.setQueryText(q);
     if (range && ['15m', '1h', '6h', '24h', '7d', 'custom'].includes(range)) {
-      this.filterService.setTimeRange(range as TimeRangePreset);
+      this.filterService.setTimeRange(range as TimeRangePreset, start || undefined, end || undefined);
     }
     if (levels) {
       this.filterService.setLevels(levels.split(',').filter(Boolean));

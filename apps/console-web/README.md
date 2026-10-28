@@ -151,12 +151,32 @@ To enable design review without connecting to live customer log streams, a dedic
 
 ---
 
-## 7. Known Milestones & Scope Roadmap
+## 7. Observability Overview & Analytics Dashboards (CONSOLE-005)
+
+`@skyra/console-web` provides live operational overview and analytical dashboards:
+
+- **Observability Overview (`/overview`)**:
+  - Live authoritative KPI cards: Total Log Count, Exception/Error Count with error rate %, Warning Count, and Active Unique Services.
+  - Interactive Ingestion & Volume Trend: Native SVG date-histogram chart with accessible table toggle.
+  - Severity Distribution: Stacked visual proportion bar + interactive list.
+  - Top Reporting Services: Ranked frequency list with proportion bars.
+  - One-Click Deep-Link Drilldowns to `/logs`: Preserving exact time buckets, error severity filters, and service scopes.
+- **Analytics Workspace (`/analytics`)**:
+  - Multi-dimensional terms breakdown: `error.type` classification, `service.name` distribution, and `event.action` metrics.
+  - High-resolution date histogram with configurable bucket interval (`1m`, `5m`, `15m`, `1h`, `6h`, `1d`).
+  - Native Accessible SVG Charting Engine: Zero third-party dependencies, 0% `[innerHTML]`, keyboard navigable, and full WCAG 2.2 AA tabular fallback.
+  - Bounded Batch Aggregation: Overview requests 4 aggregations and Analytics requests 5 aggregations via `POST /bff/query/aggregate`, honoring the DuckDB engine's batch limits.
+  - Monotonic Query Cancellation: Race-free state updates and immediate data clearing on tenant/project switches.
+
+---
+
+## 8. Known Milestones & Scope Roadmap
 
 - **LOGHUB-CONSOLE-001**: Architecture & UI/UX Design (Reported PASS)
 - **LOGHUB-CONSOLE-002**: Angular Foundation, Responsive App Shell & Design System (Reported PASS)
 - **LOGHUB-CONSOLE-003**: Enterprise BFF Authentication, OIDC Integration, Secure Sessions, Workspace Context & Role-Aware Angular Routing (Reported PASS)
-- **LOGHUB-CONSOLE-004**: Enterprise Live Log Explorer, Secure Search Integration, Dynamic Facets, Signed Cursor Pagination & Event Investigation (**THIS MILESTONE — PASS**)
-- **LOGHUB-CONSOLE-005**: Analytical Dashboards, Cardinality Facets & Real-Time Aggregations
+- **LOGHUB-CONSOLE-004**: Enterprise Live Log Explorer, Secure Search Integration, Dynamic Facets, Signed Cursor Pagination & Event Investigation (Reported PASS)
+- **LOGHUB-CONSOLE-005**: Live Observability Dashboard, Enterprise Analytics, Interactive Time-Series Charts & Secure Log Explorer Drilldowns (**THIS MILESTONE — PASS**)
+- **LOGHUB-CONSOLE-006**: Project, Workspace, Membership & Ingestion Credential Administration (NEXT)
 
 

@@ -39,28 +39,38 @@
 
 - **Route:** `/overview`
 - **Primary Persona:** Engineering Leads, SREs, Developers.
-- **Purpose:** High-level operational pulse across all active services and environments.
+- **Status:** **Implemented & Verified (LOGHUB-CONSOLE-005 — PASS)**
+- **Purpose:** High-level operational pulse across all active services and environments backed by authoritative DuckDB aggregations.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [Time: Last 24 Hours ▼]  [Projects: All ▼]  [Env: Production ▼]     [ ⟳ Refresh (10s) ]│
+│ Observability Overview                              [Tenant: skyra] [Project: billing] │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ [Time: Last 1 Hour ▼]  [Env: All ▼]                        [ ⟳ Refresh ]               │
+│ Updated: 06:28:45 | Query: 14.2ms | Scanned: 2.1 MB                                    │
 ├───────────────────┬───────────────────┬───────────────────┬────────────────────────────┤
-│ Total Events      │ Total Errors      │ Warning Count     │ Finalized Archive Storage  │
-│ 1,429,810         │ 3,421 (0.24%)     │ 14,892            │ 42.1 GB (Parquet)          │
+│ Total Logs        │ Exceptions/Errors │ Warnings          │ Active Services            │
+│ 1,429,810         │ 3,421 (0.24%)     │ 14,892            │ 12                         │
+│ [Explore in logs] │ [Explore in logs] │ [Explore in logs] │ [Explore in logs]          │
 ├───────────────────┴───────────────────┴───────────────────┴────────────────────────────┤
-│ Ingestion & Error Volume Trend (UTC Date Histogram):                                   │
-│ [ Bar Chart: Blue = Info, Yellow = Warn, Red = Error ]                                 │
+│ Ingestion & Volume Trend (Interactive Date Histogram):                                 │
+│ [ ▇▇▆▅▄▃▂ ▂▃▄▅▆▇█ ] (Click any bucket to inspect time window in Log Explorer)          │
+│ [ Toggle: Chart View / Accessible Table View (WCAG 2.2 AA) ]                           │
 ├───────────────────────────────────────┬────────────────────────────────────────────────┤
-│ Top Error-Producing Services:         │ Recent Critical Errors (Last 15m):             │
-│ 1. auth-service (1,842 errors)        │ • 15:42:01 auth-service: JWT verification fail  │
-│ 2. billing-gateway (920 errors)       │ • 15:40:12 payment-worker: Stripe timeout      │
-│ 3. search-indexer (421 errors)        │ • 15:38:55 ingestion: WAL fsync latency > 5ms  │
+│ Severity Distribution:                │ Top Reporting Services:                        │
+│ • INFO:  1,411,497 (98.7%)            │ 1. auth-service (542,100 - 37.9%)              │
+│ • WARN:     14,892 (1.0%)             │ 2. billing-gateway (412,800 - 28.9%)           │
+│ • ERROR:     3,421 (0.24%)            │ 3. search-indexer (241,000 - 16.9%)            │
+│ (Click any level to drill down)       │ (Click any service to drill down)              │
 └───────────────────────────────────────┴────────────────────────────────────────────────┘
 ```
 - **Backend API Mapping:**
-  - Aggregation totals: `POST /query/v1/logs/aggregate` (`date_histogram` with interval `1h`).
-  - Top error services: `POST /query/v1/logs/aggregate` (`terms` aggregation on `service.name` with filter `log.level = 'error'`).
-  - Recent critical errors: `POST /query/v1/logs/search` (`limit: 5`, filter `log.level in ['error', 'fatal']`).
+  - Batch Aggregations via BFF: `POST /bff/query/aggregate` $\rightarrow$ `POST /query/v1/logs/aggregate`
+    - `volume_over_time`: `date_histogram` on `@timestamp`
+    - `severity_distribution`: `terms` on `log.level`
+    - `top_services`: `terms` on `service.name`
+    - `active_services_count`: `cardinality` on `service.name`
+- **Drilldown Integration:** Clicking any metric card, severity category, service name, or time-series bucket navigates to `/logs` with preserved filter bounds.
 
 ---
 
@@ -148,12 +158,40 @@
 
 - **Route:** `/analytics`
 - **Primary Persona:** SREs, DevOps Engineers, Performance Leads.
-- **Purpose:** Metric breakdowns, latency percentiles, error classification, and multi-dimensional facet discovery.
-- **Components:**
-  1. **Date Histogram Widget:** Configurable interval (`1m`, `5m`, `15m`, `1h`, `1d`).
-  2. **Terms Distribution Widget:** Bounded frequency chart (top 10 services, top 10 error actions).
-  3. **Dynamic Facet Panel:** Real-time distinct counts for `service.name`, `log.level`, `event.action`, `environment`, and `error.type`.
-- **Backend API:** `POST /query/v1/logs/aggregate` and `POST /query/v1/logs/facets`.
+- **Status:** **Implemented & Verified (LOGHUB-CONSOLE-005 — PASS)**
+- **Purpose:** Deep analytical telemetry exploration, high-resolution date histograms, exception classification, and multi-dimensional distribution analysis.
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ Observability Analytics Workspace                   [Tenant: skyra] [Project: billing] │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ Time Range: [ Last 24 Hours ▼ ]  Bucket: [ 1 Hour ▼ ]  [Env: All ▼]      [ ⟳ Refresh ] │
+│ Query Generation: #4 | Execution: 18.5ms | Scanned: 4.8 MB                             │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ Telemetry Volume Over Time (Interactive Date Histogram - Click to Drill Down to Logs): │
+│ [ ▇▇▆▅▄▃▂ ▂▃▄▅▆▇█▇▆▅▄▃▂ ▂▃▄▅▆▇█ ]                                                     │
+│ [ Toggle: SVG Chart / Accessible Tabular View (WCAG 2.2 AA) ]                          │
+├───────────────────────────────────────┬────────────────────────────────────────────────┤
+│ Severity Breakdown:                   │ Top Services Distribution:                     │
+│ [████████████████████████████░░░░░░]  │ 1. auth-service         452,100  (45.2%)       │
+│ • INFO:    950,230 (95.0%)            │ 2. billing-gateway      312,400  (31.2%)       │
+│ • WARN:     42,100 (4.2%)             │ 3. search-indexer       180,000  (18.0%)       │
+│ • ERROR:     7,420 (0.7%)             │ (Click any service to filter in Log Explorer)  │
+├───────────────────────────────────────┴────────────────────────────────────────────────┤
+│ Top Exception Classifications (error.type):                                            │
+│ 1. ConnectionTimeoutException: 3,420 occurrences (Click to explore in logs)            │
+│ 2. JWTVerificationException:   2,180 occurrences (Click to explore in logs)            │
+│ 3. DatabasePoolExhausted:      1,820 occurrences (Click to explore in logs)            │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+- **Backend API Mapping:**
+  - Single-Batch Aggregation via BFF: `POST /bff/query/aggregate` $\rightarrow$ `POST /query/v1/logs/aggregate`
+    - `volume_over_time`: `date_histogram` on `@timestamp` with interval
+    - `severity_distribution`: `terms` on `log.level`
+    - `top_services`: `terms` on `service.name`
+    - `top_errors`: `terms` on `error.type`
+    - `event_actions`: `terms` on `event.action`
+- **Interactive Drilldowns:** One-click drilldown into `/logs` preserving exact time bucket bounds, error severity levels, or selected service names without leaking credentials or signed cursors.
 
 ---
 

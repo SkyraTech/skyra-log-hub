@@ -114,3 +114,23 @@ In milestone `LOGHUB-CONSOLE-004`, the frontend security invariants were audited
    - Keyset pagination controls announce current page state truthfully without fabricating total count.
    - Query status uses `role="status"` with `aria-live="polite"` for non-disruptive screen reader updates.
 
+---
+
+## 4. LOGHUB-CONSOLE-005 Verification & Observability Dashboard Quality
+ 
+In milestone `LOGHUB-CONSOLE-005`, the dashboard and analytics visualizations were audited against security and accessibility standards:
+
+1. **Zero `[innerHTML]` Policy across Visualizations:**
+   - Evaluated `TimeSeriesChartComponent`, `SeverityChartComponent`, `ServiceDistributionComponent`, `ErrorBreakdownComponent`, and `MetricCardComponent`.
+   - Tooltips, metric figures, service names, and exception types are rendered strictly through standard text interpolation `{{ ... }}` or SVG text elements. Hostile service names such as `<script>alert(1)</script>` or terminal escape sequences render purely as inert text.
+2. **Native Accessible SVG Architecture (Zero External Chart Bloat):**
+   - Implemented pure Angular SVG charts (`TimeSeriesChartComponent`) without heavyweight, vulnerable third-party JavaScript chart libraries.
+   - Every chart provides an accessible view toggle allowing screen reader and keyboard users to switch from the SVG visualization to an accessible semantic data table (`<table>`, `<th>`, `<td>`) complying with WCAG 2.2 AA.
+   - Interactive SVG bars and progress elements support `tabindex="0"` and keyboard activation (`Enter` / `Space`) to trigger drilldowns.
+3. **Monotonic Cancellation & Cross-Tenant Data Flashes:**
+   - `AnalyticsFacade` implements a strictly monotonic `queryGeneration` counter. Stale out-of-order responses are silently ignored.
+   - When the active project or workspace changes, `resetState()` immediately resets all KPIs, time-series arrays, and breakdowns to empty initial states, preventing data leakage from previous tenant scopes.
+4. **Drilldown State Safety:**
+   - Drilldown navigations from KPI cards, severity segments, service rankings, and histogram buckets serialize safe, unprivileged query parameters (`levels`, `services`, `range=custom`, `start`, `end`).
+   - Cursors, auth tokens, and raw log payloads are never placed in URLs.
+

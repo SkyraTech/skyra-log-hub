@@ -800,4 +800,35 @@ Always start by reading this file, `05-PROJECT_TASKS.md`, relevant ADR and task 
     - Angular strict production AOT build succeeded with 0 errors.
 - **Next Task:** `LOGHUB-CONSOLE-005` — Live Analytics & Observability Dashboard.
 
+### Task LOGHUB-CONSOLE-005: Live Observability Dashboard, Enterprise Analytics, Interactive Time-Series Charts & Secure Log Explorer Drilldowns (2026-10-28)
+- **Status:** COMPLETED (PASS).
+- **Core Implementation Accomplishments:**
+  - **Live Overview Dashboard (`apps/console-web/src/app/features/overview/`):**
+    - Connected live DuckDB analytical aggregations through BFF proxy route `POST /bff/query/aggregate`.
+    - Authoritative KPI metrics: Total Ingested Logs, Exceptions & Errors count with exact error rate percentage, Warnings count, and Active Services distinct cardinality.
+    - Interactive SVG Ingestion & Volume Trend time-series date histogram with accessible hover tooltips and keyboard navigation.
+    - Canonical severity distribution with ECS color coding and top reporting services ranking.
+    - One-click investigation drilldowns to `/logs` (Log Explorer) preserving active project, levels, services, and time bounds.
+  - **Analytics Workspace (`apps/console-web/src/app/features/analytics/`):**
+    - Multi-dimensional telemetry exploration with configurable time range presets (`15m`, `1h`, `6h`, `24h`, `7d`, `custom`) and bucket intervals (`1m`, `5m`, `15m`, `1h`, `6h`, `1d`).
+    - 5-aggregation batch pipeline: `volume_over_time` (date_histogram), `severity_distribution` (terms), `top_services` (terms), `top_errors` (terms on `error.type`), and `event_actions` (terms on `event.action`).
+    - Dedicated `ErrorBreakdownComponent` categorizing exceptions by `error.type` with direct drilldown to exception events.
+  - **Zero-Dependency Native Accessible Chart Architecture:**
+    - Lightweight, accessible SVG charts (`TimeSeriesChartComponent`, `SeverityChartComponent`, `ServiceDistributionComponent`, `MetricCardComponent`).
+    - Dual presentation: Interactive SVG visualization + WCAG 2.2 AA accessible tabular view toggle.
+    - Zero `[innerHTML]` rendering: all tooltips, labels, and timestamps render via Angular text bindings.
+  - **Cancellation & Stale-Response Invariants:**
+    - Monotonic `queryGeneration` counter discards out-of-order asynchronous responses.
+    - `cancelActiveQuery$` subject aborts active requests on filter adjustments or route changes.
+    - Workspace / project switching wipes state cleanly and aborts in-flight requests.
+  - **Comprehensive Quality Gates:**
+    - 67/67 tests passing in `@skyra/console-web` (100% pass rate across 16 test suites).
+    - 52/52 tests passing in `@skyra/console-bff` (100% pass rate across 6 test suites).
+    - 210/210 tests passing in `@skyra/query-service`.
+    - 45/45 tests passing in `@skyra/contracts`.
+    - 748 total tests passing across all active monorepo suites (0 failures).
+    - Angular strict typecheck & production AOT build pass with 0 errors.
+- **Next Task:** `LOGHUB-CONSOLE-006` — Project, Workspace, Membership & Ingestion Credential Administration.
+
+
 

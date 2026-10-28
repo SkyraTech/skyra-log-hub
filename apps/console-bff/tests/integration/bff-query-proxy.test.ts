@@ -69,6 +69,36 @@ describe('BFF Query Proxy Integration Test Suite (CONSOLE-004)', () => {
               },
             }),
           );
+        } else if (req.url?.includes('/query/v1/logs/aggregate')) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify({
+              aggregations: {
+                volume_over_time: {
+                  type: 'date_histogram',
+                  buckets: [
+                    { timestamp: '2026-10-28T04:00:00.000Z', count: 12 },
+                  ],
+                },
+                severity_distribution: {
+                  type: 'terms',
+                  buckets: [
+                    { key: 'info', count: 12 },
+                  ],
+                },
+              },
+              statistics: {
+                scanned_bytes: 262144,
+                scanned_segments: 1,
+                execution_time_ms: 4.5,
+                archive_watermark: '2026-10-28T04:59:00.000Z',
+              },
+              scope: {
+                tenant_id: 'skyra-internal',
+                searched_projects: ['auth-service'],
+              },
+            }),
+          );
         } else if (req.url?.includes('/query/v1/logs/facets')) {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(
@@ -334,5 +364,67 @@ describe('BFF Query Proxy Integration Test Suite (CONSOLE-004)', () => {
     assert.equal(body.message, 'Single event lookup payload');
     assert.ok(lastUpstreamRequest.url?.includes('projectId=auth-service'));
     assert.ok(lastUpstreamRequest.url?.includes('date=2026-10-28'));
+  });
+
+  it('8. POST /bff/query/aggregate forwards batch aggregation query with internal scoped JWT', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/bff/query/aggregate',
+      headers: {
+        cookie: sessionCookie,
+        origin: 'http://localhost:4200',
+        'x-csrf-token': csrfToken,
+        'content-type': 'application/json',
+      },
+      payload: {
+        projectId: 'auth-service',
+        time_range: {
+          start: '2026-10-28T04:00:00Z',
+          end: '2026-10-28T05:00:00Z',
+        },
+        aggregations: [
+          { name: 'volume_over_time', type: 'date_histogram', field: '@timestamp', interval: '1h' },
+          { name: 'severity_distribution', type: 'terms', field: 'log.level', size: 10 },
+        ],
+      },
+    });
+
+    assert.equal(res.statusCode, 200);
+    const body = JSON.parse(res.body);
+    assert.ok(body.aggregations.volume_over_time);
+    assert.ok(body.aggregations.severity_distribution);
+    assert.equal(lastUpstreamRequest.method, 'POST');
+    assert.ok(lastUpstreamRequest.url?.includes('/query/v1/logs/aggregate'));
+    assert.ok(lastUpstreamRequest.headers?.authorization?.startsWith('Bearer '));
+    // Confirm client-sent projectId envelope key is stripped from clean payload
+    assert.equal(lastUpstreamRequest.body.projectId, undefined);
+    assert.deepEqual(lastUpstreamRequest.body.projects, ['auth-service']);
+  });
+
+  it('9. POST /bff/query/aggregate rejects unauthorized project scope with 403', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/bff/query/aggregate',
+      headers: {
+        cookie: sessionCookie,
+        origin: 'http://localhost:4200',
+        'x-csrf-token': csrfToken,
+        'content-type': 'application/json',
+      },
+      payload: {
+        projectId: 'proj-unauthorized-target',
+        time_range: {
+          start: '2026-10-28T04:00:00Z',
+          end: '2026-10-28T05:00:00Z',
+        },
+        aggregations: [
+          { name: 'volume_over_time', type: 'date_histogram', field: '@timestamp', interval: '1h' },
+        ],
+      },
+    });
+
+    assert.equal(res.statusCode, 403);
+    const body = JSON.parse(res.body);
+    assert.equal(body.code, 'UNAUTHORIZED_PROJECT_ACCESS');
   });
 });

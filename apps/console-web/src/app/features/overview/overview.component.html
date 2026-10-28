@@ -1,98 +1,120 @@
 <div class="overview-container">
   <skyra-page-header
     title="Observability Overview"
-    description="Workspace health, ingestion volume, and real-time operational status."
+    description="Real-time operational pulse, log intake volume, and exception telemetry across your workspace."
   >
-    <div header-actions class="header-actions">
-      <div class="time-range-indicator">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
-        </svg>
-        <span>Timeframe: Last 24 hours</span>
-      </div>
+    <div header-actions class="header-badges">
+      <span class="scope-tag font-mono">Tenant: {{ context().tenantId }}</span>
+      <span class="scope-tag font-mono">Project: {{ context().projectId }}</span>
     </div>
   </skyra-page-header>
 
-  <!-- KPI summary slots -->
+  <!-- Error Banner if RFC 7807 occurred -->
+  @if (error()) {
+    <div class="error-banner" role="alert">
+      <div class="error-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="error-content">
+        <div class="error-title">{{ error() }}</div>
+        @if (errorCorrelationId()) {
+          <div class="error-correlation font-mono">Correlation ID: {{ errorCorrelationId() }}</div>
+        }
+      </div>
+      <button type="button" class="retry-btn" (click)="onRefresh()">Retry</button>
+    </div>
+  }
+
+  <!-- Operational Filter & Telemetry Toolbar -->
+  <skyra-analytics-toolbar
+    [timeRange]="timeRange()"
+    [environment]="environment()"
+    [showIntervalSelector]="false"
+    [loading]="loading()"
+    [refreshing]="refreshing()"
+    [lastUpdated]="lastUpdated()"
+    [executionTimeMs]="kpis().executionTimeMs"
+    [scannedBytes]="kpis().scannedBytes"
+    (timeRangeChange)="onTimeRangeChange($event)"
+    (environmentChange)="onEnvironmentChange($event)"
+    (refresh)="onRefresh()"
+    (customRangeApply)="onCustomRangeApply($event)"
+  />
+
+  <!-- Authoritative KPI Cards Grid -->
   <div class="kpi-grid">
-    <skyra-card>
-      <div class="kpi-card-content">
-        <span class="kpi-label">Ingested Events (24h)</span>
-        <div class="kpi-value-row">
-          <span class="kpi-value font-mono">--</span>
-          <skyra-badge variant="neutral">Pending BFF</skyra-badge>
-        </div>
-        <span class="kpi-meta">Awaiting metrics telemetry integration (CONSOLE-003)</span>
-      </div>
-    </skyra-card>
+    <skyra-metric-card
+      label="Total Logs"
+      [value]="kpis().totalLogs"
+      description="Authorized events in time window"
+      badgeText="Authorized"
+      badgeVariant="neutral"
+      [isClickable]="true"
+      (cardClick)="onExploreAllLogs()"
+    />
 
-    <skyra-card>
-      <div class="kpi-card-content">
-        <span class="kpi-label">Error Rate</span>
-        <div class="kpi-value-row">
-          <span class="kpi-value font-mono">--</span>
-          <skyra-badge variant="neutral">0.00%</skyra-badge>
-        </div>
-        <span class="kpi-meta">Percentage of fatal & error events</span>
-      </div>
-    </skyra-card>
+    <skyra-metric-card
+      label="Exceptions & Errors"
+      [value]="kpis().errorCount"
+      [description]="'Fatal and error level events (' + kpis().errorRatePercent + '%)'"
+      [badgeText]="kpis().errorRatePercent + '% Error Rate'"
+      [badgeVariant]="kpis().errorCount > 0 ? 'error' : 'success'"
+      [isClickable]="true"
+      (cardClick)="onExploreErrors()"
+    />
 
-    <skyra-card>
-      <div class="kpi-card-content">
-        <span class="kpi-label">Active Services</span>
-        <div class="kpi-value-row">
-          <span class="kpi-value font-mono">--</span>
-          <skyra-badge variant="brand">Scope: {{ context().tenantId }}</skyra-badge>
-        </div>
-        <span class="kpi-meta">Distinct reporting service.name identifiers</span>
-      </div>
-    </skyra-card>
+    <skyra-metric-card
+      label="Warnings"
+      [value]="kpis().warningCount"
+      description="Events requiring attention"
+      badgeText="Warn Level"
+      badgeVariant="warning"
+      [isClickable]="true"
+      (cardClick)="onExploreWarnings()"
+    />
 
-    <skyra-card>
-      <div class="kpi-card-content">
-        <span class="kpi-label">Query Latency p95</span>
-        <div class="kpi-value-row">
-          <span class="kpi-value font-mono">--</span>
-          <skyra-badge variant="success">Engine ready</skyra-badge>
-        </div>
-        <span class="kpi-meta">DuckDB 1.4.1 query engine active</span>
-      </div>
-    </skyra-card>
+    <skyra-metric-card
+      label="Active Services"
+      [value]="kpis().activeServicesCount"
+      description="Distinct emitting service.name"
+      [badgeText]="context().projectId"
+      badgeVariant="brand"
+      [isClickable]="true"
+      (cardClick)="onExploreAllLogs()"
+    />
   </div>
 
-  <!-- Main section: Volume Trend & Service breakdown -->
-  <div class="content-grid">
-    <!-- Trend area -->
-    <skyra-card class="trend-card" title="Ingestion Volume Trend" subtitle="Hourly log intake per project boundary">
-      <div class="trend-placeholder">
-        <skyra-empty-state
-          title="Telemetry stream not connected"
-          message="Volume charts require authenticated BFF session and live Query Service aggregate endpoint (CONSOLE-003)."
-        />
-      </div>
-    </skyra-card>
-
-    <!-- Service Activity Breakdown -->
-    <skyra-card class="activity-card" title="Top Reporting Services" subtitle="Ranked by volume">
-      <div class="activity-placeholder">
-        <skyra-empty-state
-          title="No service records"
-          message="Ingest log batches through Ingestion Gateway (port 3000) to populate service statistics."
-        />
-      </div>
-    </skyra-card>
+  <!-- Primary Time-Series Visualization -->
+  <div class="primary-chart-section">
+    <skyra-time-series-chart
+      title="Ingestion & Volume Trend"
+      subtitle="Aggregated event intake over the active window. Click any bar to investigate window in Log Explorer."
+      [points]="volumeTrend()"
+      [loading]="loading()"
+      (bucketClick)="onBucketSelect($event)"
+    />
   </div>
 
-  <!-- Recent System Events -->
-  <div class="recent-events-section">
-    <skyra-card title="Recent Ingestion Activity" subtitle="Real-time buffer and WAL sync notifications">
-      <div class="recent-placeholder">
-        <skyra-empty-state
-          title="No recent ingestion errors"
-          message="WAL buffer and DuckDB hybrid storage are operating within expected boundaries."
-        />
-      </div>
-    </skyra-card>
+  <!-- Secondary Breakdown Section -->
+  <div class="secondary-grid">
+    <!-- Severity Distribution -->
+    <skyra-severity-chart
+      title="Severity Distribution"
+      subtitle="Breakdown by canonical log level. Click any level to drill down."
+      [items]="severityDistribution()"
+      (levelClick)="onExploreLevel($event)"
+    />
+
+    <!-- Top Services -->
+    <skyra-service-distribution
+      title="Top Reporting Services"
+      subtitle="Ranked by volume intake. Click any service to inspect."
+      [items]="serviceDistribution()"
+      (serviceClick)="onExploreService($event)"
+    />
   </div>
 </div>

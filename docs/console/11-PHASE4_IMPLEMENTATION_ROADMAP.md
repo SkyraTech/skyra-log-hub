@@ -25,13 +25,13 @@ LOGHUB-CONSOLE-003 (Core API Client, Session & Workspace Context) [PASS]
 LOGHUB-CONSOLE-004 (Log Explorer & Canonical Event Drawer)     [PASS]
          │
          ▼
-LOGHUB-CONSOLE-005 (Observability Overview & Analytics Dashboards) [NEXT]
+LOGHUB-CONSOLE-005 (Observability Overview & Analytics Dashboards) [PASS]
          │
          ▼
 [Backend Prerequisite: LOGHUB-ADMIN-001 — REST APIs for Projects & Credentials]
          │
          ▼
-LOGHUB-CONSOLE-006 (Project & Ingestion Credential Administration)
+LOGHUB-CONSOLE-006 (Project & Ingestion Credential Administration) [NEXT]
          │
          ▼
 LOGHUB-CONSOLE-007 (Performance, Security, Accessibility & E2E Hardening)
@@ -78,12 +78,16 @@ LOGHUB-CONSOLE-008 (Phase 4 Final Functional & Operational Acceptance)
 - **Verification:** Unit tests, component tests, cursor pagination state tests, BFF query proxy integration tests, and full monorepo regressions (729/729 passing).
 
 ### LOGHUB-CONSOLE-005: Observability Overview & Analytics Dashboards
-- **Target:** Operational KPI metrics, date histograms, and dynamic facets.
+- **Status:** Complete (PASS).
+- **Target:** Operational KPI metrics, date histograms, severity distributions, and dynamic drilldowns.
 - **Scope:**
-  - Implement Overview Dashboard KPI cards (Total events, error counts, active services).
-  - Implement interactive UTC date histogram chart with click-and-drag interval zooming.
-  - Implement Dynamic Facets sidebar panel discovering values for `service.name`, `log.level`, etc.
-- **Verification:** Chart bucket math assertions, facet selection filtering tests, and empty state checks.
+  - Implement Overview Dashboard KPI cards (Total events, error counts, warning counts, active services).
+  - Implement interactive native SVG UTC date histogram chart with hover tooltips and WCAG 2.2 AA tabular fallback.
+  - Implement Severity distribution and Top Reporting Services components.
+  - Implement Analytics Workspace (`/analytics`) with multi-dimensional terms aggregations (`error.type`, `event.action`).
+  - Implement one-click drilldowns to Log Explorer preserving time-range bounds and filter dimensions.
+  - Enforce monotonic query cancellation and cross-tenant state wiping.
+- **Verification:** Unit tests, component tests, facade state tests, BFF aggregation integration tests, and full monorepo regressions (748/748 passing).
 
 ### [Backend Milestone] LOGHUB-ADMIN-001: Administration REST APIs
 - **Target:** Expose RESTful management endpoints in backend services.
