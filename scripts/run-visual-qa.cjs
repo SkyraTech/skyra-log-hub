@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const BASE_URL = 'http://127.0.0.1:4200';
-const ARTIFACT_DIR = path.resolve(__dirname, '..', 'artifacts', 'visual-qa', 'LOGHUB-CONSOLE-VISUAL-001');
+const ARTIFACT_DIR = process.env.VISUAL_QA_DIR ? path.resolve(process.env.VISUAL_QA_DIR) : path.resolve(__dirname, '..', 'artifacts', 'visual-qa', 'LOGHUB-CONSOLE-VISUAL-001');
 const MODE = process.argv[2] === 'after' ? 'after' : 'before';
 const OUTPUT_DIR = path.join(ARTIFACT_DIR, MODE);
 const REPORT_FILE = MODE === 'after' ? 'after_audit.json' : 'initial_audit.json';

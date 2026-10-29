@@ -2258,11 +2258,11 @@ packages:
     engines: {node: ^18.17.0 || >=20.5.0}
 
   '@skyra-tech-platform/app-shell@file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz':
-    resolution: {integrity: sha512-FQq5vtcLCoK3h3CG+0ZdKAZtIUA+B/RdGh7Jv02PhibcHO1i3kKbM3ap1awj9muwjhyjvlp1i1w0ouqV9symCw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz}
+    resolution: {integrity: sha512-4wxVMa7f4NEti6MZjkHzPK386/TyeZFaaY2q3raj0ECyK9qWC5fjiqLIa1zY+V9lpP2a08bIL486f88ZpeEAAg==, tarball: file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/badge@file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz':
-    resolution: {integrity: sha512-SDGy5QEiwcHRF3GvqfaBrf3d/lMZtIWN2Jb+9868UBQicNCWdEUMmjfxdLuh5Ej/7QJn+iYlqNyPBkF1sEIuJw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz}
+    resolution: {integrity: sha512-jphWxJZuFSfLhDCaPdAE0Eti63DRMUccnES2f/TKDbpWaVw21cPjjJYPeJKKcXkZMKGl6+QpxwwLcf2cyQl+qQ==, tarball: file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/button@file:artifacts/platform-packages/skyra-tech-platform-button-0.1.0.tgz':
@@ -2282,7 +2282,7 @@ packages:
     version: 0.1.0
 
   '@skyra-tech-platform/date-time@file:artifacts/platform-packages/skyra-tech-platform-date-time-0.1.0.tgz':
-    resolution: {integrity: sha512-AIOVRCaOIhtNiO0/FyDHxSAc9xRc56Kf4TX1cf7IyW1sjwJ8gecF5IoXfzU3JlAjWzJqW4eh7fg53JkbQWgIrw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-date-time-0.1.0.tgz}
+    resolution: {integrity: sha512-v7T3zWVVNxKlGpwPfykjCfeNkl8+0JqIpezar1UrOCobGGyp3yEOFe8JCHihjsFOzOde2Y2XFb+Y21epnSA7zw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-date-time-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz':
@@ -2290,24 +2290,24 @@ packages:
     version: 0.1.0
 
   '@skyra-tech-platform/dialog@file:artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz':
-    resolution: {integrity: sha512-27hmFJ36rur/BDJIGbajuDGLGQIbLKkUMsmhpOjkVJZVZVBwZmnM7khQNXuGuOvj1UA58cQ2XY5+u7px6ZpvqA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz}
+    resolution: {integrity: sha512-1w5EDzE0UgMFaxSPj0BD4wDWaqDA35WTd8tVJce7Sbcz7i0jQbZzs0sACDa9bMZxhH2d5geRvd47uLGl1N6yYg==, tarball: file:artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/drawer@file:artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz':
-    resolution: {integrity: sha512-rQIw7G+vd6QvtUJ1Ciw/1+y++GYMX5zuwo+vdg0QZ+r9RT3J5ptOmqAzgH/fzHJ/Au+yOOQ+qAAkSjLwxV2YnA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz}
+    resolution: {integrity: sha512-7pv1sBwvpbXyHYYqLWq15d6IDcd9CoiaFGfZpIPtEKUDbX49/WRAKJYAxzpvHDUiqrkF+g9Lrp8aKHgJKH5FPA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/dropdown-menu@file:artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz':
-    resolution: {integrity: sha512-dd1nVu4nhI2Lk4hMnTnLKlTI03OxYOD7qtRFPns8OnZxwj2TF+l54qfmyfThrIt7KMHcZfw6FWrXwD8Jru0qKw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz}
+    resolution: {integrity: sha512-51VOOs9mcYldusxdcGikPyZ9ZlgiMKjgjQV70IowB5UpcbT852T/TwJCcZ2Bt11M0KddbsgDd2hQ+WkcYGovIA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz}
     version: 0.1.0
     peerDependencies:
-      '@skyra-tech-platform/design-tokens': 0.1.0
+      '@skyra-tech-platform/design-tokens': 0.1.1
     peerDependenciesMeta:
       '@skyra-tech-platform/design-tokens':
         optional: true
 
   '@skyra-tech-platform/empty-state@file:artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz':
-    resolution: {integrity: sha512-br9ULwTtCGti7UJ+J8khAXOTb6PRGuM70zXTYeLEW/xt13DO2T01c3LcO8kdFvcL4KwSiCnePvSYNnAoYZcnjA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz}
+    resolution: {integrity: sha512-2fm93Ex2mwMpOQRJw4jHvXBO5VLzykGb3KNvMEKAZu1C4EAdmMqB/T5ik91IP0nzAq4WpirEQsgTAYRudWNFbA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/input@file:artifacts/platform-packages/skyra-tech-platform-input-0.1.0.tgz':
@@ -2323,10 +2323,10 @@ packages:
     version: 0.1.0
 
   '@skyra-tech-platform/popover@file:artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz':
-    resolution: {integrity: sha512-zGTYoMwr3Tt+bwBRw65+9ttVl2CsC1RWdf+MzPrtxmCQm2VLnq7I48Ruxzi4dUnZJ6btja81cmoySlM8G/bxUw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz}
+    resolution: {integrity: sha512-ne3t/nC/qkOkN0xlWQ8qtftwV2gdpq5iiyj3Qd20FqpU4LxomKMO9zTCSR4ZNJNh1XSsIhRsoceQy2vO/iFG9A==, tarball: file:artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz}
     version: 0.1.0
     peerDependencies:
-      '@skyra-tech-platform/design-tokens': 0.1.0
+      '@skyra-tech-platform/design-tokens': 0.1.1
     peerDependenciesMeta:
       '@skyra-tech-platform/design-tokens':
         optional: true

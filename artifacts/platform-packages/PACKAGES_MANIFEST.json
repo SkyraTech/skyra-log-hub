@@ -1,15 +1,15 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-10-29T01:46:09.137Z",
+  "generatedAt": "2026-10-29T02:26:27.909Z",
   "platformCommit": "9e9b4a55beebd1e5b0b76fd36e4abb42d1ba538d",
   "packageCount": 31,
   "packages": [
     {
       "name": "@skyra-tech-platform/accordion",
-      "version": "0.1.0",
-      "archive": "skyra-tech-platform-accordion-0.1.0.tgz",
+      "version": "0.1.1",
+      "archive": "skyra-tech-platform-accordion-0.1.1.tgz",
       "sizeBytes": 8883,
-      "sha256": "c81fed9cf7ea4a3421555f8081122dac420242040e6dffe0784f736f3e1f5267",
+      "sha256": "a5b4801bca471631266604cf71571c569d91e5c90702701602e437a1650b95bd",
       "exports": {
         ".": {
           "types": "./dist/index.d.ts",
@@ -18,14 +18,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:11.697Z"
+      "lastModified": "2026-10-29T02:26:28.586Z"
     },
     {
       "name": "@skyra-tech-platform/app-shell",
       "version": "0.1.0",
       "archive": "skyra-tech-platform-app-shell-0.1.0.tgz",
-      "sizeBytes": 6790,
-      "sha256": "7d34e86f90310ac928cca45cb924be70638354e8cab050b650a9888839b08606",
+      "sizeBytes": 6794,
+      "sha256": "203c58231510e5bb1ea7c5808bfa75552050dbe089e936313611ebd7c038b248",
       "exports": {
         "./styles.css": "./src/styles.css",
         ".": {
@@ -35,14 +35,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:13.456Z"
+      "lastModified": "2026-10-29T02:26:29.145Z"
     },
     {
       "name": "@skyra-tech-platform/badge",
       "version": "0.1.0",
       "archive": "skyra-tech-platform-badge-0.1.0.tgz",
-      "sizeBytes": 4472,
-      "sha256": "e9a97f8a3d0a84cc9fbc9e57e220d1aa00eb429d337011e5a651adcc1eab8f53",
+      "sizeBytes": 4474,
+      "sha256": "f26cc85e26de71cdd2fca52e60d548bf1188def021fc37f113b4f27af818f703",
       "exports": {
         ".": {
           "types": "./dist/index.d.ts",
@@ -51,14 +51,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:15.065Z"
+      "lastModified": "2026-10-29T02:26:29.678Z"
     },
     {
       "name": "@skyra-tech-platform/button",
-      "version": "0.1.0",
-      "archive": "skyra-tech-platform-button-0.1.0.tgz",
-      "sizeBytes": 11234,
-      "sha256": "9a3cfc7129b07ae882f186926916d7985125994d4db5b236a755091d16769643",
+      "version": "0.1.1",
+      "archive": "skyra-tech-platform-button-0.1.1.tgz",
+      "sizeBytes": 11235,
+      "sha256": "976930bd8033c6e74c0baf2a79138abce44a136b808caa9751e95e21abba13cd",
       "exports": {
         ".": {
           "types": "./dist/index.d.ts",
@@ -67,7 +67,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:16.869Z"
+      "lastModified": "2026-10-29T02:26:30.302Z"
     },
     {
       "name": "@skyra-tech-platform/checkbox",
@@ -83,14 +83,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:18.475Z"
+      "lastModified": "2026-10-29T02:26:30.857Z"
     },
     {
       "name": "@skyra-tech-platform/collapsible",
-      "version": "0.1.0",
-      "archive": "skyra-tech-platform-collapsible-0.1.0.tgz",
+      "version": "0.1.1",
+      "archive": "skyra-tech-platform-collapsible-0.1.1.tgz",
       "sizeBytes": 4815,
-      "sha256": "a97d78f2e76f56b17651d7f45f258724523b9036274c68e9a63fe6a46aa2bd9e",
+      "sha256": "26c30612026da32c3303ff20f390a10da0f73c5eae7dc6dd56a1909ddf4a867a",
       "exports": {
         ".": {
           "types": "./dist/index.d.ts",
@@ -99,14 +99,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:20.409Z"
+      "lastModified": "2026-10-29T02:26:31.352Z"
     },
     {
       "name": "@skyra-tech-platform/command-palette",
       "version": "0.1.0",
       "archive": "skyra-tech-platform-command-palette-0.1.0.tgz",
-      "sizeBytes": 34482,
-      "sha256": "354c8ddddd1342e8deaa908fe7a314fe4a51fb700138509d48689db419871e68",
+      "sizeBytes": 34485,
+      "sha256": "89d5c0a91c0253f5b213efa922c6b62e6772421105537e4ed20ee2bb63c8061c",
       "exports": {
         ".": {
           "types": "./dist/index.d.ts",
@@ -115,14 +115,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:22.266Z"
+      "lastModified": "2026-10-29T02:26:31.962Z"
     },
     {
       "name": "@skyra-tech-platform/context-menu",
       "version": "0.1.0",
       "archive": "skyra-tech-platform-context-menu-0.1.0.tgz",
-      "sizeBytes": 41233,
-      "sha256": "ac2f04670d8459de6b7210e36df76b090a860783d06f9b60d927bd50ce6d847a",
+      "sizeBytes": 41235,
+      "sha256": "26f885e7fca5235d6c98f55cf6b18f0e708729145ab074789386eb56ffe2fd6b",
       "exports": {
         ".": {
           "types": "./dist/index.d.ts",
@@ -131,7 +131,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:23.779Z"
+      "lastModified": "2026-10-29T02:26:32.560Z"
     },
     {
       "name": "@skyra-tech-platform/data-export",
@@ -147,7 +147,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:25.660Z"
+      "lastModified": "2026-10-29T02:26:33.116Z"
     },
     {
       "name": "@skyra-tech-platform/data-table",
@@ -163,14 +163,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:27.464Z"
+      "lastModified": "2026-10-29T02:26:33.668Z"
     },
     {
       "name": "@skyra-tech-platform/date-time",
       "version": "0.1.0",
       "archive": "skyra-tech-platform-date-time-0.1.0.tgz",
-      "sizeBytes": 58856,
-      "sha256": "62bf861321e05a8a771274995a25b3148156122ac801cae58a28fcc0b40dee45",
+      "sizeBytes": 58852,
+      "sha256": "985ae1f57f3c20137a0ff258cc8ca382b0411606e4fd4c9b361e52abf31517a8",
       "exports": {
         ".": {
           "require": "./dist/index.cjs",
@@ -179,14 +179,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:29.139Z"
+      "lastModified": "2026-10-29T02:26:34.261Z"
     },
     {
       "name": "@skyra-tech-platform/design-tokens",
-      "version": "0.1.0",
-      "archive": "skyra-tech-platform-design-tokens-0.1.0.tgz",
-      "sizeBytes": 6674,
-      "sha256": "28e500c3393449cab16d774533a3b65a1d790191e68d5f2655f0dc310be00fbd",
+      "version": "0.1.1",
+      "archive": "skyra-tech-platform-design-tokens-0.1.1.tgz",
+      "sizeBytes": 7569,
+      "sha256": "218bcdf4a88d2a96eead6e6bc34173e5f72b55ce587e3ea955afd6b2ec6b140c",
       "exports": {
         "./reset.css": "./src/reset.css",
         "./tokens.css": "./src/tokens.css",
@@ -197,14 +197,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:30.570Z"
+      "lastModified": "2026-10-29T02:26:34.774Z"
     },
     {
       "name": "@skyra-tech-platform/dialog",
       "version": "0.1.0",
       "archive": "skyra-tech-platform-dialog-0.1.0.tgz",
-      "sizeBytes": 7709,
-      "sha256": "c7381d7ca4d320aab28a1013914c154de668affcd505f28ba0194d817f39c749",
+      "sizeBytes": 7711,
+      "sha256": "6b860b331e1f6bb5326b6a8b8b125f2c0ea6ec06cfdbabf1e50073b3b970d2fd",
       "exports": {
         ".": {
           "require": "./dist/index.cjs",
@@ -213,14 +213,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:32.525Z"
+      "lastModified": "2026-10-29T02:26:35.272Z"
     },
     {
       "name": "@skyra-tech-platform/drawer",
       "version": "0.1.0",
       "archive": "skyra-tech-platform-drawer-0.1.0.tgz",
-      "sizeBytes": 6882,
-      "sha256": "a72d57ef66f0e840afaf98f796b473e77636cdbf7b7b0f8823ccdf2727774b7f",
+      "sizeBytes": 6883,
+      "sha256": "0f16713f399929434bc34032ebe8e87c0de44172d27350ffc7be05814b730c25",
       "exports": {
         ".": {
           "types": "./dist/index.d.ts",
@@ -229,14 +229,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:33.898Z"
+      "lastModified": "2026-10-29T02:26:35.843Z"
     },
     {
       "name": "@skyra-tech-platform/dropdown-menu",
       "version": "0.1.0",
       "archive": "skyra-tech-platform-dropdown-menu-0.1.0.tgz",
-      "sizeBytes": 38986,
-      "sha256": "1a34b4c8c0ca9a9db36822dabb0abce6fd497dfac7c72356a204e9828644a7a2",
+      "sizeBytes": 38989,
+      "sha256": "3139c235175c47e6081fc7cce4333e60ff4a080c65fd3ac97125f2ca7373b988",
       "exports": {
         ".": {
           "types": "./dist/index.d.ts",
@@ -245,14 +245,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:35.847Z"
+      "lastModified": "2026-10-29T02:26:36.431Z"
     },
     {
       "name": "@skyra-tech-platform/dynamic-form",
       "version": "0.1.0",
       "archive": "skyra-tech-platform-dynamic-form-0.1.0.tgz",
-      "sizeBytes": 53502,
-      "sha256": "a07b15fb783ea5fc71c58b104d0fb11f1316c0077cc6d607d93dc617a4e78a7b",
+      "sizeBytes": 53506,
+      "sha256": "4c5ea4c0734a74acd10829dbe01dee9d0bd0344669738966cc725449089cbf4d",
       "exports": {
         ".": {
           "require": "./dist/index.cjs",
@@ -261,7 +261,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:37.463Z"
+      "lastModified": "2026-10-29T02:26:36.967Z"
     },
     {
       "name": "@skyra-tech-platform/dynamic-select",
@@ -277,14 +277,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:38.925Z"
+      "lastModified": "2026-10-29T02:26:37.539Z"
     },
     {
       "name": "@skyra-tech-platform/empty-state",
       "version": "0.1.0",
       "archive": "skyra-tech-platform-empty-state-0.1.0.tgz",
-      "sizeBytes": 4468,
-      "sha256": "5f812efccbde1cc9a964112170ad4b522cf85b8df956a4294d7e72a065fb7db7",
+      "sizeBytes": 4470,
+      "sha256": "30c6012f923abe1515cd9dd4ff8fd019f843f95a888e40f5752464a58b5a7565",
       "exports": {
         ".": {
           "types": "./dist/index.d.ts",
@@ -293,7 +293,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:40.480Z"
+      "lastModified": "2026-10-29T02:26:38.052Z"
     },
     {
       "name": "@skyra-tech-platform/input",
@@ -309,14 +309,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:42.012Z"
+      "lastModified": "2026-10-29T02:26:38.593Z"
     },
     {
       "name": "@skyra-tech-platform/loader",
-      "version": "0.1.0",
-      "archive": "skyra-tech-platform-loader-0.1.0.tgz",
+      "version": "0.1.1",
+      "archive": "skyra-tech-platform-loader-0.1.1.tgz",
       "sizeBytes": 21648,
-      "sha256": "deef5df07dac0ccdf19161da4f8bb0cd91456b877ce22b94a782d9cf431961f8",
+      "sha256": "0e350c3b8ebb1c3fc14b58292c6a2298bc1d37891074b3ffeb8762e5195d939f",
       "exports": {
         ".": {
           "types": "./dist/index.d.ts",
@@ -325,7 +325,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:43.629Z"
+      "lastModified": "2026-10-29T02:26:39.204Z"
     },
     {
       "name": "@skyra-tech-platform/notification",
@@ -341,7 +341,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:45.256Z"
+      "lastModified": "2026-10-29T02:26:39.766Z"
     },
     {
       "name": "@skyra-tech-platform/pdf-viewer",
@@ -357,14 +357,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:46.739Z"
+      "lastModified": "2026-10-29T02:26:40.307Z"
     },
     {
       "name": "@skyra-tech-platform/popover",
       "version": "0.1.0",
       "archive": "skyra-tech-platform-popover-0.1.0.tgz",
-      "sizeBytes": 20554,
-      "sha256": "e79effdbe28df154b96730bf396085f7e50d7361ac0a0b5309ad292f06ce4b70",
+      "sizeBytes": 20557,
+      "sha256": "779c6d0ad7b3de4649d8483bb535c1b4c9ebeacae537718e96e7ba4b4b197096",
       "exports": {
         ".": {
           "types": "./dist/index.d.ts",
@@ -373,7 +373,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:48.202Z"
+      "lastModified": "2026-10-29T02:26:40.887Z"
     },
     {
       "name": "@skyra-tech-platform/qr",
@@ -394,7 +394,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:50.367Z"
+      "lastModified": "2026-10-29T02:26:41.647Z"
     },
     {
       "name": "@skyra-tech-platform/radio",
@@ -410,7 +410,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:52.001Z"
+      "lastModified": "2026-10-29T02:26:42.193Z"
     },
     {
       "name": "@skyra-tech-platform/switch",
@@ -426,14 +426,14 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:53.370Z"
+      "lastModified": "2026-10-29T02:26:42.724Z"
     },
     {
       "name": "@skyra-tech-platform/tabs",
-      "version": "0.1.0",
-      "archive": "skyra-tech-platform-tabs-0.1.0.tgz",
+      "version": "0.1.1",
+      "archive": "skyra-tech-platform-tabs-0.1.1.tgz",
       "sizeBytes": 9823,
-      "sha256": "1a518eef0634604a0aca5f0eecc6cd95094ab42cc71505958e18c2ec9ba5f3cb",
+      "sha256": "3e058e378ae304959865f8e86f7c6df6b80428b012b437f7515d6bb87159652d",
       "exports": {
         ".": {
           "types": "./dist/index.d.ts",
@@ -442,7 +442,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:54.963Z"
+      "lastModified": "2026-10-29T02:26:43.296Z"
     },
     {
       "name": "@skyra-tech-platform/textarea",
@@ -458,7 +458,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:56.534Z"
+      "lastModified": "2026-10-29T02:26:43.846Z"
     },
     {
       "name": "@skyra-tech-platform/toast",
@@ -474,7 +474,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:46:58.264Z"
+      "lastModified": "2026-10-29T02:26:44.344Z"
     },
     {
       "name": "@skyra-tech-platform/utils",
@@ -490,7 +490,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:47:00.297Z"
+      "lastModified": "2026-10-29T02:26:44.911Z"
     },
     {
       "name": "@skyra-tech-platform/validation",
@@ -506,7 +506,7 @@
         }
       },
       "sideEffects": true,
-      "lastModified": "2026-10-29T01:47:02.020Z"
+      "lastModified": "2026-10-29T02:26:45.508Z"
     }
   ]
 }

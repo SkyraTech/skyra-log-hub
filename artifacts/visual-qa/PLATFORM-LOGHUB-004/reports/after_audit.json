@@ -1,0 +1,142 @@
+{
+  "timestamp": "2026-10-29T02:45:57.422Z",
+  "screens": {},
+  "consoleErrors": [
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/aggregate",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/facets",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/search",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/search",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/search",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "location": {
+        "url": "http://127.0.0.1:3000/bff/query/aggregate",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "networkFailures": [
+    {
+      "url": "http://127.0.0.1:3000/bff/query/aggregate",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/facets",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/search",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/search",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/search",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:3000/bff/query/aggregate",
+      "failure": {
+        "errorText": "net::ERR_CONNECTION_REFUSED"
+      }
+    }
+  ],
+  "accessibility": {
+    "login-desktop-light": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "overview-desktop-light": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "log-explorer-desktop-light": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "event-detail-drawer": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "analytics-desktop-light": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "projects-page": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "settings-page": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "unauthorized-screen": {
+      "violationsCount": 0,
+      "violations": []
+    },
+    "not-found-screen": {
+      "violationsCount": 0,
+      "violations": []
+    }
+  }
+}

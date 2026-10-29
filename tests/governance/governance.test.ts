@@ -52,4 +52,25 @@ describe('Design System Governance & Brand Integrity Auditor (PLATFORM-LOGHUB-00
       );
     }
   });
+
+  it('should verify semantic versioning integrity for v0.1.1 hardened packages (PLATFORM-LOGHUB-004)', () => {
+    const pkgPath = path.resolve(__dirname, '../../apps/console-web/package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+
+    const expected011 = [
+      '@skyra-tech-platform/button',
+      '@skyra-tech-platform/design-tokens',
+      '@skyra-tech-platform/tabs',
+      '@skyra-tech-platform/loader'
+    ];
+
+    for (const name of expected011) {
+      const target = pkg.dependencies[name] as string;
+      assert.ok(target, `${name} must be present in dependencies`);
+      assert.ok(
+        target.endsWith('-0.1.1.tgz'),
+        `${name} must reference 0.1.1 archive: got ${target}`
+      );
+    }
+  });
 });

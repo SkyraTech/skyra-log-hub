@@ -8,15 +8,7 @@ import {
   TimeSeriesPoint,
   DistributionItem,
 } from '../domain/analytics-metric.model';
-
-const SEVERITY_COLOR_MAP: Record<string, string> = {
-  fatal: '#991B1B', // Dark red
-  error: '#DC2626', // Red
-  warn: '#D97706',  // Amber
-  info: '#0A58CA',  // Skyra Platform Blue
-  debug: '#475569', // Slate
-  trace: '#94A3B8', // Light slate
-};
+import { getSeverityColor } from '@skyra-tech-platform/design-tokens';
 
 export class AnalyticsMapper {
   public static mapKpis(response: AggregateLogsResponse): OverviewKpiData {
@@ -117,7 +109,7 @@ export class AnalyticsMapper {
 
       let color: string | undefined;
       if (colorScheme === 'severity') {
-        color = SEVERITY_COLOR_MAP[key.toLowerCase()] || '#64748B';
+        color = getSeverityColor(key);
       }
 
       return {

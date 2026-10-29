@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { AnalyticsMapper } from '../src/app/features/analytics/application/analytics.mapper';
 import { AggregateLogsResponse } from '../src/app/core/http/api-client.port';
+import { severityTokens } from '@skyra-tech-platform/design-tokens';
 
 describe('AnalyticsMapper Unit Tests (LOGHUB-CONSOLE-005)', () => {
   const MOCK_AGGREGATE_RESPONSE: AggregateLogsResponse = {
@@ -114,13 +115,13 @@ describe('AnalyticsMapper Unit Tests (LOGHUB-CONSOLE-005)', () => {
     assert.equal(items[0].key, 'info');
     assert.equal(items[0].count, 320);
     assert.equal(items[0].percentage, 72.7);
-    assert.equal(items[0].color, '#0A58CA');
+    assert.equal(items[0].color, severityTokens.info);
 
     assert.equal(items[2].key, 'error');
-    assert.equal(items[2].color, '#DC2626');
+    assert.equal(items[2].color, severityTokens.error);
 
     assert.equal(items[3].key, 'fatal');
-    assert.equal(items[3].color, '#991B1B');
+    assert.equal(items[3].color, severityTokens.fatal);
   });
 
   it('MAP-5: Maps top error classifications and service distributions', () => {
