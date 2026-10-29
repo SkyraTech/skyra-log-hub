@@ -2258,7 +2258,7 @@ packages:
     engines: {node: ^18.17.0 || >=20.5.0}
 
   '@skyra-tech-platform/app-shell@file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz':
-    resolution: {integrity: sha512-15PEMqC5gYM+3qR3tJNJsPdM7WeAtpc2Dv3mo10mcmtxW9cYomVjv8vVzhi4ZWOs6Z5vFBrNsfBNyV2C8Vg5ZQ==, tarball: file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz}
+    resolution: {integrity: sha512-FQq5vtcLCoK3h3CG+0ZdKAZtIUA+B/RdGh7Jv02PhibcHO1i3kKbM3ap1awj9muwjhyjvlp1i1w0ouqV9symCw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/badge@file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz':
@@ -2266,7 +2266,7 @@ packages:
     version: 0.1.0
 
   '@skyra-tech-platform/button@file:artifacts/platform-packages/skyra-tech-platform-button-0.1.0.tgz':
-    resolution: {integrity: sha512-bjA9U0jMJCLKgaIwtkRNXp8H+2hNoPliMvL2g8+6M+Vu04P0aROoNXwin5d6k52Hsbn1yj7jXghZ2yWxaI9FFQ==, tarball: file:artifacts/platform-packages/skyra-tech-platform-button-0.1.0.tgz}
+    resolution: {integrity: sha512-KUAbnj2bsckFrw7HDKS1+onKukvEbnagOK/UsFc5XxEhJrXXuYXklaoAXS/UUmL42PxB9f09oX5UYyfiefc7IQ==, tarball: file:artifacts/platform-packages/skyra-tech-platform-button-0.1.0.tgz}
     version: 0.1.0
 
   '@skyra-tech-platform/checkbox@file:artifacts/platform-packages/skyra-tech-platform-checkbox-0.1.0.tgz':

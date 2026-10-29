@@ -114,7 +114,7 @@ describe('AnalyticsMapper Unit Tests (LOGHUB-CONSOLE-005)', () => {
     assert.equal(items[0].key, 'info');
     assert.equal(items[0].count, 320);
     assert.equal(items[0].percentage, 72.7);
-    assert.equal(items[0].color, '#2563EB');
+    assert.equal(items[0].color, '#0A58CA');
 
     assert.equal(items[2].key, 'error');
     assert.equal(items[2].color, '#DC2626');

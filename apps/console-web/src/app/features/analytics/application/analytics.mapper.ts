@@ -13,7 +13,7 @@ const SEVERITY_COLOR_MAP: Record<string, string> = {
   fatal: '#991B1B', // Dark red
   error: '#DC2626', // Red
   warn: '#D97706',  // Amber
-  info: '#2563EB',  // Blue
+  info: '#0A58CA',  // Skyra Platform Blue
   debug: '#475569', // Slate
   trace: '#94A3B8', // Light slate
 };
