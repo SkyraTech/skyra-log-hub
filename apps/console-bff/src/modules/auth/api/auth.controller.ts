@@ -9,6 +9,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ServiceUnavailableException,
+  UnauthorizedException,
   Body,
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
@@ -35,14 +37,32 @@ export class AuthController {
     private readonly membershipService: MembershipService,
   ) {}
 
+  @Get('auth/readiness')
+  public async readiness(){if(!await this.sessionStore.healthy())throw new ServiceUnavailableException('Session backend unavailable.');return {ready:true};}
+
+  @Post('auth/rotate')
+  @UseGuards(SessionAuthGuard,CsrfGuard)
+  @HttpCode(HttpStatus.OK)
+  public async rotateSession(@Req() req:FastifyRequest,@Res() reply:FastifyReply){
+    const token=crypto.randomBytes(32).toString('hex'),csrf=this.csrfService.generateToken();
+    const session=await this.sessionStore.rotate(req.session!.sessionId,token,csrf);
+    if(!session)throw new UnauthorizedException('Session no longer active.');
+    const remaining=Math.max(0,Math.floor(((session.absoluteExpiresAt?.getTime()??session.createdAt.getTime()+this.config.sessionAbsoluteLifetimeMs)-Date.now())/1000));
+    reply.setCookie(this.config.sessionCookieName,token,{httpOnly:true,secure:this.config.cookieSecure,sameSite:this.config.cookieSameSite,path:'/',maxAge:remaining});
+    if(this.config.sessionCookieName!=='skyra-session'&&!this.config.cookieSecure)reply.setCookie('skyra-session',token,{httpOnly:true,secure:false,sameSite:'lax',path:'/',maxAge:remaining});
+    reply.send({success:true,csrfToken:csrf});
+  }
+
   @Get('auth/login')
-  public login(
+  public async login(
     @Query('returnUrl') returnUrl: string | undefined,
     @Query('redirect') redirect: string | undefined,
     @Res() reply: FastifyReply,
-  ): void {
+  ): Promise<void> {
     const safeReturnUrl = this.sanitizeReturnUrl(returnUrl);
-    const authReq = this.oidcService.createAuthorizationRequest(safeReturnUrl);
+    const binding=crypto.randomBytes(32).toString('hex');
+    const authReq = await this.oidcService.createProviderAuthorizationRequest(safeReturnUrl,binding);
+    reply.setCookie(this.config.isProduction?'__Host-skyra-oidc-binding':'skyra-oidc-binding',binding,{httpOnly:true,secure:this.config.cookieSecure,sameSite:'lax',path:'/',maxAge:600});
 
     if (redirect === 'false') {
       reply.send({
@@ -61,6 +81,7 @@ export class AuthController {
     @Query('state') state: string | undefined,
     @Query('error') error: string | undefined,
     @Query('error_description') errorDescription: string | undefined,
+    @Req() req:FastifyRequest,
     @Res() reply: FastifyReply,
   ): Promise<void> {
     const { tokens, returnUrl } = await this.oidcService.handleCallback(
@@ -68,7 +89,9 @@ export class AuthController {
       state,
       error,
       errorDescription,
+      (req.cookies as Record<string,string>|undefined)?.[this.config.isProduction?'__Host-skyra-oidc-binding':'skyra-oidc-binding'],
     );
+    reply.clearCookie(this.config.isProduction?'__Host-skyra-oidc-binding':'skyra-oidc-binding',{path:'/'});
 
     // Resolve authoritative workspace memberships
     const memberships = await this.membershipService.resolveMemberships(
@@ -76,27 +99,29 @@ export class AuthController {
       tokens.user.email,
     );
 
+    if(!memberships.length)throw new UnauthorizedException('No active organization membership.');
+
     // Pick initial active tenant and project if available
     const initialTenant = memberships[0];
     const initialProject = initialTenant?.projects[0];
 
     // Create secure session
+    const priorCookies=req.cookies as Record<string,string>|undefined;
+    const prior=priorCookies?.[this.config.sessionCookieName]||(!this.config.isProduction?priorCookies?.['skyra-session']:undefined);
+    if(prior)await this.sessionStore.delete(prior);
     const sessionId = crypto.randomBytes(32).toString('hex');
     const csrfToken = this.csrfService.generateToken();
     const now = new Date();
 
     const session: BffSession = {
       sessionId,
-      user: tokens.user,
+      user: this.config.useAuthoritativeMembership ? { ...tokens.user, roles: initialTenant?.tenantRoles ?? [] } : tokens.user,
       memberships,
       createdAt: now,
       lastActivityAt: now,
       csrfToken,
       activeTenantId: initialTenant?.tenantId,
       activeProjectId: initialProject?.projectId,
-      idToken: tokens.idToken,
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
     };
 
     await this.sessionStore.set(
@@ -147,7 +172,7 @@ export class AuthController {
     reply.clearCookie('skyra-session', { path: '/' });
     reply.clearCookie('__Host-skyra-session', { path: '/' });
 
-    reply.send({ success: true, message: 'Session successfully revoked and cleared.' });
+    reply.send({ success: true, message: 'Session successfully revoked and cleared.',providerLogoutUrl:await this.oidcService.logoutUrl() });
   }
 
   @Get('session')
@@ -160,10 +185,10 @@ export class AuthController {
     const availableProjects = activeTenant?.projects ?? [];
 
     const expiresAt = new Date(
-      session.createdAt.getTime() + this.config.sessionAbsoluteLifetimeMs,
+      session.absoluteExpiresAt?.getTime() ?? session.createdAt.getTime() + this.config.sessionAbsoluteLifetimeMs,
     ).toISOString();
     const idleExpiresAt = new Date(
-      session.lastActivityAt.getTime() + this.config.sessionIdleTimeoutMs,
+      session.idleExpiresAt?.getTime() ?? session.lastActivityAt.getTime() + this.config.sessionIdleTimeoutMs,
     ).toISOString();
 
     return {
@@ -215,8 +240,8 @@ export class AuthController {
     const session = req.session!;
     const { tenantId, projectId } = body;
 
-    if (!tenantId || !projectId) {
-      throw new InvalidArgumentException('Both tenantId and projectId must be provided.');
+    if (!tenantId) {
+      throw new InvalidArgumentException('tenantId must be provided.');
     }
 
     const tenant = session.memberships.find((m) => m.tenantId === tenantId);
@@ -227,7 +252,7 @@ export class AuthController {
     }
 
     const project = tenant.projects.find((p) => p.projectId === projectId);
-    if (!project) {
+    if (projectId && !project) {
       throw new UnauthorizedProjectException(
         `User does not have access to project "${projectId}" under tenant "${tenantId}".`,
       );
@@ -235,7 +260,7 @@ export class AuthController {
 
     session.activeTenantId = tenantId;
     session.activeProjectId = projectId;
-    await this.sessionStore.set(session.sessionId, session);
+    await this.sessionStore.updateContext(session.sessionId, session);
 
     return {
       success: true,
@@ -254,8 +279,9 @@ export class AuthController {
   private sanitizeReturnUrl(returnUrl?: string): string | undefined {
     if (!returnUrl) return undefined;
     // Prevent open redirect vulnerabilities: only allow relative paths starting with /
-    if (returnUrl.startsWith('/') && !returnUrl.startsWith('//') && !returnUrl.includes('\\')) {
-      return returnUrl;
+    if (typeof returnUrl==='string' && returnUrl.length<=2048 && !/[\u0000-\u0020\u007f]/.test(returnUrl) && returnUrl.startsWith('/') && !returnUrl.startsWith('//') && !returnUrl.includes('\\')) {
+      const parsed=new URL(returnUrl,'https://return.test.invalid');
+      if(parsed.origin==='https://return.test.invalid')return parsed.pathname+parsed.search+parsed.hash;
     }
     return '/';
   }

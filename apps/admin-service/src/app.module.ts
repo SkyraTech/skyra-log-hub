@@ -1,3 +1,15 @@
+import {DashboardPreferencesController} from './api/controllers/dashboard-preferences.controller.js';
+import {DashboardPreferencesService} from './modules/dashboard-preferences/dashboard-preferences.service.js';
+import {SavedSearchesService} from './modules/saved-searches/saved-searches.service.js';
+import {SavedSearchesController} from './api/controllers/saved-searches.controller.js';
+import {AuditHistoryService} from './core/audit/application/audit-history.service.js';
+import {AuditHistoryController} from './api/controllers/audit-history.controller.js';
+import {QuotasService} from './modules/projects/quotas.service.js';
+import {QuotasController} from './api/controllers/quotas.controller.js';
+import { CredentialsController } from './api/controllers/credentials.controller.js';
+import { CredentialsService } from './modules/credentials/credentials.service.js';
+import { ProjectsController } from './api/controllers/projects.controller.js';
+import { ProjectsService } from './modules/projects/projects.service.js';
 import { Module } from '@nestjs/common';
 import { AdminConfigService } from './core/config/admin-config.service.js';
 import { TrustedAssertionGuard } from './core/security/trusted-assertion.guard.js';
@@ -15,13 +27,26 @@ import { PrismaMembershipRepository } from './modules/membership/infrastructure/
 import { MembershipService } from './modules/membership/application/membership.service.js';
 import { BootstrapService } from './modules/bootstrap/application/bootstrap.service.js';
 import { MetaController } from './api/controllers/meta.controller.js';
+import { OrganizationController } from './api/controllers/organization.controller.js';
+import { OrganizationService } from './modules/organization/organization.service.js';
+import { AdminDatabaseLifecycle } from './core/database/admin-prisma.js';
+import { MembersManagementService } from './modules/membership/members-management.service.js';
+import { MembersController } from './api/controllers/members.controller.js';
 
 @Module({
-  controllers: [MetaController],
+  controllers: [DashboardPreferencesController,SavedSearchesController, AuditHistoryController, QuotasController, MetaController, OrganizationController, MembersController, ProjectsController, CredentialsController],
   providers: [
+    SavedSearchesService,DashboardPreferencesService,
     AdminConfigService,
     TrustedAssertionGuard,
     EffectivePermissionResolver,
+    OrganizationService,
+    MembersManagementService,
+    ProjectsService,
+    QuotasService,
+    AuditHistoryService,
+    CredentialsService,
+    AdminDatabaseLifecycle,
 
     // Audit persistence provider
     {

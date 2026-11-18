@@ -13,12 +13,16 @@ export interface ProjectMembership {
 }
 
 export interface WorkspaceMembership {
+  tenantRoles?: string[];
   tenantId: string;
   tenantName: string;
   projects: ProjectMembership[];
 }
 
 export interface BffSession {
+  version?:number;
+  absoluteExpiresAt?:Date;
+  idleExpiresAt?:Date;
   sessionId: string;
   user: UserProfile;
   memberships: WorkspaceMembership[];
@@ -27,9 +31,6 @@ export interface BffSession {
   csrfToken: string;
   activeTenantId?: string;
   activeProjectId?: string;
-  idToken?: string;
-  accessToken?: string;
-  refreshToken?: string;
 }
 
 export interface SafeSessionDto {

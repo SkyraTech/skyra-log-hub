@@ -1,19 +1,40 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { PageHeaderComponent } from '../../shared/ui/page-header/page-header.component';
-import { CardComponent } from '../../shared/ui/card/card.component';
-import { BadgeComponent } from '../../shared/ui/badge/badge.component';
-import { WorkspaceContextService } from '../../core/workspace/workspace-context.service';
-
-@Component({
-  selector: 'skyra-projects',
-  standalone: true,
-  imports: [CommonModule, PageHeaderComponent, CardComponent, BadgeComponent],
-  templateUrl: './projects.component.html',
-  styleUrl: './projects.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class ProjectsComponent {
-  private readonly workspaceContext = inject(WorkspaceContextService);
-  readonly context = this.workspaceContext.currentContext;
+import {AuditLinkComponent} from '../audit/audit-link.component';
+import {Component,ChangeDetectionStrategy,CUSTOM_ELEMENTS_SCHEMA,inject,signal,computed,DestroyRef,HostListener,ViewChild,ElementRef,AfterViewInit,AfterViewChecked} from '@angular/core';
+import {CommonModule} from '@angular/common';import {ActivatedRoute,Router} from '@angular/router';import {takeUntilDestroyed} from '@angular/core/rxjs-interop';import {HttpErrorResponse} from '@angular/common/http';import {Subscription} from 'rxjs';
+import {AuthService} from '../../core/auth/auth.service';import {WorkspaceContextService} from '../../core/workspace/workspace-context.service';import {ProjectsApiService,type ProjectView,type ProjectsPage} from './projects-api.service';
+@Component({selector:'skyra-projects',standalone:true,imports:[CommonModule,AuditLinkComponent],schemas:[CUSTOM_ELEMENTS_SCHEMA],templateUrl:'./projects.component.html',styleUrl:'./projects.component.css',changeDetection:ChangeDetectionStrategy.OnPush})
+export class ProjectsComponent implements AfterViewInit,AfterViewChecked {
+  private readonly api=inject(ProjectsApiService);private readonly route=inject(ActivatedRoute);private readonly router=inject(Router);private readonly destroy=inject(DestroyRef);private readonly auth=inject(AuthService);private readonly workspace=inject(WorkspaceContextService);private pending?:Subscription;
+  private readonly element=inject<ElementRef<HTMLElement>>(ElementRef);@ViewChild('confirmationDialog')private dialog?:ElementRef<HTMLElement>;
+  ngAfterViewInit(){this.dialog?.nativeElement.shadowRoot?.querySelector('[part="dialog"]')?.setAttribute('aria-label','Confirm project status change');}
+  @HostListener('skyra-dropdown-open')ngAfterViewChecked(){this.element.nativeElement.querySelectorAll('skyra-tech-dropdown-menu').forEach(menu=>menu.querySelectorAll('skyra-dropdown-item').forEach(item=>item.setAttribute('role','presentation')));}
+  readonly id=this.route.snapshot.paramMap.get('projectId');readonly creating=this.route.snapshot.data['create']===true;readonly settings=this.route.snapshot.data['settings']===true;
+  readonly page=signal<ProjectsPage|null>(null);readonly project=signal<ProjectView|null>(null);readonly name=signal('');readonly code=signal('');readonly loading=signal(true);readonly saving=signal(false);readonly error=signal('');readonly denied=signal(false);readonly success=signal('');readonly conflict=signal(false);readonly confirmation=signal<ProjectView['status']|null>(null);
+  readonly search=signal('');readonly status=signal('');readonly sort=signal('createdAt');readonly direction=signal('asc');readonly cursor=signal('');readonly history=signal<string[]>([]);
+  readonly validName=computed(()=>{const n=this.name().trim();return Array.from(n).length>=2&&Array.from(n).length<=255&&!/[\u0000-\u001f\u007f]/.test(n);});readonly validCode=computed(()=>/^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/.test(this.code()));readonly dirty=computed(()=>this.creating?!!(this.name()||this.code()):!!this.project()&&this.name()!==this.project()!.name);
+  readonly statusItems=computed(()=>['','ACTIVE','SUSPENDED','ARCHIVED'].map(value=>({label:value||'All statuses',onClick:()=>{this.status.set(value);this.apply();}})));
+  readonly sortItems=[{label:'Created date',onClick:()=>{this.sort.set('createdAt');this.apply();}},{label:'Name',onClick:()=>{this.sort.set('name');this.apply();}},{label:'Code',onClick:()=>{this.sort.set('id');this.apply();}}];
+  readonly directionItems=[{label:'Ascending',onClick:()=>{this.direction.set('asc');this.apply();}},{label:'Descending',onClick:()=>{this.direction.set('desc');this.apply();}}];
+  readonly columns=[{accessor:'name',header:'Project'},{accessor:'id',header:'Code / ID'},{accessor:'status',header:'Status'},{accessor:'createdLabel',header:'Created'}];readonly tableFeatures={sorting:false,filtering:false,globalSearch:false,pagination:false,rowSelection:false,columnVisibility:false,columnResizing:false,rowActions:true};readonly rows=computed(()=>this.page()?.items.map(p=>({...p,createdLabel:new Date(p.createdAt).toLocaleDateString()}))??[]);
+  constructor(){this.load();}
+  ngOnInit(){void this.workspace.loadWorkspacesFromBff();}
+  load(){this.pending?.unsubscribe();this.loading.set(true);this.error.set('');this.denied.set(false);this.conflict.set(false);
+    if(this.id)this.pending=this.api.read(this.id).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:p=>{this.project.set(p);this.name.set(p.name);this.loading.set(false);},error:e=>this.handle(e)});
+    else this.pending=this.api.list({limit:'10',q:this.search(),status:this.status(),sort:this.sort(),direction:this.direction(),...(this.cursor()?{cursor:this.cursor()}:{})}).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:p=>{this.page.set(p);this.loading.set(false);if(this.creating&&!p.canCreate){this.denied.set(true);this.error.set('You do not have permission to create projects.');}},error:e=>this.handle(e)});
+  }
+  apply(){this.cursor.set('');this.history.set([]);this.load();}next(){const c=this.page()?.nextCursor;if(c){this.history.update(h=>[...h,this.cursor()]);this.cursor.set(c);this.load();}}previous(){const h=[...this.history()];this.cursor.set(h.pop()??'');this.history.set(h);this.load();}
+  usage(){void this.router.navigate(['/projects',this.id,'usage']);}
+  credentials(){void this.router.navigate(['/projects',this.id,'credentials']);}
+  open(id:string){void this.router.navigate(['/projects',id]);}createRoute(){void this.router.navigateByUrl('/projects/new');}edit(){void this.router.navigate(['/projects',this.id,'settings']);}back(){void this.router.navigateByUrl('/projects');}
+  save(){if(this.saving()||this.conflict()||!this.validName()||this.creating&&!this.validCode()||!this.creating&&(!this.project()?.actions.update||!this.dirty()))return;this.saving.set(true);this.error.set('');this.success.set('');
+    const request=this.creating?this.api.create({id:this.code(),name:this.name()}):this.api.update(this.id!,{name:this.name()},this.project()!.version);
+    request.pipe(takeUntilDestroyed(this.destroy)).subscribe({next:p=>{this.saving.set(false);this.project.set(p);this.name.set(p.name);this.success.set(this.creating?'Project created.':'Project saved.');void this.workspace.loadWorkspacesFromBff();if(this.creating){this.name.set('');this.code.set('');void this.router.navigate(['/projects',p.id]);}},error:e=>{this.saving.set(false);this.handle(e);}});
+  }
+  cancel(){if(this.creating){this.back();return;}this.name.set(this.project()?.name??'');this.error.set('');this.success.set('');}
+  requestStatus(status:ProjectView['status']){const p=this.project();if(this.dirty()||!p||this.saving()||this.conflict())return;const allowed=status==='SUSPENDED'?p.actions.suspend:status==='ACTIVE'?p.actions.reactivate:p.actions.archive;if(allowed)this.confirmation.set(status);}
+  confirm(){const p=this.project(),status=this.confirmation();if(!p||!status||this.saving())return;this.confirmation.set(null);this.saving.set(true);this.error.set('');this.success.set('');this.api.update(p.id,{status},p.version).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:value=>{this.project.set(value);this.name.set(value.name);this.saving.set(false);this.success.set('Project status saved.');void this.workspace.loadWorkspacesFromBff();},error:e=>{this.saving.set(false);this.handle(e);}});}
+  async select(){const p=this.project();if(p?.status==='ACTIVE'){const ok=await this.workspace.switchWorkspace(p.tenantId,p.id);await this.workspace.loadWorkspacesFromBff();this.success.set(ok?'Project selected for workspace.':'Workspace selection failed. Retry.');}}
+  reload(){if(!this.dirty()||window.confirm('Discard unsaved project changes and reload?'))this.load();}
+  canLeave(){return !this.dirty()||window.confirm('Discard unsaved project changes?');}@HostListener('window:beforeunload',['$event'])unload(e:BeforeUnloadEvent){if(this.dirty()&&!this.loading()){e.preventDefault();e.returnValue='';}}
+  private handle(e:HttpErrorResponse){this.loading.set(false);this.denied.set([403,404].includes(e.status));this.conflict.set(!this.creating&&[409,412,428].includes(e.status));if(e.status===401){this.auth.logout();void this.router.navigateByUrl('/login');return;}if(this.denied()){this.project.set(null);this.page.set(null);}this.error.set(this.denied()?'You do not have permission to access this project.':this.creating&&e.status===409?'Project code is unavailable. Choose another code.':this.conflict()?'Project changed. Reload before retrying. Your draft was not saved.':e.status===400?'Invalid project fields. Check the name and code.':'Project service is unavailable. Changes were not saved. Retry later.');}
 }

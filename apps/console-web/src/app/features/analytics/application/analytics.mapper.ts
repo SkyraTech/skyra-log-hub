@@ -83,7 +83,7 @@ export class AnalyticsMapper {
         timestamp: ts,
         count: b.count || 0,
         formattedTime: isDateValid
-          ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+          ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false, timeZone:'UTC' })
           : ts,
         formattedDate: isDateValid
           ? date.toISOString().substring(0, 10)
@@ -95,12 +95,13 @@ export class AnalyticsMapper {
   public static mapDistribution(
     aggResult: AggregationResultItem | undefined,
     colorScheme?: 'severity' | 'monochrome',
+    totalCount?:number,
   ): DistributionItem[] {
     if (!aggResult?.buckets || !Array.isArray(aggResult.buckets)) {
       return [];
     }
 
-    const total = aggResult.buckets.reduce((acc, b) => acc + (b.count || 0), 0);
+    const total = totalCount??aggResult.buckets.reduce((acc, b) => acc + (b.count || 0), 0);
 
     return aggResult.buckets.map((b) => {
       const key = String(b.key ?? 'unknown');

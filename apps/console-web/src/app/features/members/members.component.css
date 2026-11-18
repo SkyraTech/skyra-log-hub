@@ -1,0 +1,9 @@
+:host{display:block;min-width:0}.members-page{max-width:1200px;margin:auto;padding:var(--space-6);color:var(--skyra-text)}h1{font-size:clamp(1.5rem,3vw,2rem);margin:var(--space-3) 0}h2{overflow-wrap:anywhere}.eyebrow{color:var(--skyra-primary);font-weight:600}.panel,.table-panel{background:var(--skyra-surface);border:1px solid var(--skyra-border);border-radius:var(--radius-lg);padding:var(--space-5);margin:var(--space-5) 0;min-width:0}.table-panel{overflow:auto;padding:0}.filters,.actions,.labels{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}.filters{margin:var(--space-5) 0;align-items:end}.filters skyra-tech-input{flex:1;min-width:220px}.actions{margin:var(--space-4) 0}.feedback{margin:var(--space-4) 0}dl{display:flex;gap:var(--space-5);flex-wrap:wrap}dd{margin:var(--space-2) 0}dt{font-weight:600}p,li{line-height:1.6;overflow-wrap:anywhere}skyra-tech-data-table{display:block;min-width:700px}skyra-tech-dialog p{max-width:40rem}@media(max-width:600px){.members-page{padding:var(--space-3)}.panel{padding:var(--space-4)}.filters{align-items:stretch}.filters skyra-tech-input{flex-basis:100%}.actions{gap:var(--space-2)}dl{flex-direction:column;gap:var(--space-2)}}
+:host .eyebrow{color:var(--skyra-text)}
+/* Map the packaged widgets' subtle text to the existing theme foreground for contrast. */
+.filters skyra-tech-input{--skyra-input-text-muted:var(--skyra-text);--skyra-input-text-subtle:var(--skyra-text)}
+skyra-tech-data-table{--skyra-text-subtle:var(--skyra-text)}
+
+skyra-tech-button[variant="outline"]{--skyra-primary:var(--skyra-text);--skyra-primary-light:var(--skyra-surface)}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

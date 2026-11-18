@@ -1,19 +1,25 @@
 import { Client, Pool } from 'pg';
 import { assertIsolatedDatabaseEnvironment } from './guard.js';
+import { connectIsolatedClient, validateTestTarget, verifyConnectedTarget } from '../../../scripts/lib/isolated-target.mjs';
+import { ALL_CAPABILITIES } from '../../../apps/admin-service/src/modules/authorization/domain/permission.model.js';
 
-export const TEST_DATABASE_URL =
-  process.env.ISOLATED_DATABASE_URL ??
-  'postgresql://skyra_isolated_user@127.0.0.1:5433/skyra_loghub_disposable_validation';
+export const TEST_DATABASE_URL = process.env.ISOLATED_DATABASE_URL;
 
-export function getTestPool(): Pool {
-  return new Pool({ connectionString: TEST_DATABASE_URL, max: 10 });
+export async function getTestPool(): Promise<Pool> {
+  await assertIsolatedDatabaseEnvironment(TEST_DATABASE_URL);
+  const target = validateTestTarget(TEST_DATABASE_URL);
+  const options = { connectionString: TEST_DATABASE_URL, max: 10,
+    connectionTimeoutMillis: 3000, query_timeout: 15000, statement_timeout: 12000,
+    // pg-pool waits for verify before releasing a newly connected client to callers.
+    verify: (client: Client, done: (error?: Error) => void) => {
+      verifyConnectedTarget(client, target).then(() => done(), (error: Error) => done(error));
+    },
+  };
+  return new Pool(options);
 }
 
 export async function getTestClient(): Promise<Client> {
-  const target = await assertIsolatedDatabaseEnvironment(TEST_DATABASE_URL);
-  const client = new Client({ connectionString: target.connectionString });
-  await client.connect();
-  return client;
+  return connectIsolatedClient(TEST_DATABASE_URL);
 }
 
 export interface SyntheticFixtureData {
@@ -35,18 +41,7 @@ export const STANDARD_ROLES = [
   { name: 'Viewer', desc: 'Read-only analyst viewer' },
 ];
 
-export const STANDARD_PERMISSIONS = [
-  'tenant.read', 'tenant.update', 'tenant.delete',
-  'project.create', 'project.read', 'project.update', 'project.delete',
-  'member.read', 'member.invite', 'member.update', 'member.remove',
-  'role.assign',
-  'credentials.create', 'credentials.read', 'credentials.revoke',
-  'quotas.manage',
-  'retention.manage',
-  'logs.ingest', 'logs.search', 'logs.export',
-  'audit.read',
-  'alerts.manage'
-];
+export const STANDARD_PERMISSIONS = ALL_CAPABILITIES;
 
 /**
  * Seeds standard roles and capabilities into the isolated database.

@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  CUSTOM_ELEMENTS_SCHEMA,
   Component,
   input,
   output,
@@ -7,18 +8,26 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ButtonComponent } from '../../../../shared/ui/button/button.component';
+
 import { TimeRangePreset, TIME_RANGE_PRESETS } from '../../domain/log-search.model';
 
 @Component({
   selector: 'skyra-search-toolbar',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent],
+  imports: [CommonModule, FormsModule],
+  schemas:[CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './search-toolbar.component.html',
   styleUrl: './search-toolbar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SearchToolbarComponent {
+  readonly correlationId=input<string>('');
+  readonly correlationIdChange=output<string>();
+  readonly traceId=input<string>('');
+  readonly customStart=input<string>('');
+  readonly customEnd=input<string>('');
+  readonly traceIdChange=output<string>();
+  readonly customRangeChange=output<{start:string;end:string}>();
   readonly queryText = input<string>('');
   readonly timeRange = input<TimeRangePreset>('15m');
   readonly loading = input<boolean>(false);

@@ -26,7 +26,9 @@
     },
     "event": {
       "type": "object",
-      "required": ["id"],
+      "required": [
+        "id"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -49,7 +51,17 @@
           "description": "ECS event categories.",
           "items": {
             "type": "string",
-            "enum": ["web", "database", "authentication", "iam", "process", "network", "job", "audit", "configuration"]
+            "enum": [
+              "web",
+              "database",
+              "authentication",
+              "iam",
+              "process",
+              "network",
+              "job",
+              "audit",
+              "configuration"
+            ]
           }
         },
         "type": {
@@ -57,12 +69,24 @@
           "description": "ECS event types.",
           "items": {
             "type": "string",
-            "enum": ["access", "change", "start", "end", "info", "error", "connection"]
+            "enum": [
+              "access",
+              "change",
+              "start",
+              "end",
+              "info",
+              "error",
+              "connection"
+            ]
           }
         },
         "outcome": {
           "type": "string",
-          "enum": ["success", "failure", "unknown"]
+          "enum": [
+            "success",
+            "failure",
+            "unknown"
+          ]
         },
         "duration": {
           "type": "integer",
@@ -74,11 +98,20 @@
     },
     "log": {
       "type": "object",
-      "required": ["level"],
+      "required": [
+        "level"
+      ],
       "properties": {
         "level": {
           "type": "string",
-          "enum": ["trace", "debug", "info", "warn", "error", "fatal"]
+          "enum": [
+            "trace",
+            "debug",
+            "info",
+            "warn",
+            "error",
+            "fatal"
+          ]
         },
         "logger": {
           "type": "string",
@@ -95,7 +128,10 @@
     },
     "service": {
       "type": "object",
-      "required": ["name", "environment"],
+      "required": [
+        "name",
+        "environment"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -106,7 +142,15 @@
         "environment": {
           "type": "string",
           "description": "Deployment environment. Canonical names: local, development, test, staging, production. Legacy aliases: dev, qa.",
-          "enum": ["local", "development", "test", "staging", "production", "dev", "qa"]
+          "enum": [
+            "local",
+            "development",
+            "test",
+            "staging",
+            "production",
+            "dev",
+            "qa"
+          ]
         },
         "version": {
           "type": "string",
@@ -115,7 +159,10 @@
         "node": {
           "type": "object",
           "properties": {
-            "name": { "type": "string", "maxLength": 128 }
+            "name": {
+              "type": "string",
+              "maxLength": 128
+            }
           },
           "additionalProperties": false
         }
@@ -124,7 +171,10 @@
     },
     "skyra": {
       "type": "object",
-      "required": ["project_id", "schema_version"],
+      "required": [
+        "project_id",
+        "schema_version"
+      ],
       "properties": {
         "project_id": {
           "type": "string",
@@ -148,7 +198,10 @@
         "http": {
           "type": "object",
           "properties": {
-            "route_template": { "type": "string", "maxLength": 256 }
+            "route_template": {
+              "type": "string",
+              "maxLength": 256
+            }
           },
           "additionalProperties": false
         },
@@ -170,36 +223,86 @@
         "job": {
           "type": "object",
           "properties": {
-            "id": { "type": "string", "maxLength": 128 },
-            "type": { "type": "string", "maxLength": 64 },
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "type": {
+              "type": "string",
+              "maxLength": 64
+            },
             "status": {
               "type": "string",
-              "enum": ["queued", "running", "completed", "failed", "cancelled"]
+              "enum": [
+                "queued",
+                "running",
+                "completed",
+                "failed",
+                "cancelled"
+              ]
             },
-            "queue_duration_ms": { "type": "number", "minimum": 0 },
-            "attempt": { "type": "integer", "minimum": 1 }
+            "queue_duration_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "attempt": {
+              "type": "integer",
+              "minimum": 1
+            }
           },
           "additionalProperties": false
         },
         "audit": {
           "type": "object",
           "properties": {
-            "actor_id": { "type": "string", "maxLength": 128 },
-            "action": { "type": "string", "maxLength": 128 },
-            "resource_type": { "type": "string", "maxLength": 128 },
-            "resource_id": { "type": "string", "maxLength": 128 }
+            "actor_id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "action": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "resource_type": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "resource_id": {
+              "type": "string",
+              "maxLength": 128
+            }
           },
           "additionalProperties": false
         },
         "security": {
           "type": "object",
           "properties": {
-            "audit": { "type": "boolean" },
-            "event_type": { "type": "string", "maxLength": 64 },
-            "subject_id": { "type": "string", "maxLength": 128 },
-            "decision": { "type": "string", "enum": ["allow", "deny"] },
-            "auth_mechanism": { "type": "string", "maxLength": 64 },
-            "client_ip": { "type": "string", "maxLength": 45 }
+            "audit": {
+              "type": "boolean"
+            },
+            "event_type": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "subject_id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "decision": {
+              "type": "string",
+              "enum": [
+                "allow",
+                "deny"
+              ]
+            },
+            "auth_mechanism": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "client_ip": {
+              "type": "string",
+              "maxLength": 45
+            }
           },
           "additionalProperties": true
         },
@@ -213,7 +316,9 @@
     },
     "trace": {
       "type": "object",
-      "required": ["id"],
+      "required": [
+        "id"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -225,7 +330,9 @@
     },
     "span": {
       "type": "object",
-      "required": ["id"],
+      "required": [
+        "id"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -240,19 +347,36 @@
       "properties": {
         "request": {
           "type": "object",
-          "required": ["method"],
+          "required": [
+            "method"
+          ],
           "properties": {
             "method": {
               "type": "string",
-              "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "CONNECT", "TRACE"]
+              "enum": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "HEAD",
+                "OPTIONS",
+                "CONNECT",
+                "TRACE"
+              ]
             },
-            "id": { "type": "string", "maxLength": 128 }
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            }
           },
           "additionalProperties": false
         },
         "response": {
           "type": "object",
-          "required": ["status_code"],
+          "required": [
+            "status_code"
+          ],
           "properties": {
             "status_code": {
               "type": "integer",
@@ -276,37 +400,72 @@
     "url": {
       "type": "object",
       "properties": {
-        "path": { "type": "string", "maxLength": 1024 },
-        "query": { "type": "string", "maxLength": 2048 },
-        "domain": { "type": "string", "maxLength": 256 },
-        "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+        "path": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "query": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "domain": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
       },
       "additionalProperties": false
     },
     "client": {
       "type": "object",
       "properties": {
-        "ip": { "type": "string", "maxLength": 45 },
-        "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+        "ip": {
+          "type": "string",
+          "maxLength": 45
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
       },
       "additionalProperties": false
     },
     "user_agent": {
       "type": "object",
       "properties": {
-        "original": { "type": "string", "maxLength": 512 }
+        "original": {
+          "type": "string",
+          "maxLength": 512
+        }
       },
       "additionalProperties": false
     },
     "user": {
       "type": "object",
       "properties": {
-        "id": { "type": "string", "maxLength": 128 },
-        "name": { "type": "string", "maxLength": 128 },
-        "email": { "type": "string", "maxLength": 256 },
+        "id": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 256
+        },
         "roles": {
           "type": "array",
-          "items": { "type": "string", "maxLength": 64 }
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          }
         }
       },
       "additionalProperties": false
@@ -316,77 +475,173 @@
       "properties": {
         "system": {
           "type": "string",
-          "enum": ["postgresql", "mysql", "sqlite", "duckdb", "valkey", "redis", "elasticsearch", "mongodb", "oracle", "sqlserver"]
+          "enum": [
+            "postgresql",
+            "mysql",
+            "sqlite",
+            "duckdb",
+            "valkey",
+            "redis",
+            "elasticsearch",
+            "mongodb",
+            "oracle",
+            "sqlserver"
+          ]
         },
-        "name": { "type": "string", "maxLength": 128 },
-        "operation": { "type": "string", "maxLength": 32 },
-        "table": { "type": "string", "maxLength": 128 },
+        "name": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "operation": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "table": {
+          "type": "string",
+          "maxLength": 128
+        },
         "statement_sanitized": {
           "type": "string",
           "maxLength": 4096,
           "description": "Sanitized query fingerprint with parameters replaced by placeholders."
         },
-        "rows_affected": { "type": "integer", "minimum": 0 }
+        "rows_affected": {
+          "type": "integer",
+          "minimum": 0
+        }
       },
       "additionalProperties": false
     },
     "error": {
       "type": "object",
-      "required": ["type", "message"],
+      "required": [
+        "type",
+        "message"
+      ],
       "properties": {
-        "type": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "message": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
         "code": {
           "oneOf": [
-            { "type": "string", "maxLength": 64 },
-            { "type": "integer" }
+            {
+              "type": "string",
+              "maxLength": 64
+            },
+            {
+              "type": "integer"
+            }
           ]
         },
-        "stack_trace": { "type": "string", "maxLength": 16384 }
+        "stack_trace": {
+          "type": "string",
+          "maxLength": 16384
+        }
       },
       "additionalProperties": false
     },
     "job": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
-        "name": { "type": "string", "minLength": 1, "maxLength": 128 },
-        "id": { "type": "string", "maxLength": 128 },
-        "queue": { "type": "string", "maxLength": 128 },
-        "attempt": { "type": "integer", "minimum": 1 },
-        "max_attempts": { "type": "integer", "minimum": 1 }
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "queue": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1
+        }
       },
       "additionalProperties": false
     },
     "host": {
       "type": "object",
       "properties": {
-        "hostname": { "type": "string", "maxLength": 256 },
-        "name": { "type": "string", "maxLength": 256 },
+        "hostname": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 256
+        },
         "ip": {
           "type": "array",
-          "items": { "type": "string", "maxLength": 45 }
+          "items": {
+            "type": "string",
+            "maxLength": 45
+          }
         },
-        "id": { "type": "string", "maxLength": 128 }
+        "id": {
+          "type": "string",
+          "maxLength": 128
+        }
       },
       "additionalProperties": false
     },
     "process": {
       "type": "object",
       "properties": {
-        "pid": { "type": "integer", "minimum": 0 }
+        "pid": {
+          "type": "integer",
+          "minimum": 0
+        }
       },
       "additionalProperties": false
     },
     "labels": {
       "type": "object",
       "description": "Key-value string pairs for user-defined attributes.",
-      "additionalProperties": { "type": "string", "maxLength": 256 }
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 256
+      }
     },
     "tags": {
       "type": "array",
       "description": "Array of tags.",
-      "items": { "type": "string", "maxLength": 64 }
+      "items": {
+        "type": "string",
+        "maxLength": 64
+      }
+    },
+    "correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+        }
+      }
     }
   },
   "additionalProperties": false

@@ -3,6 +3,7 @@ import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
   input,
+  effect,
   output,
   signal,
 } from '@angular/core';
@@ -113,18 +114,18 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
       @if (timeRange() === 'custom') {
         <div class="custom-range-bar">
           <div class="custom-field">
-            <label class="control-label">Start (UTC)</label>
+            <label for="analytics-start" class="control-label">Start (UTC)</label>
             <input
-              type="text"
+              id="analytics-start" type="text"
               class="custom-input font-mono"
               placeholder="YYYY-MM-DDTHH:mm:ssZ"
               [(ngModel)]="customStartVal"
             />
           </div>
           <div class="custom-field">
-            <label class="control-label">End (UTC)</label>
+            <label for="analytics-end" class="control-label">End (UTC, exclusive)</label>
             <input
-              type="text"
+              id="analytics-end" type="text"
               class="custom-input font-mono"
               placeholder="YYYY-MM-DDTHH:mm:ssZ"
               [(ngModel)]="customEndVal"
@@ -167,6 +168,7 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
     </div>
   `,
   styles: [`
+    .custom-range-bar{flex-wrap:wrap}.custom-field{min-width:0;flex:1 1 240px}.custom-input{box-sizing:border-box;width:100%;min-width:0}
     .toolbar-container {
       background: var(--skyra-surface, #ffffff);
       border: 1px solid var(--skyra-border, #e2e8f0);
@@ -350,10 +352,14 @@ import { BucketInterval } from '../../domain/analytics-metric.model';
       border-radius: 50%;
       background: var(--skyra-success, #16a34a);
     }
+    .apply-custom-btn{background:var(--skyra-text);color:var(--skyra-surface);}
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AnalyticsToolbarComponent {
+  readonly customStart=input<string>('');
+  readonly customEnd=input<string>('');
+  constructor(){effect(()=>{this.customStartVal=this.customStart();this.customEndVal=this.customEnd();});}
   readonly timeRange = input.required<TimeRangePreset>();
   readonly interval = input<BucketInterval>('5m');
   readonly environment = input<string>('');
@@ -390,7 +396,7 @@ export class AnalyticsToolbarComponent {
   }
 
   applyCustomRange(): void {
-    if (this.customStartVal && this.customEndVal) {
+    {
       this.customRangeApply.emit({
         start: this.customStartVal,
         end: this.customEndVal,

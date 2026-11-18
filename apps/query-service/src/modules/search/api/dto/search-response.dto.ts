@@ -5,6 +5,8 @@ export interface SearchPaginationDto {
 }
 
 export interface SearchStatisticsDto {
+  readonly partial_results?:boolean;
+  readonly unavailable_segments?:number;
   readonly scanned_bytes: number;
   readonly scanned_segments: number;
   readonly execution_time_ms: number;

@@ -21,7 +21,7 @@ import { DistributionItem } from '../../domain/analytics-metric.model';
         </div>
       } @else {
         <!-- Stacked visual proportion bar -->
-        <div class="stacked-bar" role="progressbar" aria-label="Severity distribution bar">
+        <div class="stacked-bar" role="img" aria-label="Severity distribution; exact counts are listed below">
           @for (item of items(); track item.key) {
             @if (item.percentage > 0) {
               <div
@@ -35,12 +35,12 @@ import { DistributionItem } from '../../domain/analytics-metric.model';
         </div>
 
         <!-- Interactive Legend / Breakdown List -->
-        <div class="items-list" role="list">
+        <div class="items-list" role="group" aria-label="Severity filters">
           @for (item of items(); track item.key) {
             <button
               type="button"
               class="item-row"
-              role="listitem"
+
               [attr.aria-label]="item.label.toUpperCase() + ': ' + item.count.toLocaleString() + ' logs, ' + item.percentage + ' percent. Click to filter logs.'"
               (click)="onItemClick(item.key)"
             >

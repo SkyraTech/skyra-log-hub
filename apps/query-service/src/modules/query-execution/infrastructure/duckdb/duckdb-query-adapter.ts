@@ -262,7 +262,7 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
     if (totalSegments === 0) {
       const aggregations: Record<string, SingleAggregationResult> = {};
       for (const spec of plan.aggregations) {
-        if (spec.type === 'date_histogram') {
+        if(spec.type==='service_trend'){aggregations[spec.name]={type:'service_trend',buckets:[]};} else if (spec.type === 'date_histogram') {
           aggregations[spec.name] = { type: 'date_histogram', buckets: [] };
         } else if (spec.type === 'terms') {
           aggregations[spec.name] = { type: 'terms', buckets: [] };
@@ -340,7 +340,7 @@ export class DuckDbLogQueryAdapter implements ILogQueryExecutionPort {
               const reader = await prep.run();
               const rows = await reader.getRows();
 
-              if (spec.type === 'date_histogram') {
+              if(spec.type==='service_trend'){results[spec.name]={type:'service_trend',buckets:rows.map(r=>({service:r[0]===null?'':String(r[0]),timestamp:String(r[1]),count:Number(r[2]),errors:Number(r[3]),warnings:Number(r[4])}))};} else if (spec.type === 'date_histogram') {
                 const buckets = rows.map((r) => ({
                   timestamp: String(r[0] ?? ''),
                   count: Number(r[1] ?? 0),

@@ -19,6 +19,7 @@ describe('PostgreSQL Integration: Migration & Schema Parity (Section 7 & 8)', ()
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+        AND table_name <> '_prisma_migrations'
       ORDER BY table_name;
     `);
 

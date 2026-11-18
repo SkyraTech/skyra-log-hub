@@ -1,3 +1,4 @@
+import {QuotaAccountingService} from '../storage/quota-accounting.service.js';
 import { Injectable, HttpStatus, Logger, Optional } from '@nestjs/common';
 import { ProjectService } from '../projects/project.service.js';
 import { DiagnosticsService } from '../observability/diagnostics.service.js';
@@ -22,6 +23,7 @@ export class IngestionService {
     @Optional() private readonly receiptService?: ReceiptService,
     @Optional() private readonly archiveWriter?: ArchiveWriterService,
     @Optional() private readonly lockService?: DeduplicationLockService,
+    @Optional() private readonly accounting?: QuotaAccountingService,
   ) {}
 
   public async admitAndIngestBatch(
@@ -71,6 +73,8 @@ export class IngestionService {
       }
     }
 
+    if(this.accounting?.enabled&&batch.events.some(e=>e.skyra?.project_id!==batch.events[0]?.skyra?.project_id))
+      throw new GatewayException(ErrorCode.SCHEMA_VALIDATION_FAILED,'Metered batches must contain one project.',422);
     // 2. Storage Readiness Verification
     if (!this.walService || !this.receiptService || !this.walService.getStatus().isReady) {
       this.diagnostics.recordStorageUnavailable(batch.batch_id, batch.events.length);
@@ -101,7 +105,8 @@ export class IngestionService {
 
     try {
       // 3. Authoritative Replay & Deduplication Check (ADR-015)
-      const idempotency = await this.receiptService.checkIdempotency(
+      const metered = this.accounting?.enabled ? await this.accounting.admit({batchId:batch.batch_id,tenantId:identity.tenantId,projectId:primaryProjectId,eventCount:batch.events.length,contentDigestSha256:canonicalDigest},Buffer.from(JSON.stringify(batch.events),'utf8')) : undefined;
+      const idempotency = metered ? {duplicate:metered.duplicate,receipt:metered.receipt} : await this.receiptService.checkIdempotency(
         identity.tenantId,
         primaryProjectId,
         batch.batch_id,
@@ -129,10 +134,10 @@ export class IngestionService {
 
       // 4. Contiguous Frame Serialization & Synchronous fsync Append
       const payloadBuf = Buffer.from(JSON.stringify(batch.events), 'utf-8');
-      let commitResult: { receipt: any; frame: any };
+      let commitResult: { receipt: any; frame?: any };
 
       try {
-        commitResult = await this.walService.appendBatch(
+        commitResult = metered ?? await this.walService.appendBatch(
           {
             batchId: batch.batch_id,
             tenantId: identity.tenantId,
@@ -179,7 +184,9 @@ export class IngestionService {
             | 'local';
           const serviceName = primaryEvent.service?.name || 'gateway';
 
-          await this.archiveWriter.appendEvents(
+          if(process.env['INGESTION_PUBLISH_ARCHIVES']==='true'){
+            await this.archiveWriter.publishCommittedFrame(commitResult.frame,walReceipt.journalSegment);
+          }else await this.archiveWriter.appendEvents(
             {
               tenantId: identity.tenantId,
               projectId: primaryProjectId,

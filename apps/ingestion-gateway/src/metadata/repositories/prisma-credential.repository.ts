@@ -10,6 +10,7 @@ export class PrismaCredentialRepository implements ICredentialRepository {
   public async findByKeyHash(keyHash: string): Promise<IngestionCredentialEntity | null> {
     const cred = await this.prisma.ingestionCredential.findUnique({
       where: { keyHash },
+      select:{id:true,tenantId:true,keyHash:true,keyPrefix:true,description:true,allowedProjects:true,allowedEnvironments:true,rateLimitPerMin:true,createdAt:true,expiresAt:true,isRevoked:true,lastUsedAt:true},
     });
     if (!cred) return null;
     return {
@@ -29,8 +30,8 @@ export class PrismaCredentialRepository implements ICredentialRepository {
   }
 
   public async updateLastUsed(id: string, timestamp: Date): Promise<void> {
-    await this.prisma.ingestionCredential.update({
-      where: { id },
+    await this.prisma.ingestionCredential.updateMany({
+      where: { id, isRevoked:false, expiresAt:{gt:timestamp} },
       data: { lastUsedAt: timestamp },
     });
   }

@@ -1,47 +1,38 @@
-<div class="projects-container">
-  <skyra-page-header
-    title="Workspace Projects"
-    description="Manage tenant data isolation boundaries, project keys, and ingestion credentials."
-  />
-
-  <div class="projects-grid">
-    <skyra-card [title]="'Current Scope: ' + context().tenantId" subtitle="Configured tenant context">
-      <div class="project-details">
-        <div class="detail-row">
-          <span class="detail-label">Active Project ID</span>
-          <span class="detail-val font-mono">{{ context().projectId }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Target Environment</span>
-          <span class="detail-val">
-            <skyra-badge variant="brand">{{ context().environment }}</skyra-badge>
-          </span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Retention Boundary</span>
-          <span class="detail-val font-mono">30 Days</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Administration State</span>
-          <span class="detail-val">
-            <skyra-badge variant="neutral">BFF Integration in CONSOLE-003</skyra-badge>
-          </span>
-        </div>
-      </div>
-    </skyra-card>
-
-    <skyra-card title="Project Creation & RBAC" subtitle="Role-based administration">
-      <p class="admin-notice">
-        Dynamic project creation, multi-tenant workspace switching, and API key provisioning require the NestJS BFF administration endpoints being designed for Task <strong>CONSOLE-003</strong>.
-      </p>
-      <div class="capabilities-box">
-        <span class="cap-title">Configured Architecture Standards:</span>
-        <ul class="cap-list">
-          <li>Tenancy model: Shared storage, strict tenant_id & project_id row isolation.</li>
-          <li>Ingestion endpoints: <code>/v1/logs</code> with HMAC / Api-Key authentication.</li>
-          <li>Query authorization: Scoped to verified session claims.</li>
-        </ul>
-      </div>
-    </skyra-card>
-  </div>
-</div>
+<section class="projects-page" aria-labelledby="projects-title">
+  <div><p class="eyebrow">Organization projects</p><h1 id="projects-title">{{creating?'Create project':id?(settings?'Project settings':'Project details'):'Projects'}}</h1><p>Manage logging projects in your authorized organization.</p></div>
+  @if(!loading()&&!denied()&&!creating&&(project()||page())){<skyra-audit-link resourceType="project" [resourceId]="id||''"></skyra-audit-link>}
+  @if(loading()){<div class="panel" aria-busy="true"><skyra-spinner label="Loading projects" show-label></skyra-spinner></div>}
+  @if(error()){<div class="feedback"><skyra-notification-bar type="error" duration="0">{{error()}}</skyra-notification-bar></div>@if(!denied()&&!creating){<skyra-tech-button variant="outline" (click)="reload()">{{conflict()?'Reload project':'Retry'}}</skyra-tech-button>}}
+  @if(success()){<div role="status" class="feedback"><skyra-notification-bar type="success" duration="0">{{success()}}</skyra-notification-bar></div>}
+  @if(!loading()&&!denied()){
+    @if(!id&&!creating&&page();as result){
+      <div class="actions">@if(result.canCreate){<skyra-tech-button (click)="createRoute()">Create project</skyra-tech-button>}</div>
+      <form class="filters" aria-label="Filter projects" (submit)="$event.preventDefault();apply()">
+        <skyra-tech-input label="Search projects" helper-text="Search name or code" [value]="search()" (input)="search.set($any($event.target).value)" (keydown.enter)="$event.preventDefault();apply()"></skyra-tech-input><skyra-tech-button type="button" (click)="apply()">Search</skyra-tech-button>
+        <skyra-tech-dropdown-menu [items]="statusItems()" aria-label="Project status filter"><span slot="trigger">Status: {{status()||'All'}}</span></skyra-tech-dropdown-menu>
+        <skyra-tech-dropdown-menu [items]="sortItems" aria-label="Project sort"><span slot="trigger">Sort: {{sort()}}</span></skyra-tech-dropdown-menu>
+        <skyra-tech-dropdown-menu [items]="directionItems" aria-label="Sort direction"><span slot="trigger">{{direction()==='asc'?'Ascending':'Descending'}}</span></skyra-tech-dropdown-menu>
+      </form>
+      @if(result.items.length){<div class="table-panel"><skyra-tech-data-table [data]="rows()" [columns]="columns" [features]="tableFeatures" (skyra-row-click)="open($any($event).detail.id)" aria-label="Authorized projects">@for(row of result.items;track row.id){<skyra-tech-button [attr.slot]="'row-actions-'+row.id" variant="outline" size="sm" (click)="$event.stopPropagation();open(row.id)">View<span class="sr-only"> {{row.id}}</span></skyra-tech-button>}</skyra-tech-data-table></div>}
+      @else{<skyra-tech-empty-state headline="No matching projects" description="Try another search or create a project if permitted."></skyra-tech-empty-state>}
+      <nav class="actions" aria-label="Project pages"><skyra-tech-button variant="outline" (click)="previous()" [disabled]="!history().length">Previous page</skyra-tech-button><span role="status">Page {{history().length+1}}</span><skyra-tech-button variant="outline" (click)="next()" [disabled]="!result.nextCursor">Next page</skyra-tech-button></nav>
+    }
+    @if(creating||(settings&&project()?.actions?.update)){
+      <form class="panel" aria-label="Project form" (submit)="$event.preventDefault();save()">
+        <skyra-tech-input label="Project name" helper-text="2–255 characters" [value]="name()" [disabled]="saving()" (input)="name.set($any($event.target).value)"></skyra-tech-input>
+        @if(name()&&!validName()){<p class="validation" role="status">Enter a name with 2–255 characters and no control characters.</p>}
+        @if(creating){<skyra-tech-input label="Project code" helper-text="Immutable, globally unique code; 3–64 lowercase letters, digits and hyphens" [value]="code()" [disabled]="saving()" (input)="code.set($any($event.target).value)"></skyra-tech-input>@if(code()&&!validCode()){<p class="validation" role="status">Use 3–64 lowercase letters, digits and hyphens. Start and end with a letter or digit.</p>}}
+        <div class="actions"><skyra-tech-button type="button" (click)="save()" [disabled]="saving()||conflict()||!validName()||(creating&&!validCode())||!dirty()">{{saving()?'Saving…':creating?'Create project':'Save project'}}</skyra-tech-button><skyra-tech-button variant="outline" type="button" (click)="cancel()" [disabled]="saving()">{{creating?'Cancel':'Cancel changes'}}</skyra-tech-button></div>
+      </form>
+    }
+    @if(project();as current){<div class="panel"><h2>{{current.name}}</h2><skyra-tech-badge>{{current.status}}</skyra-tech-badge><dl><div><dt>Project code / ID</dt><dd>{{current.id}}</dd></div><div><dt>Organization</dt><dd>{{current.tenantId}}</dd></div><div><dt>Created</dt><dd>{{current.createdAt|date:'medium'}}</dd></div><div><dt>Updated</dt><dd>{{current.updatedAt|date:'medium'}}</dd></div></dl>
+      <p>Identifiers and organization ownership are immutable. Credentials, quotas, memberships and log references are preserved.</p>
+      @if(current.status!=='ACTIVE'){<p role="status">Inactive projects cannot be selected for queries or accept new ingestion. Previously authorized access may continue briefly (about a minute).</p>}
+      @if(current.status==='ARCHIVED'){<p role="status">Archived projects are permanently read-only.</p>}
+      @if(settings&&!current.actions.update){<p role="status">Project settings are read-only for your current permissions or project state.</p>}
+      <div class="actions"><skyra-tech-button variant="outline" (click)="usage()">Quotas &amp; usage</skyra-tech-button><skyra-tech-button variant="outline" (click)="credentials()">Ingestion credentials</skyra-tech-button>@if(!settings&&current.actions.update){<skyra-tech-button (click)="edit()">Edit project</skyra-tech-button>}@if(current.status==='ACTIVE'){<skyra-tech-button variant="outline" (click)="select()">Select for workspace</skyra-tech-button>}
+      @if(current.actions.suspend){<skyra-tech-button variant="outline" [disabled]="saving()||dirty()||conflict()" (click)="requestStatus('SUSPENDED')">Suspend project</skyra-tech-button>}@if(current.actions.reactivate){<skyra-tech-button variant="outline" [disabled]="saving()||dirty()||conflict()" (click)="requestStatus('ACTIVE')">Reactivate project</skyra-tech-button>}@if(current.actions.archive){<skyra-tech-button variant="outline" [disabled]="saving()||dirty()||conflict()" (click)="requestStatus('ARCHIVED')">Archive project</skyra-tech-button>}<skyra-tech-button variant="outline" (click)="back()">Back to projects</skyra-tech-button></div>
+    </div>}
+  }
+  <skyra-tech-dialog #confirmationDialog [open]="!!confirmation()" size="sm" (skyra-close)="confirmation.set(null)"><span slot="title">Confirm project status change</span><p>Set {{project()?.name}} to {{confirmation()}}? Suspension stops new ingestion and workspace/query selection. Archive is permanent. Credentials and stored references are retained.</p><div slot="footer" class="actions"><skyra-tech-button variant="outline" (click)="confirmation.set(null)">Cancel</skyra-tech-button><skyra-tech-button (click)="confirm()">Confirm change</skyra-tech-button></div></skyra-tech-dialog>
+</section>

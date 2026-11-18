@@ -29,12 +29,10 @@ export function resolveTimeRange(
   nowMs: number = Date.now(),
 ): TimeRangeBoundaries {
   if (preset === 'custom') {
-    const start = customStart && !Number.isNaN(Date.parse(customStart))
-      ? new Date(customStart).toISOString()
-      : new Date(nowMs - 60 * 60 * 1000).toISOString();
-    const end = customEnd && !Number.isNaN(Date.parse(customEnd))
-      ? new Date(customEnd).toISOString()
-      : new Date(nowMs).toISOString();
+    const valid=(value:string|undefined)=>{if(!value)return false;const match=/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);if(!match||Number(match[2])>23||Number(match[3])>59||Number(match[4]??0)>59||!Number.isFinite(Date.parse(value)))return false;return new Date(match[1]+'T00:00:00Z').toISOString().slice(0,10)===match[1];};
+    if(!valid(customStart)||!valid(customEnd))throw new Error('Enter valid ISO UTC date/time values without calendar rollover.');
+    if(!customStart||!customEnd||!Number.isFinite(Date.parse(customStart))||!Number.isFinite(Date.parse(customEnd))||Date.parse(customStart)>=Date.parse(customEnd))throw new Error('Enter a valid UTC start before the exclusive end.');
+    const start=new Date(customStart).toISOString(),end=new Date(customEnd).toISOString();
     return { start, end };
   }
 
@@ -54,6 +52,7 @@ export interface LogSearchCriteria {
   levels: string[];
   services: string[];
   environments: string[];
+  correlationId?: string;
   traceId?: string;
   eventId?: string;
   filters?: StructuredFilter[];

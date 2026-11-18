@@ -89,11 +89,11 @@ function createMockAnalyticsFacade(opts?: {
     }),
   };
 
-  let dispatchedRequest: AggregateLogsRequest | null = null;
+  let dispatchedRequest: AggregateLogsRequest | null = null;const requests:AggregateLogsRequest[]=[];
 
   const mockQueryClient = {
     aggregateLogs: (req: AggregateLogsRequest): Observable<AggregateLogsResponse> => {
-      dispatchedRequest = req;
+      dispatchedRequest = req;requests.push(req);
       if (opts?.aggregateError) {
         return throwError(() => opts.aggregateError);
       }
@@ -111,7 +111,7 @@ function createMockAnalyticsFacade(opts?: {
   (facade as unknown as { router: unknown }).router = mockRouter;
 
   return {
-    facade,
+    facade, requests,
     getDispatchedRequest: () => dispatchedRequest,
     getLastNavigated: () => ({ commands: lastNavigatedCommands, extras: lastNavigatedExtras }),
   };
@@ -143,22 +143,7 @@ describe('AnalyticsFacade Unit Tests (LOGHUB-CONSOLE-005)', () => {
     assert.ok(facade.lastUpdated());
   });
 
-  it('FAC-2: loadAnalytics dispatches error and event action breakdowns', () => {
-    const { facade, getDispatchedRequest } = createMockAnalyticsFacade();
-
-    facade.loadAnalytics();
-
-    const req = getDispatchedRequest();
-    assert.ok(req);
-    assert.equal(req?.aggregations.length, 5);
-    assert.equal(req?.aggregations[3].name, 'top_errors');
-    assert.equal(req?.aggregations[4].name, 'event_actions');
-
-    assert.equal(facade.errorBreakdown().length, 1);
-    assert.equal(facade.errorBreakdown()[0].key, 'StripeTimeout');
-    assert.equal(facade.eventActionBreakdown().length, 1);
-    assert.equal(facade.eventActionBreakdown()[0].key, 'payment.charge');
-  });
+  it('FAC-2: dashboard uses three bounded aggregate calls over identical frozen scope',()=>{const {facade,requests}=createMockAnalyticsFacade();facade.setEnvironment('staging');facade.loadAnalytics();assert.equal(requests.length,3);assert.equal(requests[0].aggregations.length,5);assert.equal(requests[0].aggregations[3].name,'environment_distribution');assert.deepEqual(requests[1].levels,['error','fatal']);assert.deepEqual(requests[2].levels,['warn']);for(const request of requests){assert.deepEqual(request.time_range,requests[0].time_range);assert.deepEqual(request.environments,['staging']);assert.equal(request.include_empty_buckets,true);}assert.ok(facade.appliedScope());});
 
   it('FAC-3: Monotonic queryGeneration discards out-of-order delayed responses', async () => {
     let callCount = 0;

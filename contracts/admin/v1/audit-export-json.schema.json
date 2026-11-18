@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AuditMatchingJsonExport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "metadata",
+    "items"
+  ],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "consistency",
+        "watermark",
+        "filters",
+        "pages",
+        "limits",
+        "count",
+        "truncated",
+        "reason"
+      ],
+      "properties": {
+        "consistency": {
+          "const": "watermark-bounded-keyset-traversal"
+        },
+        "watermark": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "filters": {
+          "$ref": "audit-export-request.schema.json#/$defs/filters"
+        },
+        "pages": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "events",
+            "pages",
+            "pageSize",
+            "bytes",
+            "durationMs",
+            "concurrent"
+          ],
+          "properties": {
+            "events": {
+              "const": 1000
+            },
+            "pages": {
+              "const": 10
+            },
+            "pageSize": {
+              "const": 100
+            },
+            "bytes": {
+              "const": 5242880
+            },
+            "durationMs": {
+              "const": 15000
+            },
+            "concurrent": {
+              "const": 2
+            }
+          }
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "reason": {
+          "enum": [
+            null,
+            "record_limit",
+            "byte_limit",
+            "page_limit"
+          ]
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "$ref": "public-audit-event.schema.json"
+      }
+    }
+  }
+}

@@ -30,19 +30,15 @@ export class RecoverMaterializationUseCase {
         if (filePath.includes('.staging') || filePath.includes('.tmp-conv') || filePath.includes('.tmp-meta')) {
           scanned++;
           try {
-            const stat = fs.statSync(filePath);
-            const age = Date.now() - stat.mtimeMs;
-            if (age >= maxAgeMs) {
-              fs.unlinkSync(filePath);
-              removed++;
-              this.logger.log(`Recovered and removed stale staging artifact: ${filePath}`);
-            }
+            // Age does not establish ownership or prove the converter is dead.
+            // Preserve unknown jobs; only the creating converter cleans its own staging.
+            void maxAgeMs;
           } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
             errors.push(`Failed to remove stale file ${filePath}: ${msg}`);
           }
         }
-      });
+      }, { remaining: 4096 }, 0);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       errors.push(`Recovery walk failed: ${msg}`);
@@ -51,16 +47,17 @@ export class RecoverMaterializationUseCase {
     return { stagedFilesScanned: scanned, stagedFilesRemoved: removed, errors };
   }
 
-  private walkDirectory(dir: string, callback: (filePath: string) => void): void {
+  private walkDirectory(dir: string, callback: (filePath: string) => void, budget: {remaining:number}, depth:number): void {
+    if(depth>16)throw Error('Derived staging scan depth bound reached');
     if (!fs.existsSync(dir)) return;
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = path.resolve(dir, entry.name);
-      if (entry.isDirectory()) {
-        this.walkDirectory(fullPath, callback);
-      } else if (entry.isFile()) {
-        callback(fullPath);
-      }
-    }
+    if(fs.lstatSync(dir).isSymbolicLink())throw Error('Redirected derived staging root preserved');
+    const directory=fs.opendirSync(dir);
+    try{let entry;while((entry=directory.readSync())){
+      if(--budget.remaining<0)throw Error('Derived staging scan entry bound reached');
+      const fullPath=path.resolve(dir,entry.name);
+      if(entry.isSymbolicLink())continue;
+      if(entry.isDirectory())this.walkDirectory(fullPath,callback,budget,depth+1);
+      else if(entry.isFile())callback(fullPath);
+    }}finally{directory.closeSync();}
   }
 }

@@ -10,6 +10,7 @@ import {
 import { resolveCanonicalField } from '../../../query-execution/domain/canonical-field.model.js';
 
 const ALLOWED_ENVELOPE_KEYS = new Set([
+  'include_empty_buckets',
   'time_range',
   'projects',
   'environments',
@@ -80,6 +81,7 @@ export class AggregateValidationPipe implements PipeTransform<unknown, Aggregate
     }
 
     const raw = value as Record<string, unknown>;
+    if(raw['include_empty_buckets']!==undefined && typeof raw['include_empty_buckets']!=='boolean')throw new InvalidArgumentException('include_empty_buckets must be boolean.');
 
     // 1. Reject unknown top-level envelope properties
     for (const key of Object.keys(raw)) {
@@ -117,6 +119,7 @@ export class AggregateValidationPipe implements PipeTransform<unknown, Aggregate
     if (endMs <= startMs) {
       throw new InvalidArgumentException('time_range.end must be strictly greater than time_range.start.');
     }
+    if([tr['start'],tr['end']].some(v=>new Date(v as string).toISOString().slice(0,10)!==(v as string).slice(0,10)))throw new InvalidArgumentException('UTC calendar rollover is not permitted.');
 
     if (endMs - startMs > MAX_TIME_RANGE_MS) {
       throw new TimeRangeExceededException(30);
@@ -146,7 +149,7 @@ export class AggregateValidationPipe implements PipeTransform<unknown, Aggregate
         }
       }
 
-      if (typeof agg.name !== 'string' || !AGG_NAME_REGEX.test(agg.name)) {
+      if (typeof agg.name !== 'string' || !AGG_NAME_REGEX.test(agg.name)||['__proto__','constructor','prototype'].includes(agg.name)) {
         throw new InvalidArgumentException(`Aggregation at index ${i} must have a valid alphanumeric "name" (1-32 chars).`);
       }
 
@@ -167,11 +170,11 @@ export class AggregateValidationPipe implements PipeTransform<unknown, Aggregate
         if (agg.field !== '@timestamp' && agg.field !== 'timestamp') {
           throw new InvalidArgumentException(`date_histogram aggregation "${agg.name}" must aggregate on field "@timestamp".`);
         }
-        if (!agg.interval || typeof agg.interval !== 'string' || !(agg.interval in ALLOWED_INTERVALS)) {
+        if (!agg.interval || typeof agg.interval !== 'string' || !Object.hasOwn(ALLOWED_INTERVALS,agg.interval)) {
           throw new InvalidArgumentException(`date_histogram aggregation "${agg.name}" requires a valid "interval" (1m, 5m, 15m, 1h, 6h, 1d).`);
         }
         const intervalMs = ALLOWED_INTERVALS[agg.interval]!;
-        const bucketCount = (endMs - startMs) / intervalMs;
+        const bucketCount = Math.floor((endMs-1)/intervalMs)-Math.floor(startMs/intervalMs)+1;
         if (bucketCount > MAX_HISTOGRAM_BUCKETS) {
           throw new InvalidArgumentException(
             `date_histogram aggregation "${agg.name}" with interval "${agg.interval}" exceeds maximum limit of ${MAX_HISTOGRAM_BUCKETS} buckets (calculated ${Math.ceil(bucketCount)}). Increase interval or narrow time range.`,
@@ -304,6 +307,7 @@ export class AggregateValidationPipe implements PipeTransform<unknown, Aggregate
     }
 
     return {
+      ...(raw['include_empty_buckets']!==undefined?{include_empty_buckets:raw['include_empty_buckets'] as boolean}:{}),
       time_range: {
         start: tr['start'] as string,
         end: tr['end'] as string,

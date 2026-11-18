@@ -1,3 +1,5 @@
+import {Test} from '@nestjs/testing';
+import {SessionStoreService} from '../../src/modules/auth/application/session-store.service.js';
 import { describe, it, before, after } from 'node:test';
 import * as assert from 'node:assert/strict';
 import * as http from 'node:http';
@@ -150,10 +152,8 @@ describe('BFF Query Proxy Integration Test Suite (CONSOLE-004)', () => {
     // 2. Configure BFF to route to our test Query Service
     process.env['QUERY_SERVICE_URL'] = `http://127.0.0.1:${mockQueryPort}`;
 
-    app = await NestFactory.create<NestFastifyApplication>(
-      AppModule,
-      new FastifyAdapter({ logger: false }),
-    );
+    const module=await Test.createTestingModule({imports:[AppModule]}).overrideProvider(SessionStoreService).useFactory({factory:()=>SessionStoreService.forIsolatedTests()}).compile();
+    app=module.createNestApplication<NestFastifyApplication>(new FastifyAdapter({logger:false}));
     await app.register(fastifyCookie as any, {
       secret: 'test-session-secret-at-least-32-chars-long!',
     });

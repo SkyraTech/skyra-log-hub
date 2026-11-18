@@ -1,3 +1,4 @@
+import {QuotaAccountingService} from '../storage/quota-accounting.service.js';
 import { Injectable, Optional } from '@nestjs/common';
 import { PrismaService } from '../metadata/prisma.service.js';
 import { WalJournalService } from '../storage/wal/wal-journal.service.js';
@@ -22,6 +23,7 @@ export class HealthService {
     private readonly prisma: PrismaService,
     @Optional() private readonly walService?: WalJournalService,
     @Optional() private readonly configService?: GatewayConfigService,
+    @Optional() private readonly accounting?: QuotaAccountingService,
   ) {}
 
   public getLiveness(): LivenessResponse {
@@ -37,6 +39,7 @@ export class HealthService {
       this.configService?.nodeEnv === 'production' || process.env['NODE_ENV'] === 'production';
     const dbStatus = isDbHealthy ? 'connected' : isProd ? 'disconnected' : 'offline_mock';
 
+    if(this.accounting?.enabled&&(!this.accounting.isReady||!isDbHealthy))return {status:'not_ready',durability_backend:'unavailable',database:dbStatus,reason:'Usage accounting requires recovery',timestamp:new Date().toISOString()};
     // 1. In production, database connectivity is mandatory
     if (isProd && !isDbHealthy) {
       return {

@@ -14,7 +14,7 @@ describe('PostgreSQL Integration: First-Owner Bootstrap & Idempotency (Section 1
 
   before(async () => {
     mainClient = await getTestClient();
-    pool = getTestPool();
+    pool = await getTestPool();
     const roleMap = await seedStandardRolesAndPermissions(mainClient);
     ownerRoleId = roleMap.get('OrgOwner')!;
   });

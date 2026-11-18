@@ -13,6 +13,8 @@ export interface TrustedPrincipal {
   iss: string;
   aud: string;
   exp: number;
+  identityIssuer?: string;
+  scope?: string;
 }
 
 declare module 'fastify' {
@@ -99,7 +101,7 @@ export class TrustedAssertionGuard implements CanActivate {
     // Expiration check (with 2s clock skew grace)
     const nowSec = Math.floor(Date.now() / 1000);
     const exp = typeof payload['exp'] === 'number' ? payload['exp'] : 0;
-    if (exp < nowSec - 2) {
+    if (!Number.isFinite(exp) || exp < nowSec - 2) {
       throw new InvalidIdentityAssertionException('Token assertion has expired.');
     }
 
@@ -110,7 +112,13 @@ export class TrustedAssertionGuard implements CanActivate {
     const roles = Array.isArray(payload['roles']) ? (payload['roles'] as string[]) : [];
     const capabilities = Array.isArray(payload['capabilities']) ? (payload['capabilities'] as string[]) : undefined;
 
-    if (!sub || !tenantId) {
+    const scope = typeof payload['scope'] === 'string' ? payload['scope'] : undefined;
+    if ((scope === 'organization' || scope === 'memberships.resolve' || scope === 'members.read' || scope === 'members.manage' || scope === 'projects.read' || scope === 'projects.manage' || ['analytics.preferences','saved-searches','audit.read','quotas.read','quotas.manage','credentials.read','credentials.create','credentials.rotate','credentials.revoke'].includes(scope??'')) &&
+        (!this.config.internalJwtConfigured || exp > nowSec + 62 || typeof payload['iat'] !== 'number' ||
+         payload['iat'] > nowSec + 2 || exp - payload['iat'] > 60)) {
+      throw new InvalidIdentityAssertionException('Invalid organization assertion lifetime or signing configuration.');
+    }
+    if (!sub || (!tenantId && scope !== 'memberships.resolve')) {
       throw new InvalidIdentityAssertionException(
         'Token assertion payload missing mandatory sub or tenant_id claims.',
       );
@@ -125,6 +133,8 @@ export class TrustedAssertionGuard implements CanActivate {
       iss,
       aud,
       exp,
+      identityIssuer: typeof payload['identity_issuer'] === 'string' ? payload['identity_issuer'] : undefined,
+      scope,
     };
   }
 }

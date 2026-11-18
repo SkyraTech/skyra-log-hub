@@ -635,6 +635,21 @@ export const LOG_EVENT_SCHEMA_V1 = {
         "type": "string",
         "maxLength": 64
       }
+    },
+    "correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+        }
+      }
     }
   },
   "additionalProperties": false

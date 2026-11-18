@@ -1,5 +1,6 @@
 // Import and register all authoritative Skyra Platform Web Components
-import '@skyra-tech-platform/app-shell';
+import { registerAppShell } from '@skyra-tech-platform/app-shell';
+registerAppShell();
 import '@skyra-tech-platform/badge';
 import '@skyra-tech-platform/button';
 import '@skyra-tech-platform/checkbox';

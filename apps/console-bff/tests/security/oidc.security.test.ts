@@ -1,3 +1,4 @@
+import {SessionStoreService} from '../../src/modules/auth/application/session-store.service.js';
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
 import * as crypto from 'node:crypto';
@@ -7,10 +8,10 @@ import { OidcCallbackException } from '../../src/common/errors/bff.errors.js';
 
 describe('OIDC Security & PKCE Test Suite (Section 21 Tests 1-10)', () => {
   const config = new BffConfigService();
-  const oidcService = new OidcService(config);
+  const oidcService = new OidcService(config,SessionStoreService.forIsolatedTests());
 
   it('1. Valid code flow: generates PKCE S256 challenge, state, and exchanges code', async () => {
-    const authReq = oidcService.createAuthorizationRequest('/dashboard');
+    const authReq = await oidcService.createAuthorizationRequest('/dashboard');
     assert.ok(authReq.authorizationUrl.includes('code_challenge_method=S256'));
     assert.ok(authReq.authorizationUrl.includes(`state=${authReq.state}`));
     assert.ok(authReq.authorizationUrl.includes('response_type=code'));
@@ -23,7 +24,7 @@ describe('OIDC Security & PKCE Test Suite (Section 21 Tests 1-10)', () => {
   });
 
   it('2. Invalid state: rejects callback when state does not match pending authorization', async () => {
-    oidcService.createAuthorizationRequest();
+    await oidcService.createAuthorizationRequest();
     await assert.rejects(
       async () => {
         await oidcService.handleCallback('some_code', 'invalid-or-forged-state');
@@ -199,7 +200,7 @@ describe('OIDC Security & PKCE Test Suite (Section 21 Tests 1-10)', () => {
   });
 
   it('10. Replayed callback: state is deleted on first exchange and cannot be reused', async () => {
-    const authReq = oidcService.createAuthorizationRequest();
+    const authReq = await oidcService.createAuthorizationRequest();
     // First exchange succeeds
     const firstExchange = await oidcService.handleCallback('mock:usr_2:bob@skyra.dev:Bob', authReq.state);
     assert.equal(firstExchange.tokens.user.email, 'bob@skyra.dev');

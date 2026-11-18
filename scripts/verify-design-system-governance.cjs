@@ -249,7 +249,10 @@ function runGovernanceAudit(options = {}) {
   const mainTsContent = fs.readFileSync(mainTsPath, 'utf8');
 
   for (const pkgName of CUSTOM_ELEMENT_PACKAGES) {
-    if (!mainTsContent.includes(`import '${pkgName}';`)) {
+    const registered = pkgName === '@skyra-tech-platform/app-shell'
+      ? mainTsContent.includes(`import { registerAppShell } from '${pkgName}';`) && /\bregisterAppShell\(\);/.test(mainTsContent)
+      : mainTsContent.includes(`import '${pkgName}';`);
+    if (!registered) {
       logError(`  [FAIL] ${pkgName} is not imported in main.ts for Custom Elements registration`);
       details.gate5Fails++;
       violations++;

@@ -19,6 +19,7 @@ export class LogExplorerFacade {
   filterState!: FilterStateService;
 
   // Reactive state signals
+  readonly appliedRequest=signal<SearchLogsRequest|null>(null);
   readonly rows = signal<LogExplorerRow[]>([]);
   readonly loading = signal<boolean>(false);
   readonly error = signal<string | null>(null);
@@ -34,9 +35,13 @@ export class LogExplorerFacade {
 
   // Cancellation and Generation safety invariants
   private queryGeneration = 0;
+  private detailGeneration=0;
+  private cancelDetail$=new Subject<void>();
+  private searchTimeRange?: ReturnType<typeof resolveTimeRange>;
   private readonly cancelActiveQuery$ = new Subject<void>();
   private readonly cancelActiveFacets$ = new Subject<void>();
   private lastProjectId: string | null = null;
+  private hasSearched=false;
 
   constructor() {
     try {
@@ -54,11 +59,17 @@ export class LogExplorerFacade {
         if (this.lastProjectId !== null && this.lastProjectId !== currentProjectId) {
           // Project changed: cancel in-flight, reset pagination, clear rows immediately to avoid showing stale tenant data
           this.cancelActiveQuery$.next();
+          this.cancelActiveFacets$.next();
           this.cursorHistory.reset();
           this.rows.set([]);
-          this.selectedRow.set(null);
+          this.facets.set(INITIAL_FACETS_STATE);
+          this.appliedRequest.set(null);
+          this.statistics.set(null);
+          this.scope.set(null);
+          this.loading.set(false);
+          this.closeDrawer();
           this.error.set(null);
-          if (currentProjectId) {
+          if (currentProjectId && this.hasSearched) {
             this.executeSearch(true);
             this.loadFacets();
           }
@@ -82,10 +93,14 @@ export class LogExplorerFacade {
     if (!activeProject) {
       this.error.set('No active project selected. Please select an authorized workspace project.');
       this.rows.set([]);
+      this.statistics.set(null);
+      this.scope.set(null);
+      this.appliedRequest.set(null);
       this.loading.set(false);
       return;
     }
 
+    this.hasSearched=true;
     if (resetCursor) {
       this.cursorHistory.reset();
     }
@@ -102,12 +117,17 @@ export class LogExplorerFacade {
 
     const pageSize = this.cursorHistory.getPageSize();
     const criteria = this.filterState.getCriteria(pageSize);
-    const timeRange = resolveTimeRange(
+    try{
+    if(resetCursor||!this.searchTimeRange)this.searchTimeRange = resolveTimeRange(
       criteria.timeRangePreset,
       criteria.customStart,
       criteria.customEnd,
     );
 
+    }catch(e){this.error.set(e instanceof Error?e.message:'Invalid time range.');this.rows.set([]);this.statistics.set(null);this.scope.set(null);this.appliedRequest.set(null);this.loading.set(false);return;}
+    if(criteria.correlationId&&!/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(criteria.correlationId)){this.error.set('Correlation ID must use 1–128 letters, numbers or . _ : / - with an initial letter or number.');this.rows.set([]);this.appliedRequest.set(null);this.loading.set(false);return;}
+    if(criteria.traceId&&!/^[a-f0-9]{32}$/i.test(criteria.traceId)){this.error.set('Trace ID must contain 32 hexadecimal characters.');this.rows.set([]);this.statistics.set(null);this.scope.set(null);this.appliedRequest.set(null);this.loading.set(false);return;}
+    const timeRange=this.searchTimeRange;
     const cursorToUse = cursorOverride !== undefined
       ? (cursorOverride ?? undefined)
       : (this.cursorHistory.getCurrentCursor() ?? undefined);
@@ -122,6 +142,7 @@ export class LogExplorerFacade {
     if (criteria.queryText) {
       request.query_text = criteria.queryText;
     }
+    if(criteria.correlationId)request.correlation_id=criteria.correlationId;
     if (criteria.traceId) {
       request.trace_id = criteria.traceId;
     }
@@ -146,6 +167,7 @@ export class LogExplorerFacade {
           }
 
           const mappedRows = (response.events || []).map((ev, idx) => mapCanonicalEventToRow(ev, idx));
+          this.appliedRequest.set(request);
           this.rows.set(mappedRows);
           this.statistics.set(response.statistics ?? null);
           this.scope.set(response.scope ?? null);
@@ -166,6 +188,11 @@ export class LogExplorerFacade {
           const parsed = this.errorParser.parse(err);
           this.error.set(parsed.detail || parsed.title);
           this.errorCorrelationId.set(parsed.instance || parsed.code || null);
+          this.rows.set([]);
+          this.statistics.set(null);
+          this.scope.set(null);
+          this.appliedRequest.set(null);
+          this.closeDrawer();
           this.loading.set(false);
         },
       });
@@ -220,11 +247,7 @@ export class LogExplorerFacade {
     this.facets.update((f) => ({ ...f, loading: true, error: null }));
 
     const criteria = this.filterState.getCriteria(50);
-    const timeRange = resolveTimeRange(
-      criteria.timeRangePreset,
-      criteria.customStart,
-      criteria.customEnd,
-    );
+    let timeRange:ReturnType<typeof resolveTimeRange>;try{timeRange=resolveTimeRange(criteria.timeRangePreset,criteria.customStart,criteria.customEnd);}catch{this.facets.update(f=>({...f,loading:false,error:'Set a valid UTC range before refreshing facets.'}));return;}
 
     this.queryClient
       .getLogFacets({
@@ -265,6 +288,7 @@ export class LogExplorerFacade {
    * Select a row and open the event detail drawer.
    */
   selectRow(row: LogExplorerRow): void {
+    this.detailGeneration++;this.cancelDetail$.next();this.detailLoading.set(false);
     this.selectedRow.set(row);
     this.detailError.set(null);
   }
@@ -273,6 +297,7 @@ export class LogExplorerFacade {
    * Close the event detail drawer.
    */
   closeDrawer(): void {
+    this.detailGeneration++;this.cancelDetail$.next();this.detailLoading.set(false);
     this.selectedRow.set(null);
     this.detailError.set(null);
   }
@@ -289,11 +314,13 @@ export class LogExplorerFacade {
       return;
     }
 
+    this.cancelDetail$.next();const detailGeneration=++this.detailGeneration;
     this.detailLoading.set(true);
     this.detailError.set(null);
 
-    this.queryClient.getLogEventById(eventId, activeProject, timestamp).subscribe({
+    this.queryClient.getLogEventById(eventId, activeProject, timestamp).pipe(takeUntil(this.cancelDetail$)).subscribe({
       next: (canonicalEvent) => {
+        if(detailGeneration!==this.detailGeneration||this.workspaceContext.currentContext()?.projectId!==activeProject)return;
         const row = mapCanonicalEventToRow(canonicalEvent, 0);
         this.selectedRow.set(row);
         this.detailLoading.set(false);

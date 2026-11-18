@@ -19,7 +19,7 @@ export class MembershipService implements IMembershipProvider {
       return this.authoritativeAdapter.resolveMemberships(userId, email);
     }
 
-    if (this.config.isProduction) {
+    if (this.config.isProduction || !this.config.mockOidcEnabled) {
       // In production mode, we must fail closed unless an enterprise directory or IAM provider is connected
       this.logger.error(
         `Production workspace authorization failed: No authoritative enterprise membership provider configured. Access blocked for user ${userId}.`,

@@ -1,5 +1,7 @@
 import {
   ChangeDetectionStrategy,
+  inject,
+  ElementRef,
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
   HostListener,
@@ -25,11 +27,15 @@ type DrawerTab = 'summary' | 'ecs' | 'raw';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LogEventDrawerComponent {
+  private readonly element=inject<ElementRef<HTMLElement>>(ElementRef);
+  @HostListener('document:keydown',['$event'])containTab(event:KeyboardEvent){if(event.key!=='Tab'||!this.isOpen())return;const root=this.element.nativeElement.querySelector('skyra-tech-drawer');if(!root)return;const focusable:HTMLElement[]=[];const visit=(node:Element)=>{if(node instanceof HTMLSlotElement){const assigned=node.assignedElements({flatten:true});for(const child of assigned.length?assigned:Array.from(node.children))visit(child);return;}if(node instanceof HTMLElement&&!node.shadowRoot&&node.matches('button,a[href],input,select,textarea,[tabindex]')&&node.tabIndex>=0&&!node.hasAttribute('disabled')&&node.getClientRects().length)focusable.push(node);for(const child of Array.from(node.shadowRoot?.children??node.children))visit(child);};visit(root);if(!focusable.length)return;let active:Element|null=document.activeElement;while(active?.shadowRoot?.activeElement)active=active.shadowRoot.activeElement;const index=focusable.indexOf(active as HTMLElement);if(event.shiftKey&&index<=0){event.preventDefault();focusable.at(-1)!.focus();}else if(!event.shiftKey&&(index<0||index===focusable.length-1)){event.preventDefault();focusable[0]!.focus();}}
   readonly log = input<LogExplorerRow | null>(null);
   readonly isOpen = input<boolean>(false);
   readonly loading = input<boolean>(false);
   readonly error = input<string | null>(null);
 
+  readonly investigateCorrelation=output<string>();
+  readonly investigateTrace=output<string>();
   readonly close = output<void>();
 
   readonly activeTab = signal<DrawerTab>('summary');

@@ -70,6 +70,7 @@ export class FilterCompilerService {
       );
     }
 
+    if(field.canonicalPath==='correlation.id'&&raw.operator!=='exists'){const ids=Array.isArray(raw.value)?raw.value:[raw.value];if(!ids.length||!ids.every(v=>typeof v==='string'&&/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(v)))throw new InvalidArgumentException('Invalid correlation ID filter.');}
     if (!raw.operator || typeof raw.operator !== 'string') {
       throw new InvalidArgumentException(
         `Filter for field "${field.canonicalPath}" is missing required string "operator".`,

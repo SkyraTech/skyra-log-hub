@@ -1,0 +1,5 @@
+import fs from 'node:fs';import path from 'node:path';import {spawnSync} from 'node:child_process';import {root,readState,testEnvironment} from './isolated-postgres.mjs';import {sessionTestEnvironment} from './lib/session-test-runtime.mjs';
+await sessionTestEnvironment();const env=testEnvironment(readState()),evidence=path.join(root,'.tmp/dev013-evidence'),results=[];
+for(const name of ['migration','persistence','http-security','outage-recovery','cleanup-recovery']){
+ const args=['--test','--test-reporter=tap','tests/sessions/'+name+'.test.mjs'],start=performance.now(),r=spawnSync(process.execPath,args,{cwd:root,env,windowsHide:true,encoding:'utf8',timeout:240000,maxBuffer:30e6});fs.writeFileSync(path.join(evidence,name==='migration'?'migration-security.log':name+'.log'),(r.stdout??'')+(r.stderr??''));results.push({name,command:[process.execPath,...args],exit:r.status,ms:performance.now()-start});fs.writeFileSync(path.join(evidence,'session-security-summary.json'),JSON.stringify(results,null,2));console.log(name,r.status);if(r.status!==0)process.exit(r.status??1);
+}

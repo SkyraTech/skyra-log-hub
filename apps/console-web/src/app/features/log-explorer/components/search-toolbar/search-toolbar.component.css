@@ -121,7 +121,13 @@
   .actions-group {
     width: 100%;
   }
-  .actions-group skyra-button {
+  .actions-group skyra-tech-button {
     width: 100%;
   }
 }
+
+@media(max-width:768px){.search-input-wrapper{flex:0 0 auto;}.search-icon svg{width:16px;height:16px;}}
+
+.actions-group skyra-tech-button[variant="outline"]{--skyra-primary:var(--skyra-text);--skyra-primary-light:var(--skyra-surface);}
+
+.search-help{flex-basis:100%;font-size:.8rem;color:var(--skyra-text)}.control-group{min-width:0;flex-wrap:wrap}.control-group input{max-width:100%;min-width:0;background:var(--skyra-bg);color:var(--skyra-text);border:1px solid var(--skyra-border);border-radius:var(--skyra-radius-md);padding:.5rem}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/organization-name-update.schema.json",
+  "title": "OrganizationDisplayNameUpdate",
+  "description": "Trim before validating. PATCH requires a strong If-Match ETag from the latest read; no status or immutable fields are accepted.",
+  "type": "object", "additionalProperties": false, "required": ["name"],
+  "properties": { "name": { "type": "string", "minLength": 2, "maxLength": 255, "pattern": "\\S" } }
+}

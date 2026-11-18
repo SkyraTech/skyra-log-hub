@@ -6,6 +6,10 @@ export interface TransportStatus {
   totalEventsFsynced: number;
   currentActiveFile?: string;
   isClosed: boolean;
+  pendingEvents?: number;
+  pendingBytes?: number;
+  pendingBatches?: number;
+  retryTimers?: number;
 }
 
 export interface SkyraTransport {
@@ -28,6 +32,9 @@ export interface SkyraTransport {
    * Gracefully flushes and closes file handles. Rejects future writes.
    */
   close(): Promise<void>;
+
+  /** Optional bounded shutdown clock, started before the logger drains its queue. */
+  beginClose?(): void;
 
   /**
    * Returns current transport health and status statistics.

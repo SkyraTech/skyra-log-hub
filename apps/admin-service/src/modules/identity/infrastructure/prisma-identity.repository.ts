@@ -1,40 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
 import type { IIdentityRepositoryPort } from '../domain/identity.repository.port.js';
 import type { UserIdentity } from '../domain/identity.model.js';
 import { AdminConfigService } from '../../../core/config/admin-config.service.js';
-import { MembershipProviderUnavailableException } from '../../../core/errors/admin.errors.js';
-
-@Injectable()
+import { adminPrisma } from '../../../core/database/admin-prisma.js';
+import type { Prisma } from '@prisma/client';
 export class PrismaIdentityRepository implements IIdentityRepositoryPort {
-  private readonly logger = new Logger(PrismaIdentityRepository.name);
-
   constructor(private readonly config: AdminConfigService) {}
-
-  public async findById(_id: string): Promise<UserIdentity | null> {
-    if (!this.config.persistenceEnabled) {
-      throw new MembershipProviderUnavailableException('Prisma identity repository inactive under Gate A.');
-    }
-    throw new Error('Prisma identity operations pending Gate B database migration execution.');
+  private get db() { return adminPrisma(this.config); }
+  findById(id: string): Promise<UserIdentity | null> { return this.db.user.findUnique({ where: { id } }); }
+  findByIssuerSubject(issuer: string, subject: string, transaction?: Prisma.TransactionClient): Promise<UserIdentity | null> {
+    return (transaction ?? this.db).user.findUnique({ where: { issuer_subject: { issuer, subject } } });
   }
-
-  public async findByIssuerSubject(_issuer: string, _subject: string): Promise<UserIdentity | null> {
-    if (!this.config.persistenceEnabled) {
-      throw new MembershipProviderUnavailableException('Prisma identity repository inactive under Gate A.');
-    }
-    throw new Error('Prisma identity operations pending Gate B database migration execution.');
-  }
-
-  public async findByEmail(_email: string): Promise<UserIdentity[]> {
-    if (!this.config.persistenceEnabled) {
-      return [];
-    }
-    throw new Error('Prisma identity operations pending Gate B database migration execution.');
-  }
-
-  public async save(_user: UserIdentity): Promise<UserIdentity> {
-    if (!this.config.persistenceEnabled) {
-      throw new MembershipProviderUnavailableException('Prisma identity repository inactive under Gate A.');
-    }
-    throw new Error('Prisma identity operations pending Gate B database migration execution.');
+  findByEmail(email: string): Promise<UserIdentity[]> { return this.db.user.findMany({ where: { email } }); }
+  save(user: UserIdentity): Promise<UserIdentity> {
+    const { id, issuer, subject, ...mutable } = user;
+    return this.db.user.upsert({ where: { id }, create: user, update: mutable });
   }
 }

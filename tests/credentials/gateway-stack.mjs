@@ -1,0 +1,26 @@
+import fs from 'node:fs';import path from 'node:path';import net from 'node:net';import crypto from 'node:crypto';import {spawn} from 'node:child_process';
+import {root,readState,testEnvironment,isolatedAdminClient} from '../../scripts/isolated-postgres.mjs';import {connectIsolatedClient,connectIsolatedIngestionRuntimeClient} from '../../scripts/lib/isolated-target.mjs';
+import {deserializeWalFrame} from '../../apps/ingestion-gateway/dist/storage/wal/wal-frame.js';
+export async function startCredentialGateway(evidence){
+  const state=readState(),env=testEnvironment(state),owner=await connectIsolatedClient(env.ISOLATED_DATABASE_URL,env);await owner.end();const physical=await isolatedAdminClient(state);await physical.end();
+  const secret=JSON.parse(fs.readFileSync(path.join(root,'.tmp/feature004-postgres/gateway-runtime.json'),'utf8'));if(secret.clusterId!==state.clusterId||secret.role!=='skyra_ingestion_runtime')throw Error('Unverified Gateway runtime state');
+  const url=new URL(env.ISOLATED_DATABASE_URL);url.username=secret.role;url.password=secret.password;const verified=await connectIsolatedIngestionRuntimeClient(url.href,env);await verified.end();
+  const parent=path.join(root,'.tmp'),realRoot=fs.realpathSync(root);if(fs.lstatSync(parent).isSymbolicLink()||!fs.realpathSync(parent).startsWith(realRoot+path.sep))throw Error('Redirected disposable store parent');
+  const storeRoot=fs.mkdtempSync(path.join(parent,'feature004-ingestion-')),marker={id:crypto.randomUUID(),clusterId:state.clusterId,database:state.database,port:state.port,storeRoot};
+  fs.writeFileSync(path.join(storeRoot,'ownership.json'),JSON.stringify(marker),{flag:'wx'});const wal=path.join(storeRoot,'wal'),archive=path.join(storeRoot,'archive');fs.mkdirSync(wal);fs.mkdirSync(archive);
+  const server=net.createServer();await new Promise(r=>server.listen(0,'127.0.0.1',r));const port=server.address().port;await new Promise(r=>server.close(r));const origin='http://127.0.0.1:'+port;let child,iteration=0;const logFiles=[];
+  const verifyStore=()=>{if(fs.lstatSync(storeRoot).isSymbolicLink()||fs.realpathSync(storeRoot)!==path.resolve(storeRoot)||JSON.parse(fs.readFileSync(path.join(storeRoot,'ownership.json'),'utf8')).id!==marker.id||[wal,archive].some(p=>fs.lstatSync(p).isSymbolicLink()))throw Error('Unverified ingestion store');};
+  const start=async()=>{verifyStore();const again=await connectIsolatedIngestionRuntimeClient(url.href,env);await again.end();const file=path.join(evidence,'gateway-'+iteration+++'.log');logFiles.push(file);const fd=fs.openSync(file,'w');
+    child=spawn(process.execPath,[path.join(root,'apps/ingestion-gateway/dist/main.js')],{cwd:storeRoot,windowsHide:true,env:{...env,NODE_ENV:'test',DATABASE_URL:url.href,HOST:'127.0.0.1',PORT:String(port),WAL_DIRECTORY:wal,ARCHIVE_ROOT:archive,INSTANCE_ID:'feature004-gateway'},stdio:['ignore',fd,fd]});fs.closeSync(fd);
+    for(let i=0;i<120;i++){if(child.exitCode!==null)throw Error('Gateway exited; inspect sanitized local log');try{const response=await fetch(origin+'/health/ready');if(response.ok){const health=await response.json();if(health.database==='connected'&&health.durability_backend==='ready')return;}}catch{}await new Promise(r=>setTimeout(r,100));}throw Error('Gateway readiness timeout');};
+  const stop=async()=>{if(!child||child.exitCode!==null||child.signalCode!==null)return;const exited=new Promise(r=>child.once('exit',r));child.kill();await exited;};
+  try{await start();}catch(error){await stop();throw error;}const boundary={...marker,gatewayRole:secret.role,gatewayOrigin:origin,cache:'No credential cache; NullReceiptCache only',boundary:'200 durably_accepted after synchronous WAL fsync; PostgreSQL receipt indexed; archive append separately verified'};
+  fs.writeFileSync(path.join(evidence,'ingestion-store.json'),JSON.stringify(boundary,null,2));
+  return {origin,storeRoot,logFiles,stop,restart:async()=>{await stop();await start();},frames:()=>{verifyStore();const frames=[];for(const file of fs.readdirSync(wal).filter(n=>n.endsWith('.wal'))){const data=fs.readFileSync(path.join(wal,file));let offset=0;while(offset<data.length){const parsed=deserializeWalFrame(data.subarray(offset),offset);if(!parsed.valid||!parsed.frame||parsed.bytesConsumed<=0)throw Error('WAL frame integrity verification failed');frames.push(parsed.frame);offset+=parsed.bytesConsumed;}}return frames;}};
+}
+export function ingestionBatch(projectId,message='feature004 acceptance event',batchId=crypto.randomUUID()){
+  const body=JSON.parse(fs.readFileSync(path.join(root,'contracts/ingestion/v1/examples/valid-authoritative-batch-request.json'),'utf8'));
+  const event=body.events[0];event['@timestamp']=new Date().toISOString();event.event.id=crypto.randomUUID();event.event.action='credential.test';event.event.dataset='feature004.test';event.message=message;event.skyra.project_id=projectId;event.service.environment='production';event.service.name='credential-test';
+  return {...body,batch_id:batchId,sent_at:new Date().toISOString(),batch_size:1,events:[event]};
+}
+export async function sendCredentialLog(gateway,token,body){return fetch(gateway.origin+'/ingest/v1/logs',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});}

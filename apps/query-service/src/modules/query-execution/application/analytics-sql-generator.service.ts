@@ -59,11 +59,12 @@ export class AnalyticsSqlGeneratorService {
       (plan.descriptors?.length ?? 0) === 0 && (plan.parquetDescriptors?.length ?? 0) > 0;
     const canUseParquetDirect =
       isParquetOnly &&
-      !plan.filter &&
+      !plan.filter && !plan.deduplicateEvents &&
       (spec.type === 'date_histogram' ||
         Boolean(PARQUET_COLUMN_MAP[spec.field?.toLowerCase()?.trim() ?? '']));
 
-    const fromClause = this.buildFromClause(plan, nextParam, !canUseParquetDirect);
+    let fromClause = this.buildFromClause(plan, nextParam, !canUseParquetDirect);
+    if(fromClause && plan.deduplicateEvents)fromClause=`(SELECT json FROM ${fromClause} QUALIFY row_number() OVER (PARTITION BY json_extract_string(json, '$.event.id') ORDER BY CAST(json AS VARCHAR))=1)`;
     if (!fromClause) {
       return {
         sql: 'SELECT 1 WHERE 1 = 0',
@@ -74,6 +75,12 @@ export class AnalyticsSqlGeneratorService {
     const whereClauses = this.buildBaseWhereClauses(plan, nextParam, canUseParquetDirect);
 
     switch (spec.type) {
+      case 'service_trend': {
+        const interval=INTERVAL_SQL_MAP[spec.interval],size=Math.min(10,Math.max(1,spec.size));
+        if(!interval)throw new InvalidArgumentException('Invalid service trend interval.');
+        const service=this.resolveFieldExpression('service.name'),level=this.resolveFieldExpression('log.level'),timestamp=this.resolveFieldExpression('@timestamp');
+        return {sql:`WITH source AS (SELECT ${service} AS service, ${level} AS level, time_bucket(${interval},CAST(${timestamp} AS TIMESTAMP)) AS stamp FROM ${fromClause} WHERE ${whereClauses.join(' AND ')}), top AS (SELECT service FROM source WHERE service IS NOT NULL GROUP BY service ORDER BY count(*) DESC, service ASC LIMIT ${size}) SELECT service,strftime(stamp,'%Y-%m-%dT%H:%M:%S.000Z'),count(*),sum(CASE WHEN level IN ('error','fatal') THEN 1 ELSE 0 END),sum(CASE WHEN level='warn' THEN 1 ELSE 0 END) FROM source WHERE service IN (SELECT service FROM top) GROUP BY service,stamp UNION ALL SELECT NULL,strftime(stamp,'%Y-%m-%dT%H:%M:%S.000Z'),count(*),sum(CASE WHEN level IN ('error','fatal') THEN 1 ELSE 0 END),sum(CASE WHEN level='warn' THEN 1 ELSE 0 END) FROM source GROUP BY stamp ORDER BY 1 NULLS LAST,2`,parameters};
+      }
       case 'date_histogram':
         return this.buildDateHistogramQuery(spec, fromClause, whereClauses, parameters, canUseParquetDirect);
 
@@ -107,7 +114,8 @@ export class AnalyticsSqlGeneratorService {
     const canUseParquetDirect =
       isParquetOnly && Boolean(PARQUET_COLUMN_MAP[field.toLowerCase().trim()]);
 
-    const fromClause = this.buildFromClause(plan, nextParam, !canUseParquetDirect);
+    let fromClause = this.buildFromClause(plan, nextParam, !canUseParquetDirect);
+
     if (!fromClause) {
       return {
         sql: 'SELECT 1 WHERE 1 = 0',

@@ -16,6 +16,7 @@ interface Crumb {
 }
 
 const ROUTE_LABELS: Record<string, string> = {
+  organization: 'Organization',
   overview: 'Overview',
   logs: 'Log Explorer',
   analytics: 'Analytics',
@@ -83,6 +84,10 @@ const ROUTE_LABELS: Record<string, string> = {
       color: var(--text-primary);
       font-weight: var(--font-semibold);
     }
+    @media(max-width:600px) {
+      .crumb-item:not(:last-child) { display:none; }
+      .crumb-current { max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -99,7 +104,7 @@ export class BreadcrumbsComponent {
 
   readonly crumbs = computed<Crumb[]>(() => {
     const url = this.navEnd();
-    const segments = url.split('/').filter(Boolean);
+    const segments = url.split(/[?#]/, 1)[0].split('/').filter(Boolean);
     if (segments.length === 0) {
       return [{ label: 'Overview', url: '/overview', current: true }];
     }

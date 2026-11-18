@@ -10,6 +10,12 @@ import {
 describe('SearchValidationPipe Unit Tests (LOGHUB-QUERY-004)', () => {
   const pipe = new SearchValidationPipe();
 
+  it('rejects calendar rollover instead of silently searching a different UTC date', () => {
+    for (const start of ['2026-02-30T00:00:00Z', '2026-11-06T24:00:00Z']) {
+      assert.throws(() => pipe.transform({time_range:{start,end:'2026-12-01T00:00:00Z'}}, {type:'body'}), InvalidArgumentException);
+    }
+  });
+
   const validPayload = {
     time_range: {
       start: '2026-10-26T00:00:00.000Z',

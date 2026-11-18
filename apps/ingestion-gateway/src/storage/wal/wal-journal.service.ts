@@ -85,6 +85,14 @@ export class WalJournalService implements OnModuleInit, OnModuleDestroy {
     // Acquire cross-process single-writer exclusive ownership (ADR-011 / ADR-016)
     this.ownershipManager.acquireOwnership();
 
+    this.segmentIndex = Math.max(-1,...fs.readdirSync(this.walDir).map(n=>/^journal-(\d+)\.wal$/.exec(n)).filter(Boolean).map(m=>Number(m![1])))+1;
+    const retentionPath=path.join(this.walDir,'.retention-sequence.json');
+    if(fs.existsSync(retentionPath)){
+      if(process.env['INGESTION_QUOTAS_ENABLED']!=='true'||fs.lstatSync(retentionPath).isSymbolicLink()||!fs.statSync(retentionPath).isFile()||fs.statSync(retentionPath).size>1024)throw Error('Retired metered journal requires verified accounting activation');
+      const checkpoint=JSON.parse(fs.readFileSync(retentionPath,'utf8'));
+      if(checkpoint.version!==1||!Number.isSafeInteger(checkpoint.nextIndex)||checkpoint.nextIndex<0||checkpoint.nextIndex>10000000000)throw Error('Invalid retention sequence checkpoint');
+      this.segmentIndex=Math.max(this.segmentIndex,checkpoint.nextIndex);
+    }
     const activePath = path.join(this.walDir, this.activeSegmentName);
     const recoveredFrames = this.recoverActiveSegment(activePath);
 
@@ -283,6 +291,7 @@ export class WalJournalService implements OnModuleInit, OnModuleDestroy {
     const rotatedName = `journal-${this.segmentIndex.toString().padStart(4, '0')}.wal`;
     const rotatedPath = path.join(this.walDir, rotatedName);
 
+    if(fs.existsSync(rotatedPath))throw Error('Journal rotation destination already exists');
     fs.renameSync(oldPath, rotatedPath);
     this.segmentIndex++;
 
@@ -336,6 +345,11 @@ export class WalJournalService implements OnModuleInit, OnModuleDestroy {
     return frames;
   }
 
+  public quarantineAccounting(): void {
+    this.isRecoveryRequired = true;
+    this.recoveryError = 'Accounting requires verified journal recovery';
+  }
+
   public findCommittedFrame(tenantId: string, projectId: string, batchId: string): WalFrame | undefined {
     return this.committedFrames.get(`${tenantId}:${projectId}:${batchId}`);
   }
@@ -347,6 +361,14 @@ export class WalJournalService implements OnModuleInit, OnModuleDestroy {
       }
     }
     return undefined;
+  }
+
+  public readPublicationFrames(): {frame:WalFrame;segment:string}[] {
+    const result:{frame:WalFrame;segment:string}[]=[];
+    for(const segment of fs.readdirSync(this.walDir).filter(n=>n===this.activeSegmentName||/^journal-\d+\.wal$/.test(n)).sort()){
+      const file=path.join(this.walDir,segment);if(fs.lstatSync(file).isSymbolicLink())throw Error('Redirected journal');const data=fs.readFileSync(file);let offset=0;
+      while(offset<data.length){const parsed=deserializeWalFrame(data.subarray(offset),offset);if(!parsed.valid||!parsed.frame||parsed.bytesConsumed<=0)throw Error('Journal publication integrity failure');result.push({frame:parsed.frame,segment});offset+=parsed.bytesConsumed;}
+    }return result;
   }
 
   public getAllCommittedFrames(): WalFrame[] {
@@ -381,6 +403,8 @@ export class WalJournalService implements OnModuleInit, OnModuleDestroy {
    */
   public canCompactSegment(segmentName: string, prereqs: CompactionPrerequisites): { eligible: boolean; blockers: string[] } {
     const blockers: string[] = [];
+    if(!/^journal-[0-9]{4,10}\.wal$/.test(segmentName))blockers.push('Only a closed journal filename may be compacted');
+    if(process.env['INGESTION_QUOTAS_ENABLED']==='true') blockers.push('Metered journal retention requires explicit accounting-aware maintenance; automatic compaction disabled');
 
     if (segmentName === this.activeSegmentName) {
       blockers.push('Cannot compact active WAL segment');
@@ -430,6 +454,7 @@ export class WalJournalService implements OnModuleInit, OnModuleDestroy {
       return { compacted: false, reason: `Segment file '${segmentName}' does not exist` };
     }
 
+    if(!this.ownershipManager.getStatus().isOwned||fs.lstatSync(filePath).isSymbolicLink()||!fs.statSync(filePath).isFile())return {compacted:false,reason:'Unverified journal ownership or segment'};
     try {
       fs.unlinkSync(filePath);
       this.logger.log(`Safely compacted and unlinked archived WAL segment: ${segmentName}`);

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dashboard presentation preferences v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "range",
+    "refreshSeconds",
+    "service",
+    "interval",
+    "topN",
+    "metric"
+  ],
+  "properties": {
+    "v": {
+      "const": 1
+    },
+    "range": {
+      "enum": [
+        "15m",
+        "1h",
+        "6h",
+        "24h",
+        "7d"
+      ]
+    },
+    "refreshSeconds": {
+      "enum": [
+        0,
+        15,
+        30,
+        60,
+        300
+      ]
+    },
+    "service": {
+      "type": "string",
+      "pattern": "^(?:[A-Za-z0-9_.-]{1,64})?$"
+    },
+    "interval": {
+      "enum": [
+        "1m",
+        "5m",
+        "15m",
+        "1h",
+        "6h",
+        "1d"
+      ]
+    },
+    "topN": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "metric": {
+      "enum": [
+        "events",
+        "errors",
+        "warnings"
+      ]
+    }
+  },
+  "$comment": "Runtime also caps JSON at 2048 bytes and validates the interval/range combination. Owner, tenant, project and query/correlation definitions are not presentation fields."
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/project-update.schema.json",
+  "title": "ProjectUpdateV1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 255
+    },
+    "status": {
+      "enum": [
+        "ACTIVE",
+        "SUSPENDED",
+        "ARCHIVED"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "name"
+      ],
+      "not": {
+        "required": [
+          "status"
+        ]
+      }
+    },
+    {
+      "required": [
+        "status"
+      ],
+      "not": {
+        "required": [
+          "name"
+        ]
+      }
+    }
+  ]
+}

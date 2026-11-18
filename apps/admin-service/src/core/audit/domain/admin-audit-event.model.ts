@@ -1,11 +1,16 @@
 export type AdminAuditAction =
+  | 'SAVED_SEARCH_CREATED' | 'SAVED_SEARCH_UPDATED' | 'SAVED_SEARCH_DELETED'
   | 'TENANT_UPDATED'
   | 'PROJECT_CREATED'
   | 'PROJECT_UPDATED'
   | 'PROJECT_DISABLED'
+  | 'PROJECT_REACTIVATED'
+  | 'PROJECT_ARCHIVED'
   | 'MEMBER_INVITED'
   | 'MEMBER_ROLE_CHANGED'
   | 'MEMBER_REMOVED'
+  | 'MEMBER_SUSPENDED'
+  | 'MEMBER_REACTIVATED'
   | 'CREDENTIAL_CREATED'
   | 'CREDENTIAL_ROTATED'
   | 'CREDENTIAL_REVOKED'
@@ -18,7 +23,7 @@ export interface AdminAuditEvent {
   actorUserId?: string | null;
   actorEmail: string;
   action: AdminAuditAction;
-  targetType: 'tenant' | 'project' | 'membership' | 'credential' | 'quota' | 'retention';
+  targetType: 'saved_search' | 'tenant' | 'project' | 'membership' | 'credential' | 'quota' | 'retention';
   targetId: string;
   details: Record<string, unknown>;
   ipAddress?: string | null;

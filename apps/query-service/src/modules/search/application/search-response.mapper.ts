@@ -53,6 +53,7 @@ export class SearchResponseMapper {
         total_returned: result.events.length,
       },
       statistics: {
+        ...(plan.unavailableSegmentCount?{partial_results:true,unavailable_segments:plan.unavailableSegmentCount}:{}),
         scanned_bytes: result.scannedBytes,
         scanned_segments: result.scannedSegmentCount,
         execution_time_ms: result.executionDurationMs,

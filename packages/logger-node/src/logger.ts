@@ -41,6 +41,12 @@ export interface LoggerStatus {
   totalBytesWritten: number;
   totalEventsFsynced: number;
   activeFile?: string;
+  inFlightQueueCount?: number;
+  inFlightQueueBytes?: number;
+  pendingTransportEvents?: number;
+  pendingTransportBytes?: number;
+  pendingTransportBatches?: number;
+  retryTimers?: number;
 }
 
 export class SkyraLogger {
@@ -49,6 +55,7 @@ export class SkyraLogger {
   private readonly writeQueue: WriteQueue;
   private currentLevelValue: number;
   private isClosed = false;
+  private closeOperation: Promise<void> | undefined;
   private totalEventsSubmitted = 0;
 
   constructor(
@@ -77,6 +84,7 @@ export class SkyraLogger {
       this.writeQueue = new WriteQueue(
         config.limits,
         async (batch) => {
+          let failure: unknown;
           for (const item of batch) {
             try {
               await this.transport.write(item.level, item.line, item.bytes);
@@ -88,9 +96,13 @@ export class SkyraLogger {
                   // Prevent user error handler from crashing logger
                 }
               }
-              throw err;
+              failure ??= err;
+              // A retained/unknown HTTP admission is unresolved, not a proven event drop.
+              const outcome = typeof err === 'object' && err !== null && 'outcome' in err ? err.outcome : undefined;
+              if (outcome !== 'unknown' && outcome !== 'rejected') this.writeQueue.recordDrop(1, 'Transport handoff failed; inspect onError');
             }
           }
+          if (failure) throw failure;
         },
         (emergencyItem) => {
           this.transport.emergencyWrite(emergencyItem.level, emergencyItem.line, emergencyItem.bytes);
@@ -215,6 +227,7 @@ export class SkyraLogger {
       // Enqueue to write queue
       this.writeQueue.enqueue(level, line);
     } catch (err) {
+      this.writeQueue.recordDrop(1, 'Invalid log event rejected');
       emitInternalDiagnostic('LogEventFailed', `Failed processing log event (level=${level})`, err);
       if (this.config.onError && err instanceof Error) {
         try {
@@ -249,12 +262,17 @@ export class SkyraLogger {
   /**
    * Gracefully flushes and closes file handles. Rejects subsequent writes.
    */
-  public async close(): Promise<void> {
-    if (this.isClosed) return;
+  public close(): Promise<void> {
+    if (this.closeOperation) return this.closeOperation;
     this.isClosed = true;
-
-    await this.writeQueue.close();
-    await this.transport.close();
+    this.transport.beginClose?.();
+    this.closeOperation = (async () => {
+      let failure: unknown;
+      try { await this.writeQueue.close(); } catch (err) { failure = err; }
+      try { await this.transport.close(); } catch (err) { failure ??= err; }
+      if (failure) throw failure;
+    })();
+    return this.closeOperation;
   }
 
   /**
@@ -281,6 +299,12 @@ export class SkyraLogger {
       totalBytesWritten: transportStats.totalBytesWritten,
       totalEventsFsynced: transportStats.totalEventsFsynced,
       activeFile: transportStats.currentActiveFile,
+      inFlightQueueCount: queueStats.inFlightCount,
+      inFlightQueueBytes: queueStats.inFlightBytes,
+      pendingTransportEvents: transportStats.pendingEvents,
+      pendingTransportBytes: transportStats.pendingBytes,
+      pendingTransportBatches: transportStats.pendingBatches,
+      retryTimers: transportStats.retryTimers,
     };
   }
 
@@ -296,10 +320,14 @@ export class SkyraLogger {
  * Resolves user options with production-grade defaults.
  */
 function resolveConfig(raw: SkyraLoggerConfig): ResolvedSkyraLoggerConfig {
+  if (typeof raw.serviceName !== 'string' || !raw.serviceName.trim() || raw.serviceName.length > 128 || /[\x00-\x1f\x7f]/.test(raw.serviceName)) throw new Error('Invalid service name');
+  if (typeof raw.environment !== 'string' || !['local','development','test','staging','production'].includes(normalizeEnvironment(raw.environment))) throw new Error('Invalid environment');
   const limits: ResourceLimits = {
     ...DEFAULT_RESOURCE_LIMITS,
     ...raw.limits,
   };
+
+  for (const value of Object.values(limits)) if (!Number.isSafeInteger(value) || value < 1) throw new Error('Invalid logger resource limit');
 
   const fsyncOnLevels = new Set<LogLevel>(raw.fsyncOnLevels ?? ['error', 'fatal']);
 
@@ -325,7 +353,7 @@ function resolveConfig(raw: SkyraLoggerConfig): ResolvedSkyraLoggerConfig {
 /**
  * Factory function creating a production-grade SkyraLogger instance.
  */
-export function createSkyraLogger(config: SkyraLoggerConfig): SkyraLogger {
+export function createSkyraLogger(config: SkyraLoggerConfig, transport?: SkyraTransport): SkyraLogger {
   const resolved = resolveConfig(config);
-  return new SkyraLogger(resolved);
+  return new SkyraLogger(resolved, transport);
 }

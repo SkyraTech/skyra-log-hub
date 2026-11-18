@@ -24,12 +24,15 @@
     "@skyra/logger-nestjs": "workspace:*",
     "@skyra/logger-node": "workspace:*",
     "fastify": "^4.28.1",
+    "jose": "6.1.3",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "pg": "^8.23.1"
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.22",
     "@types/node": "^26.6.5",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "@types/pg": "^8.23.1"
   }
 }

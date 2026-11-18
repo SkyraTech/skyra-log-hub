@@ -9,6 +9,9 @@ import { ThemeToggleComponent } from '../../shared/ui/theme-toggle/theme-toggle.
 import { WorkspaceContextService } from '../../core/workspace/workspace-context.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { BreadcrumbsComponent } from '../breadcrumbs/breadcrumbs.component';
+import { Router, NavigationEnd } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
 
 @Component({
   selector: 'skyra-topbar',
@@ -21,6 +24,12 @@ import { BreadcrumbsComponent } from '../breadcrumbs/breadcrumbs.component';
 export class TopbarComponent {
   private readonly workspaceContext = inject(WorkspaceContextService);
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  readonly organizationPage = toSignal(this.router.events.pipe(filter(event => event instanceof NavigationEnd), map(() => this.router.url.startsWith('/organization'))), { initialValue: this.router.url.startsWith('/organization') });
+
+  readonly projectsPage = toSignal(this.router.events.pipe(filter(event => event instanceof NavigationEnd), map(() => this.router.url.startsWith('/projects'))), { initialValue: this.router.url.startsWith('/projects') });
+  readonly activeTenant=this.workspaceContext.activeTenant;
+  readonly selectedProjectNames=this.workspaceContext.selectedProjectNames;
 
   readonly toggleMobileNav = output<void>();
 

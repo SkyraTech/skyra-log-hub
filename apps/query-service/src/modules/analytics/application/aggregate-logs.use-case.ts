@@ -28,6 +28,7 @@ export class AggregateLogsUseCase {
     dto: AggregateRequestDto,
     correlationId?: string,
     signal?: AbortSignal,
+    deduplicateEvents=false,
   ): Promise<AggregateResponseDto> {
     const startTimeNs = process.hrtime.bigint();
 
@@ -46,9 +47,25 @@ export class AggregateLogsUseCase {
     });
 
     try {
-      const plan = await this.planner.planAggregation(principal, dto, correlationId);
+      const planned = await this.planner.planAggregation(principal, dto, correlationId);
+      const plan={...planned,deduplicateEvents};
       const queryResult = await this.executionPort.executeAggregation(plan, signal);
       const responseDto = this.mapper.mapAggregationResult(queryResult);
+      responseDto.statistics.archive_watermark=plan.archiveWatermark??responseDto.statistics.archive_watermark;
+      responseDto.query_range={start:plan.timeInterval.startInclusive,end:plan.timeInterval.endExclusive,timezone:'UTC'};
+      if(plan.unavailableSegmentCount){responseDto.statistics.partial_results=true;responseDto.statistics.unavailable_segments=plan.unavailableSegmentCount;}
+      const widths:Record<string,number>={'1m':60000,'5m':300000,'15m':900000,'1h':3600000,'6h':21600000,'1d':86400000};
+      for(const spec of plan.aggregations){
+        const result=responseDto.aggregations[spec.name];
+        if(spec.type==='date_histogram'&&result?.type==='date_histogram'){
+          const width=widths[spec.interval]!;result.interval_ms=width;
+          if(dto.include_empty_buckets&&!responseDto.statistics.partial_results){
+            const counts=new Map(result.buckets.map(b=>[Date.parse(b.timestamp),b.count]));
+            const start=Math.floor(Date.parse(plan.timeInterval.startInclusive)/width)*width,end=Date.parse(plan.timeInterval.endExclusive);
+            const buckets=[];for(let at=start;at<end;at+=width)buckets.push({timestamp:new Date(at).toISOString(),count:counts.get(at)??0});result.buckets=buckets;
+          }
+        }
+      }
 
       const durationMs = Number(process.hrtime.bigint() - startTimeNs) / 1_000_000;
 

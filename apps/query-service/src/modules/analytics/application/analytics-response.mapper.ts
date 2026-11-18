@@ -79,6 +79,7 @@ export class AnalyticsResponseMapper {
           })),
         };
 
+      case 'service_trend': return {type:'service_trend',buckets:result.buckets.map(b=>({...b}))};
       case 'cardinality':
         return {
           type: 'cardinality',

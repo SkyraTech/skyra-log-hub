@@ -23,6 +23,7 @@ export interface CanonicalFieldDefinition {
 }
 
 export const CANONICAL_FIELD_CATALOG: readonly CanonicalFieldDefinition[] = [
+  {canonicalPath:'correlation.id',queryAlias:'correlation_id',jsonPath:'$.correlation.id',dataType:'string',nullable:true,supportedOperators:['eq','in','exists'],sortable:false},
   {
     canonicalPath: '@timestamp',
     queryAlias: 'timestamp',

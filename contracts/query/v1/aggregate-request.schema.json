@@ -4,12 +4,18 @@
   "title": "SkyraQueryAggregateRequestV1",
   "description": "Request envelope for POST /query/v1/logs/aggregate.",
   "type": "object",
-  "required": ["time_range", "aggregations"],
+  "required": [
+    "time_range",
+    "aggregations"
+  ],
   "additionalProperties": false,
   "properties": {
     "time_range": {
       "type": "object",
-      "required": ["start", "end"],
+      "required": [
+        "start",
+        "end"
+      ],
       "additionalProperties": false,
       "properties": {
         "start": {
@@ -26,22 +32,47 @@
     },
     "projects": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^[a-z0-9_-]{1,64}$" },
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_-]{1,64}$"
+      },
       "maxItems": 20
     },
     "environments": {
       "type": "array",
-      "items": { "type": "string", "enum": ["production", "staging", "development", "test", "local"] },
+      "items": {
+        "type": "string",
+        "enum": [
+          "production",
+          "staging",
+          "development",
+          "test",
+          "local"
+        ]
+      },
       "maxItems": 5
     },
     "services": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,64}$" },
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_.-]{1,64}$"
+      },
       "maxItems": 20
     },
     "levels": {
       "type": "array",
-      "items": { "type": "string", "enum": ["trace", "debug", "info", "warn", "error", "fatal"] },
+      "items": {
+        "type": "string",
+        "enum": [
+          "trace",
+          "debug",
+          "info",
+          "warn",
+          "error",
+          "fatal"
+        ]
+      },
       "maxItems": 6
     },
     "query_text": {
@@ -53,11 +84,32 @@
       "maxItems": 15,
       "items": {
         "type": "object",
-        "required": ["field", "operator"],
+        "required": [
+          "field",
+          "operator"
+        ],
         "additionalProperties": false,
         "properties": {
-          "field": { "type": "string", "pattern": "^[a-z0-9_.]+$", "maxLength": 64 },
-          "operator": { "type": "string", "enum": ["eq", "neq", "in", "not_in", "contains", "exists", "gt", "gte", "lt", "lte"] },
+          "field": {
+            "type": "string",
+            "pattern": "^[a-z0-9_.]+$",
+            "maxLength": 64
+          },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "neq",
+              "in",
+              "not_in",
+              "contains",
+              "exists",
+              "gt",
+              "gte",
+              "lt",
+              "lte"
+            ]
+          },
           "value": {}
         }
       }
@@ -68,17 +120,25 @@
       "maxItems": 5,
       "items": {
         "type": "object",
-        "required": ["name", "type", "field"],
+        "required": [
+          "name",
+          "type",
+          "field"
+        ],
         "additionalProperties": false,
         "properties": {
           "name": {
             "type": "string",
-            "pattern": "^[a-zA-Z0-9_]{1,32}$",
+            "pattern": "^(?!__proto__$|constructor$|prototype$)[a-zA-Z0-9_]{1,32}$",
             "description": "Identifier key for this aggregation result in response."
           },
           "type": {
             "type": "string",
-            "enum": ["date_histogram", "terms", "cardinality"],
+            "enum": [
+              "date_histogram",
+              "terms",
+              "cardinality"
+            ],
             "description": "Aggregation type."
           },
           "field": {
@@ -88,7 +148,14 @@
           },
           "interval": {
             "type": "string",
-            "enum": ["1m", "5m", "15m", "1h", "6h", "1d"],
+            "enum": [
+              "1m",
+              "5m",
+              "15m",
+              "1h",
+              "6h",
+              "1d"
+            ],
             "description": "Required for date_histogram aggregations."
           },
           "size": {
@@ -100,6 +167,11 @@
           }
         }
       }
+    },
+    "include_empty_buckets": {
+      "type": "boolean",
+      "default": false,
+      "description": "Zero-fill intersecting epoch-aligned UTC histogram buckets, maximum 2000."
     }
   }
 }

@@ -1,4 +1,5 @@
 <skyra-tech-app-shell
+  (skyra-sidebar-toggle)="onPlatformSidebarToggle($event)"
   [attr.collapsed]="sidebarCollapsed() ? '' : null"
   [attr.mobile-open]="mobileNavOpen() ? '' : null">
   <!-- Desktop & Mobile Slotted Sidebar -->

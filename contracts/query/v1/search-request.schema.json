@@ -4,12 +4,17 @@
   "title": "SkyraQuerySearchRequestV1",
   "description": "Request envelope for POST /query/v1/logs/search.",
   "type": "object",
-  "required": ["time_range"],
+  "required": [
+    "time_range"
+  ],
   "additionalProperties": false,
   "properties": {
     "time_range": {
       "type": "object",
-      "required": ["start", "end"],
+      "required": [
+        "start",
+        "end"
+      ],
       "additionalProperties": false,
       "properties": {
         "start": {
@@ -40,7 +45,13 @@
       "description": "Optional environment filters.",
       "items": {
         "type": "string",
-        "enum": ["production", "staging", "development", "test", "local"]
+        "enum": [
+          "production",
+          "staging",
+          "development",
+          "test",
+          "local"
+        ]
       },
       "maxItems": 5
     },
@@ -58,7 +69,14 @@
       "description": "Optional log severity levels to include.",
       "items": {
         "type": "string",
-        "enum": ["trace", "debug", "info", "warn", "error", "fatal"]
+        "enum": [
+          "trace",
+          "debug",
+          "info",
+          "warn",
+          "error",
+          "fatal"
+        ]
       },
       "maxItems": 6
     },
@@ -83,7 +101,10 @@
       "maxItems": 15,
       "items": {
         "type": "object",
-        "required": ["field", "operator"],
+        "required": [
+          "field",
+          "operator"
+        ],
         "additionalProperties": false,
         "properties": {
           "field": {
@@ -94,7 +115,18 @@
           },
           "operator": {
             "type": "string",
-            "enum": ["eq", "neq", "in", "not_in", "contains", "exists", "gt", "gte", "lt", "lte"],
+            "enum": [
+              "eq",
+              "neq",
+              "in",
+              "not_in",
+              "contains",
+              "exists",
+              "gt",
+              "gte",
+              "lt",
+              "lte"
+            ],
             "description": "Filter operator."
           },
           "value": {
@@ -109,12 +141,17 @@
       "properties": {
         "field": {
           "type": "string",
-          "enum": ["@timestamp"],
+          "enum": [
+            "@timestamp"
+          ],
           "default": "@timestamp"
         },
         "direction": {
           "type": "string",
-          "enum": ["asc", "desc"],
+          "enum": [
+            "asc",
+            "desc"
+          ],
           "default": "desc"
         }
       }
@@ -130,6 +167,12 @@
       "type": "string",
       "maxLength": 1024,
       "description": "Opaque pagination cursor from a previous search response."
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
     }
   }
 }

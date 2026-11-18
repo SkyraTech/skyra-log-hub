@@ -8,6 +8,8 @@ export interface StructuredFilter {
 }
 
 export interface SearchStatistics {
+  partial_results?:boolean;
+  unavailable_segments?:number;
   scanned_bytes: number;
   scanned_segments: number;
   execution_time_ms: number;
@@ -29,6 +31,7 @@ export interface SearchLogsRequest {
   services?: string[];
   levels?: Array<'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'>;
   query_text?: string;
+  correlation_id?: string;
   trace_id?: string;
   event_id?: string;
   filters?: StructuredFilter[];
@@ -43,12 +46,15 @@ export interface SearchLogsRequest {
 
 export interface CanonicalLogEvent {
   '@timestamp': string;
-  ecs: { version: string };
+  'ecs.version'?:string;
+  /** Legacy client fixtures; current canonical wire field is ecs.version. */
+  ecs?: { version: string };
   event: { id: string; action?: string; duration?: number };
   log: { level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal' };
   message: string;
   service: { name: string; environment?: string; version?: string };
   skyra: { tenant_id: string; project_id: string; schema_version: string };
+  correlation?: { id: string };
   trace?: { id: string };
   span?: { id: string };
   error?: { type: string; message: string; stack_trace?: string };
@@ -77,6 +83,10 @@ export interface AggregationDefinition {
 }
 
 export interface AggregateLogsRequest {
+  include_empty_buckets?:boolean;
+  levels?:string[];
+  environments?:string[];
+  services?:string[];
   time_range: { start: string; end: string };
   projects: string[];
   filters?: StructuredFilter[];
@@ -90,12 +100,14 @@ export interface AggregationBucket {
 }
 
 export interface AggregationResultItem {
+  interval_ms?:number;
   type: 'date_histogram' | 'terms' | 'cardinality';
   buckets?: AggregationBucket[];
   value?: number;
 }
 
 export interface AggregateLogsResponse {
+  query_range?:{start:string;end:string;timezone:'UTC'};
   aggregations: Record<string, AggregationResultItem>;
   statistics?: SearchStatistics;
   scope?: SearchScope;

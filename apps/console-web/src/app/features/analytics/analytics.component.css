@@ -116,3 +116,24 @@
     align-items: flex-start;
   }
 }
+
+:host{--skyra-text-muted:var(--skyra-text);--skyra-text-subtle:var(--skyra-text);--skyra-primary:var(--skyra-text)}
+.project-control{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}.project-control select{background:var(--skyra-surface);color:var(--skyra-text);border:1px solid var(--skyra-border);padding:.65rem;max-width:100%;border-radius:var(--skyra-radius-md)}
+.query-context{overflow-wrap:anywhere;font-size:.85rem}.partial-warning{background:var(--skyra-surface);color:var(--skyra-text);border:2px solid var(--skyra-warning);padding:1rem;border-radius:var(--skyra-radius-md)}
+.trend-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4)}.trend-grid>*{min-width:0}.loading-card{padding:1rem;border:1px solid var(--skyra-border)}
+.analytics-container>*{min-width:0}.header-badges{flex-wrap:wrap}.scope-tag{overflow-wrap:anywhere;max-width:100%}
+@media(max-width:768px){.trend-grid{grid-template-columns:1fr}.analytics-container{padding:1rem}.error-banner{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){:host ::ng-deep *{animation:none!important;transition:none!important}}
+
+.scope-tag{background:var(--skyra-surface);color:var(--skyra-text)}
+
+.advanced-analytics-controls,.comparison-panel {padding:var(--space-4,1rem);border:1px solid var(--skyra-border, #e2e8f0);border-radius:var(--radius-md,8px);min-width:0;}
+.advanced-controls {display:flex;gap:var(--space-3,.75rem);align-items:center;flex-wrap:wrap;margin-block:.75rem;}
+.advanced-controls skyra-tech-input {flex:1 1 220px;min-width:0;}
+.advanced-controls select {max-width:100%;padding:.5rem;color:var(--skyra-text-primary, #0f172a);background:var(--skyra-surface, #ffffff);border:1px solid var(--skyra-border, #e2e8f0);border-radius:var(--radius-sm,4px);}
+.comparison-table {max-width:100%;overflow-x:auto;}
+.comparison-table table {width:100%;border-collapse:collapse;text-align:left;}
+.comparison-table th,.comparison-table td {padding:.75rem;border-bottom:1px solid var(--skyra-border, #e2e8f0);}
+.service-trend-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:1rem;}
+.service-trend-grid article {min-width:0;overflow-wrap:anywhere;}
+@media(max-width:600px){.advanced-controls{align-items:stretch;flex-direction:column;}.advanced-controls skyra-tech-input{flex:0 0 auto;width:100%;}.comparison-table th,.comparison-table td{padding:.4rem;}.comparison-panel{padding:.5rem;}}

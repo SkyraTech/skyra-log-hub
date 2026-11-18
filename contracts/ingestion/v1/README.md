@@ -81,6 +81,28 @@ contracts/ingestion/v1/
 | `PAYLOAD_TOO_LARGE` | 413 | Batch payload exceeds 5MB uncompressed | No |
 | `SCHEMA_VALIDATION_FAILED`| 422 | One or more events failed canonical schema | No |
 | `UNSUPPORTED_PROTOCOL_VERSION` | 422 | Protocol version unrecognized | No |
-| `RATE_LIMIT_EXCEEDED` | 429 | Rate limit or quota exceeded | Yes (after `Retry-After`) |
+| `RATE_LIMIT_EXCEEDED` | 429 | Credential request rate limit exceeded | Yes (after `Retry-After`) |
+| `PROJECT_QUOTA_EXCEEDED` | 429 | Whole batch exceeds project daily event or canonical-byte budget | No automatic SDK retry; retained bounded batch may be explicitly retried after reset or policy change |
 | `STORAGE_NOT_READY` | 503 | Gateway alive but storage engine not ready | Yes (with backoff) |
 | `JOURNAL_UNAVAILABLE` | 503 | Journal write or fsync failure | Yes (with backoff) |
+
+
+## Daily resource accounting (FEATURE-008)
+
+Metered projects use UTC admission days [00:00, next 00:00). Canonical bytes are the UTF-8
+`JSON.stringify(normalizedEvents)` array including brackets and commas, excluding HTTP envelopes,
+compression, WAL frames, archives and Query volume. Existing batch/payload limits remain separate.
+The project lock and database reservation precede WAL fsync. Fsync acceptance is authoritative;
+finalization failure retains capacity until journal reconciliation. PostgreSQL and the filesystem do
+not form one ACID transaction. Permanent admission identity survives the seven-day receipt cache.
+Quota duplicates return the original receipt ID without additional usage, including at exhaustion.
+The credential rate guard still runs before request validation/idempotency; a rate-limited duplicate
+can receive the separate retryable RATE_LIMIT_EXCEEDED error without changing project usage.
+PROJECT_QUOTA_EXCEEDED is nonretryable within an automatic flush. No Retry-After is promised because
+some batches cannot fit a daily limit even after reset. The queue remains bounded for an explicit
+later retry. A changed batch under the same ID is a conflict, never a new charge.
+
+Activation requires coordinated Gateway `INGESTION_QUOTAS_ENABLED=true` and Admin
+`QUOTA_USAGE_ENABLED=true`, isolated-tested migrations and runtime grants, plus empty owned WAL
+stores on first activation. Legacy unmetered history is not retroactively inferred from archives.
+No protected-environment activation is performed by the test scripts.

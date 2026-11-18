@@ -178,14 +178,14 @@ describe('Hardening & Acceptance Verification (LOGHUB-PKG-002A)', () => {
     }
 
     logger.info('Log against closed file descriptor');
-    await logger.flush();
+    await assert.rejects(logger.flush(), /EBADF/);
 
     // Verify onError was safely invoked
     assert.ok(capturedError !== null);
     assert.ok((capturedError as any).message.includes('EBADF'));
 
-    // Verify logger can still close without throwing
-    await logger.close();
+    // Closing releases resources and preserves the failed delivery outcome
+    await assert.rejects(logger.close(), /EBADF/);
   });
 
   it('Scenario 5: Quarantine metadata does NOT expose secrets by default', () => {

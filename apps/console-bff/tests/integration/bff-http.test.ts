@@ -1,3 +1,5 @@
+import {Test} from '@nestjs/testing';
+import {SessionStoreService} from '../../src/modules/auth/application/session-store.service.js';
 import { describe, it, before, after } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { NestFactory } from '@nestjs/core';
@@ -10,10 +12,8 @@ describe('BFF End-to-End HTTP Integration Test Suite', () => {
   let app: NestFastifyApplication;
 
   before(async () => {
-    app = await NestFactory.create<NestFastifyApplication>(
-      AppModule,
-      new FastifyAdapter({ logger: false }),
-    );
+    const module=await Test.createTestingModule({imports:[AppModule]}).overrideProvider(SessionStoreService).useFactory({factory:()=>SessionStoreService.forIsolatedTests()}).compile();
+    app=module.createNestApplication<NestFastifyApplication>(new FastifyAdapter({logger:false}));
     await app.register(fastifyCookie as any, {
       secret: 'test-session-secret-at-least-32-chars-long!',
     });

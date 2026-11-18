@@ -44,6 +44,7 @@ export class CursorCodecService {
     readonly services?: readonly string[];
     readonly levels?: readonly string[];
     readonly query_text?: string;
+    readonly correlation_id?: string;
     readonly trace_id?: string;
     readonly event_id?: string;
     readonly filters?: readonly { readonly field: string; readonly operator: string; readonly value?: unknown }[];
@@ -58,6 +59,7 @@ export class CursorCodecService {
       levels: params.levels ? [...params.levels].sort() : [],
       query_text: params.query_text ? params.query_text.trim() : '',
       trace_id: params.trace_id ? params.trace_id.trim() : '',
+      ...(params.correlation_id!==undefined?{correlation_id:params.correlation_id}:{}),
       event_id: params.event_id ? params.event_id.trim() : '',
       filters: params.filters
         ? [...params.filters]

@@ -4,7 +4,11 @@
   "title": "SkyraQueryAggregateResponseV1",
   "description": "Response envelope for POST /query/v1/logs/aggregate.",
   "type": "object",
-  "required": ["aggregations", "statistics", "scope"],
+  "required": [
+    "aggregations",
+    "statistics",
+    "scope"
+  ],
   "additionalProperties": false,
   "properties": {
     "aggregations": {
@@ -12,22 +16,40 @@
       "description": "Map of aggregation names to aggregation bucket results.",
       "additionalProperties": {
         "type": "object",
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "additionalProperties": false,
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["date_histogram", "terms", "cardinality"]
+            "enum": [
+              "date_histogram",
+              "terms",
+              "cardinality"
+            ]
           },
           "buckets": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["count"],
+              "required": [
+                "count"
+              ],
               "properties": {
-                "key": { "description": "Bucket key for terms aggregations." },
-                "timestamp": { "type": "string", "format": "date-time", "description": "Bucket start for date_histogram." },
-                "count": { "type": "integer", "minimum": 0, "description": "Number of matching events in bucket." }
+                "key": {
+                  "description": "Bucket key for terms aggregations."
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Bucket start for date_histogram."
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Number of matching events in bucket."
+                }
               }
             }
           },
@@ -35,28 +57,88 @@
             "type": "number",
             "minimum": 0,
             "description": "Value for single-value aggregations such as cardinality."
+          },
+          "interval_ms": {
+            "type": "integer",
+            "minimum": 1
           }
         }
       }
     },
     "statistics": {
       "type": "object",
-      "required": ["scanned_bytes", "scanned_segments", "execution_time_ms", "archive_watermark"],
+      "required": [
+        "scanned_bytes",
+        "scanned_segments",
+        "execution_time_ms",
+        "archive_watermark"
+      ],
       "additionalProperties": false,
       "properties": {
-        "scanned_bytes": { "type": "integer", "minimum": 0 },
-        "scanned_segments": { "type": "integer", "minimum": 0 },
-        "execution_time_ms": { "type": "number", "minimum": 0 },
-        "archive_watermark": { "type": "string", "format": "date-time" }
+        "scanned_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scanned_segments": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "execution_time_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "archive_watermark": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "partial_results": {
+          "type": "boolean"
+        },
+        "unavailable_segments": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "scope": {
       "type": "object",
-      "required": ["tenant_id", "searched_projects"],
+      "required": [
+        "tenant_id",
+        "searched_projects"
+      ],
       "additionalProperties": false,
       "properties": {
-        "tenant_id": { "type": "string" },
-        "searched_projects": { "type": "array", "items": { "type": "string" } }
+        "tenant_id": {
+          "type": "string"
+        },
+        "searched_projects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "query_range": {
+      "type": "object",
+      "required": [
+        "start",
+        "end",
+        "timezone"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timezone": {
+          "const": "UTC"
+        }
       }
     }
   }

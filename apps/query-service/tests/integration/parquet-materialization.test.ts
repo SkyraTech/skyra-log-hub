@@ -155,7 +155,7 @@ describe('Parquet Materialization & Lifecycle Integration Tests (LOGHUB-QUERY-00
   it('MAT-3: should verify stable record locator and unicode preservation in Parquet', async () => {
     const conn = await instanceManager.createConnection();
     try {
-      const paths = pathSafety.resolveSegmentPaths(tenantId, projectId, environment, date, segmentFilename);
+      const paths = pathSafety.resolveSegmentPaths(tenantId, projectId, environment, date, segmentFilename,undefined,jsonlChecksum);
 
       const reader = await conn.run(
         `SELECT "@timestamp", "event.id", "segment_id", "record_offset", "json" 
@@ -190,8 +190,8 @@ describe('Parquet Materialization & Lifecycle Integration Tests (LOGHUB-QUERY-00
     assert.equal(result.recordCount, 3);
   });
 
-  it('MAT-5: should clean up stale staging files during crash recovery', () => {
-    const paths = pathSafety.resolveSegmentPaths(tenantId, projectId, environment, date, segmentFilename);
+  it('MAT-5: should preserve unowned staging files despite age during crash recovery', () => {
+    const paths = pathSafety.resolveSegmentPaths(tenantId, projectId, environment, date, segmentFilename,undefined,jsonlChecksum);
     fs.mkdirSync(paths.stagingDirectory, { recursive: true });
     fs.writeFileSync(paths.stagingParquetPath, 'stale-data');
 
@@ -202,7 +202,7 @@ describe('Parquet Materialization & Lifecycle Integration Tests (LOGHUB-QUERY-00
     assert.equal(fs.existsSync(paths.stagingParquetPath), true);
 
     const recovery = recoverUseCase.execute(600_000); // 10 minutes max age
-    assert.ok(recovery.stagedFilesRemoved >= 1);
-    assert.equal(fs.existsSync(paths.stagingParquetPath), false);
+    assert.equal(recovery.stagedFilesRemoved, 0);
+    assert.equal(fs.existsSync(paths.stagingParquetPath), true);
   });
 });

@@ -14,8 +14,7 @@ describe('LogTableComponent — High-Density Workstation Table', () => {
       const table = new LogTableComponent();
       const iso = '2026-10-27T10:14:02.148Z';
       const formatted = table.formatTimestamp(iso);
-      assert.ok(formatted.includes('2026-10-27'));
-      assert.ok(formatted.includes('.148') || formatted.includes('10:14:02'));
+      assert.equal(formatted, '2026-10-27 10:14:02.148');
     });
   });
 

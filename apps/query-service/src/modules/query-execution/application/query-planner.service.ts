@@ -36,6 +36,7 @@ export interface PlanQueryRequest {
   readonly services?: readonly string[];
   readonly levels?: readonly string[];
   readonly query_text?: string;
+  readonly correlation_id?: string;
   readonly trace_id?: string;
   readonly event_id?: string;
   readonly filters?: readonly RawFilterInput[];
@@ -160,6 +161,7 @@ export class QueryPlannerService {
       });
     }
 
+    if (request.correlation_id) combinedFilters.push({field:'correlation.id',operator:'eq',value:request.correlation_id});
     if (request.trace_id) {
       combinedFilters.push({
         field: 'trace.id',
@@ -217,6 +219,7 @@ export class QueryPlannerService {
     }
 
     const plan: AuthorizedLogQueryPlan = {
+      unavailableSegmentCount:discovery.missingCount+discovery.corruptCount,
       queryId,
       tenantId: scope.tenantId,
       authorizedProjects: scope.effectiveProjects,
@@ -348,6 +351,8 @@ export class QueryPlannerService {
     }
 
     return {
+      archiveWatermark:new Date(Math.max(0,...verifiedDescriptors.map(d=>Date.parse(d.lastEventTimestamp||d.finalizedAt)).filter(Number.isFinite))).toISOString(),
+      unavailableSegmentCount:discovery.missingCount+discovery.corruptCount,
       queryId,
       tenantId: scope.tenantId,
       authorizedProjects: scope.effectiveProjects,

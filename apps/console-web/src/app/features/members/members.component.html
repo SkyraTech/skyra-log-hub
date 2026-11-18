@@ -1,0 +1,37 @@
+<section class="members-page" aria-labelledby="members-title">
+  <div class="page-header"><p class="eyebrow">Organization administration</p><h1 id="members-title">{{ id ? 'Member details' : 'Members & roles' }}</h1><p>Manage existing organization memberships and their permissions.</p></div>
+  @if(!loading()&&!denied()&&(member()||page())){<skyra-audit-link resourceType="membership" [resourceId]="id||''"></skyra-audit-link>}
+  @if(loading()) {<div class="panel" aria-busy="true"><skyra-spinner label="Loading members" show-label></skyra-spinner></div>}
+  @if(error()) {<div class="feedback"><skyra-notification-bar type="error" duration="0">{{error()}}</skyra-notification-bar></div>@if(!denied()){<skyra-tech-button variant="outline" (click)="reload()">{{conflict()?'Reload member':'Retry'}}</skyra-tech-button>}}
+  @if(success()){<div role="status" class="feedback"><skyra-notification-bar type="success" duration="0">{{success()}}</skyra-notification-bar></div>}
+  @if(!loading() && !denied()) {
+    @if(!id && page(); as result) {
+      <form class="filters" (submit)="$event.preventDefault();apply()" aria-label="Filter members">
+        <skyra-tech-input label="Search members" [value]="search()" (input)="search.set($any($event.target).value)" (keydown.enter)="$event.preventDefault();apply()" helper-text="Search name or email"></skyra-tech-input>
+        <skyra-tech-button type="button" (click)="apply()">Search</skyra-tech-button>
+        <skyra-tech-dropdown-menu [items]="statusItems()" aria-label="Membership status filter"><span slot="trigger">Status: {{status()||'All'}}</span></skyra-tech-dropdown-menu>
+        <skyra-tech-dropdown-menu [items]="roleItems()" aria-label="Membership role filter"><span slot="trigger">Role: {{role()||'All'}}</span></skyra-tech-dropdown-menu>
+      </form>
+      @if(result.items.length){
+        <div class="table-panel"><skyra-tech-data-table [data]="rows()" [columns]="columns" [features]="tableFeatures" (skyra-row-click)="open($any($event).detail.id)" aria-label="Organization members">
+          @for(row of result.items;track row.id){<skyra-tech-button [attr.slot]="'row-actions-'+row.id" size="sm" variant="outline" (click)="$event.stopPropagation();open(row.id)">View<span class="sr-only"> {{row.displayName||row.email}}</span></skyra-tech-button>}
+        </skyra-tech-data-table></div>
+      } @else {<skyra-tech-empty-state headline="No matching members" description="Try another search or filter."></skyra-tech-empty-state>}
+      <nav class="actions" aria-label="Member pages"><skyra-tech-button variant="outline" (click)="previous()" [disabled]="!history().length">Previous page</skyra-tech-button><span role="status">Page {{history().length+1}}</span><skyra-tech-button variant="outline" (click)="next()" [disabled]="!result.nextCursor">Next page</skyra-tech-button></nav>
+    }
+    @if(id && member();as current){
+      <div class="panel"><h2>{{current.displayName||current.email}}</h2><p>{{current.email}}</p><div class="labels"><skyra-tech-badge>{{current.status}}</skyra-tech-badge>@for(role of current.roles;track role){<skyra-tech-badge>{{role}}</skyra-tech-badge>}</div>
+        <dl><div><dt>Identity status</dt><dd>{{current.identityStatus}}</dd></div><div><dt>Membership scope</dt><dd>Organization</dd></div><div><dt>Member since</dt><dd>{{current.createdAt|date:'medium'}}</dd></div></dl>
+        @if(current.projectRoles.length){<h3>Existing project-scoped roles</h3><ul>@for(grant of current.projectRoles;track $index){<li>{{grant.role}} — {{grant.projectId}}</li>}</ul><p>Organization role edits preserve these project grants.</p>}
+        @if(current.lastOwner){<p role="status">This is the last active OrgOwner. Demotion, suspension and revocation are protected.</p>}
+        @if(current.actions.changeRole){<h3>Organization role</h3><skyra-tech-dropdown-menu [items]="editItems()" aria-label="Choose organization role"><span slot="trigger">Role: {{selectedRole()||'Choose role'}}</span></skyra-tech-dropdown-menu>
+          @if(explanation();as info){<p>{{info.description}}</p><details><summary>Applicable permissions</summary><ul>@for(cap of info.capabilities;track cap){<li>{{cap}}</li>}</ul></details>}
+          <div class="actions"><skyra-tech-button (click)="requestRole()" [disabled]="!dirty()||!selectedRole()||saving()||conflict()">{{saving()?'Saving…':'Save role'}}</skyra-tech-button><skyra-tech-button variant="outline" (click)="cancel()" [disabled]="!dirty()||saving()">Cancel changes</skyra-tech-button></div>
+        }
+        <div class="actions">@if(current.actions.suspend){<skyra-tech-button variant="outline" (click)="requestStatus('SUSPENDED')" [disabled]="saving()||conflict()">Suspend membership</skyra-tech-button>}@if(current.actions.reactivate){<skyra-tech-button variant="outline" (click)="requestStatus('ACTIVE')" [disabled]="saving()||conflict()">Reactivate membership</skyra-tech-button>}@if(current.actions.revoke){<skyra-tech-button variant="outline" (click)="requestStatus('REVOKED')" [disabled]="saving()||conflict()">Revoke membership</skyra-tech-button>}<skyra-tech-button variant="outline" (click)="back()">Back to members</skyra-tech-button></div>
+        @if(current.status==='REVOKED'||current.status==='PENDING_INVITE'||current.identityStatus!=='ACTIVE'){<p role="status">This membership is read-only. Invitations and identity provisioning are outside this feature.</p>}
+      </div>
+    }
+  }
+  <skyra-tech-dialog #confirmationDialog [open]="!!confirmation()" size="sm" (skyra-close)="confirmation.set(null)"><span slot="title">{{confirmation()?.label||'Confirm membership change'}}</span>@if(confirmation();as proposed){<p>Confirm this change for {{member()?.displayName||member()?.email}}. {{proposed.body.role?'Organization-wide permissions will change.':'Access changes on the next authorized request.'}}</p>@if(member()?.self){<p>You are changing your own membership. You may lose access.</p>}}<div slot="footer" class="actions"><skyra-tech-button variant="outline" (click)="confirmation.set(null)">Cancel</skyra-tech-button><skyra-tech-button (click)="confirm()">Confirm change</skyra-tech-button></div></skyra-tech-dialog>
+</section>

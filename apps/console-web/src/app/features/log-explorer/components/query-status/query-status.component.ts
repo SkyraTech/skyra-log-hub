@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  CUSTOM_ELEMENTS_SCHEMA,
   Component,
   input,
   output,
@@ -10,6 +11,7 @@ import { CursorPaginationState } from '../../domain/pagination.model';
 
 @Component({
   selector: 'skyra-query-status',
+  schemas:[CUSTOM_ELEMENTS_SCHEMA],
   standalone: true,
   imports: [CommonModule],
   templateUrl: './query-status.component.html',

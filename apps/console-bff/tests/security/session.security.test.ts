@@ -38,7 +38,7 @@ describe('Session Security & Lifecycle Test Suite (Section 21 Tests 11-20)', () 
 
   beforeEach(() => {
     config = new BffConfigService();
-    sessionStore = new SessionStoreService();
+    sessionStore = SessionStoreService.forIsolatedTests();
     guard = new SessionAuthGuard(config, sessionStore);
   });
 

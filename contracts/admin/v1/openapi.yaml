@@ -19,6 +19,14 @@ security:
   - AdminBearerAuth: []
 
 paths:
+  /admin/v1/tenants/{tenantId}/projects/{projectId}/credentials:
+    $ref: './managed-credentials.openapi.yaml#/paths/~1admin~1v1~1tenants~1{tenantId}~1projects~1{projectId}~1credentials'
+  /admin/v1/tenants/{tenantId}/projects/{projectId}/credentials/{credentialId}:
+    $ref: './managed-credentials.openapi.yaml#/paths/~1admin~1v1~1tenants~1{tenantId}~1projects~1{projectId}~1credentials~1{credentialId}'
+  /admin/v1/tenants/{tenantId}/projects/{projectId}/credentials/{credentialId}/rotate:
+    $ref: './managed-credentials.openapi.yaml#/paths/~1admin~1v1~1tenants~1{tenantId}~1projects~1{projectId}~1credentials~1{credentialId}~1rotate'
+  /admin/v1/tenants/{tenantId}/projects/{projectId}/credentials/{credentialId}/revoke:
+    $ref: './managed-credentials.openapi.yaml#/paths/~1admin~1v1~1tenants~1{tenantId}~1projects~1{projectId}~1credentials~1{credentialId}~1revoke'
   /admin/v1/tenants:
     get:
       summary: List Authorized Tenants
@@ -45,7 +53,7 @@ paths:
         - $ref: '#/components/parameters/TenantIdParam'
       responses:
         '200':
-          description: Tenant metadata.
+          description: Tenant metadata. ETag and X-Organization-Capabilities headers carry concurrency and server-resolved management capabilities.
           content:
             application/json:
               schema:
@@ -59,14 +67,20 @@ paths:
     patch:
       summary: Update Tenant Metadata
       operationId: updateTenant
+      description: Name-only update. A stale If-Match returns 409; a missing precondition returns 428. Identity, code, creation date and status are immutable in this slice.
       parameters:
+        - in: header
+          name: If-Match
+          required: true
+          schema: { type: string }
+          description: Strong ETag from the latest organization read.
         - $ref: '#/components/parameters/TenantIdParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: './tenant-request.schema.json'
+              $ref: './organization-name-update.schema.json'
       responses:
         '200':
           description: Tenant updated successfully.
@@ -82,27 +96,47 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: Concurrent update or non-active organization. Reload before retrying.
+        '428':
+          description: Missing If-Match precondition.
 
   /admin/v1/tenants/{tenantId}/projects:
+    x-implementation-status: FEATURE-003 implemented in isolation; protected activation deferred
     get:
+      description: Stored tenant and project scope. Default array preserved; page=true opts into paginated envelope. Project ID is the globally unique canonical code.
       summary: List Projects in Tenant
       operationId: listProjects
       parameters:
         - $ref: '#/components/parameters/TenantIdParam'
+        - { name: page, in: query, schema: { type: string, enum: ['true'] } }
+        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: status, in: query, schema: { type: string, enum: [ACTIVE, SUSPENDED, ARCHIVED] } }
+        - { name: sort, in: query, schema: { type: string, enum: [createdAt, name, id], default: createdAt } }
+        - { name: direction, in: query, schema: { type: string, enum: [asc, desc], default: asc } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { name: cursor, in: query, schema: { type: string, maxLength: 2048 } }
       responses:
         '200':
           description: Projects list.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: './project-response.schema.json'
+                oneOf:
+                  - type: array
+                    items: { $ref: './project-response.schema.json' }
+                  - type: object
+                    required: [items, nextCursor, canCreate]
+                    properties:
+                      items: { type: array, items: { $ref: './project-response.schema.json' } }
+                      nextCursor: { type: string, nullable: true }
+                      canCreate: { type: boolean }
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      description: Requires projects.create. Optional id is immutable and globally unique; omitted ID is generated. Name is trimmed 2–255 characters; create status is ACTIVE only. Tenant comes from server-authorized context.
       summary: Provision New Project
       operationId: createProject
       parameters:
@@ -150,17 +184,19 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     patch:
+      description: Requires projects.manage assertion and effective projects.update (projects.archive for ARCHIVED). Exactly one name or status; If-Match required. ACTIVE/SUSPENDED may archive; ARCHIVED terminal. Identifiers immutable. Inactive projects reject new ingestion and new BFF query grants; issued assertions expire within 60 seconds.
       summary: Update Project
       operationId: updateProject
       parameters:
         - $ref: '#/components/parameters/TenantIdParam'
         - $ref: '#/components/parameters/ProjectIdParam'
+        - { name: If-Match, in: header, required: true, schema: { type: string }, description: Project-specific microsecond ETag }
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: './project-request.schema.json'
+              $ref: './project-update.schema.json'
       responses:
         '200':
           description: Project updated.
@@ -168,6 +204,8 @@ paths:
             application/json:
               schema:
                 $ref: './project-response.schema.json'
+        '409': { description: Stale version or unsupported lifecycle transition }
+        '428': { description: If-Match required }
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -177,7 +215,80 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /admin/v1/tenants/{tenantId}/memberships:
+    x-implementation-status: FEATURE-002 implemented in isolation; protected activation deferred
+    parameters:
+      - $ref: '#/components/parameters/TenantIdParam'
+    get:
+      operationId: listExistingMemberships
+      summary: List existing organization memberships
+      description: Requires members.read internal assertion and persisted tenant.members.read. Stable createdAt/id cursor pages; role filter applies to organization-wide roles only.
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: status, in: query, schema: { type: string, enum: [PENDING_INVITE, ACTIVE, SUSPENDED, REVOKED] } }
+        - { name: role, in: query, schema: { type: string, enum: [OrgOwner, OrgAdmin, ProjectAdmin, Developer, Viewer] } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { name: cursor, in: query, schema: { type: string, maxLength: 2048 } }
+      responses:
+        '200':
+          description: Safe member page, nextCursor, caller member capabilities and predefined role explanations.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor, capabilities, roles]
+                properties:
+                  items: { type: array, items: { $ref: './member-management-view.schema.json' } }
+                  nextCursor: { type: [string, 'null'] }
+                  capabilities: { type: array, items: { type: string } }
+                  roles: { type: array, items: { type: object, required: [name, description, capabilities] } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/v1/tenants/{tenantId}/memberships/{membershipId}:
+    parameters:
+      - $ref: '#/components/parameters/TenantIdParam'
+      - { name: membershipId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: readExistingMembership
+      summary: Read one tenant-scoped membership
+      responses:
+        '200':
+          description: Safe member detail with ETag and permitted actions.
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: './member-management-view.schema.json' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: updateExistingMembership
+      summary: Change one organization role or membership status
+      description: Requires members.manage assertion and current tenant.members.manage. Replaces tenant-wide roles only; project roles preserved. REVOKED is terminal, PENDING_INVITE read-only. Active last owner protected under tenant row lock. No hard deletion or invitation.
+      parameters:
+        - { name: If-Match, in: header, required: true, schema: { type: string } }
+        - { name: X-Correlation-ID, in: header, schema: { type: string, maxLength: 64 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: './member-management-update.schema.json' }
+      responses:
+        '200':
+          description: Updated member and new version; mutation and append-only audit committed atomically.
+          content:
+            application/json:
+              schema: { $ref: './member-management-view.schema.json' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '428': { description: Missing If-Match precondition. }
   /admin/v1/tenants/{tenantId}/members:
+    x-implementation-status: Historical invitation-oriented proposal; not implemented by FEATURE-002. Use additive memberships routes for existing-member management.
     get:
       summary: List Tenant Members
       operationId: listMembers
@@ -278,6 +389,7 @@ paths:
           $ref: '#/components/responses/Conflict'
 
   /admin/v1/projects/{projectId}/credentials:
+    x-implementation-status: legacy-proposal-not-implemented-use-tenant-scoped-routes
     get:
       summary: List Project Machine Credentials
       operationId: listCredentials
@@ -328,6 +440,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
 
   /admin/v1/projects/{projectId}/credentials/{credentialId}/rotate:
+    x-implementation-status: legacy-proposal-not-implemented-use-tenant-scoped-routes
     post:
       summary: Rotate Machine Credential
       description: Issues a replacement credential and starts a grace overlap window for the existing credential.
@@ -355,6 +468,7 @@ paths:
           $ref: '#/components/responses/NotFound'
 
   /admin/v1/projects/{projectId}/credentials/{credentialId}/revoke:
+    x-implementation-status: legacy-proposal-not-implemented-use-tenant-scoped-routes
     post:
       summary: Immediately Revoke Credential
       operationId: revokeCredential
@@ -376,47 +490,71 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /admin/v1/projects/{projectId}/quotas:
+  /admin/v1/tenants/{tenantId}/projects/{projectId}/usage:
     get:
-      summary: Get Project Quotas
+      summary: Read authoritative UTC daily ingestion usage (quotas.read)
+      operationId: getProjectUsage
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+        - $ref: '#/components/parameters/ProjectIdParam'
+        - in: query
+          name: period
+          schema: {type: string, format: date}
+          description: UTC admission day; defaults to server today. Policy is the current policy.
+      responses:
+        '200':
+          description: Accepted usage, reserved capacity and completeness. Cache-Control no-store.
+          content:
+            application/json:
+              schema: {$ref: './project-usage-response.schema.json'}
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '503':
+          description: Meter not activated or metadata unavailable; never a fabricated zero.
+  /admin/v1/tenants/{tenantId}/projects/{projectId}/quota:
+    get:
+      summary: Read current daily quota policy (quotas.read)
       operationId: getQuotas
       parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
         - $ref: '#/components/parameters/ProjectIdParam'
       responses:
         '200':
-          description: Quota configuration.
+          description: Policy and ETag, zero version denotes missing/unlimited policy.
           content:
             application/json:
-              schema:
-                $ref: './quota-response.schema.json'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+              schema: {$ref: './daily-quota-response.schema.json'}
     patch:
-      summary: Update Project Quotas
+      summary: Update daily limits with existing quotas.manage capability and immutable audit
       operationId: updateQuotas
       parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
         - $ref: '#/components/parameters/ProjectIdParam'
+        - in: header
+          name: If-Match
+          required: true
+          schema: {type: string}
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              $ref: './quota-request.schema.json'
+            schema: {$ref: './daily-quota-request.schema.json'}
       responses:
         '200':
-          description: Quotas updated.
+          description: Policy saved transactionally with audit. Existing accepted usage preserved.
           content:
             application/json:
-              schema:
-                $ref: './quota-response.schema.json'
+              schema: {$ref: './daily-quota-response.schema.json'}
         '400':
           $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Stale policy; reload.
+        '428':
+          description: If-Match required.
+        '503':
+          description: Meter not activated or storage unavailable.
 
   /admin/v1/projects/{projectId}/retention:
     get:
@@ -462,24 +600,172 @@ paths:
 
   /admin/v1/tenants/{tenantId}/audit-events:
     get:
-      summary: Query Administrative Audit Events
+      summary: Read immutable organization audit history with current tenant-wide audit.read
       operationId: queryAuditEvents
+      description: Read-only transaction, no email/IP/raw metadata. UTC timestamp DESC then UUID DESC keyset order; newly appended events after the first-page anchor are excluded. No cross-request MVCC snapshot is claimed for artificially backdated inserts.
       parameters:
         - $ref: '#/components/parameters/TenantIdParam'
+        - in: query
+          name: action
+          description: Canonical action, including unknown historical uppercase identifiers.
+          schema: {type: string}
+        - in: query
+          name: actorId
+          description: Exact historical actor UUID; no actor directory is returned.
+          schema: {type: string}
+        - in: query
+          name: correlationId
+          description: Exact case-sensitive administrative operation ID, separate from application-log correlation. Bound to the signed cursor.
+          schema: {type: string, maxLength: 64, pattern: '^[a-zA-Z0-9-]{1,64}$'}
+        - in: query
+          name: resourceType
+          description: tenant, membership, project, credential, quota or retention.
+          schema: {type: string}
+        - in: query
+          name: resourceId
+          description: Exact target identifier within the authorized organization.
+          schema: {type: string}
+        - in: query
+          name: projectId
+          description: Project/credential/quota history for an exact project identifier.
+          schema: {type: string}
+        - in: query
+          name: start
+          description: Inclusive UTC timestamp, up to six fractional digits. Both bounds required; maximum span 366 days.
+          schema: {type: string}
+        - in: query
+          name: end
+          description: Exclusive UTC timestamp, up to six fractional digits.
+          schema: {type: string}
+        - in: query
+          name: limit
+          description: Page size 1-100, default 25.
+          schema: {type: string}
+        - in: query
+          name: cursor
+          description: Signed 15-minute keyset cursor bound to tenant, current reader and all filters.
+          schema: {type: string}
       responses:
         '200':
-          description: Paginated audit records.
+          description: Bounded safe audit page, Cache-Control no-store.
           content:
             application/json:
-              schema:
-                $ref: './audit-events-response.schema.json'
+              schema: {$ref: './audit-history-page.schema.json'}
+        '400':
+          description: Invalid filters, tampered/expired cursor or cursor context mismatch.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '503':
+          description: Audit read feature disabled or storage unavailable. No fixture fallback.
+  /admin/v1/tenants/{tenantId}/audit-events/access:
+    get:
+      summary: Verify audit.read for permission-aware navigation without querying event records
+      operationId: auditReadAccess
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+      responses:
+        '200':
+          description: Authorized action catalog; no actor/resource enumeration.
+          content:
+            application/json:
+              schema: {$ref: './audit-history-access.schema.json'}
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /admin/v1/tenants/{tenantId}/audit-events/{eventId}:
+    get:
+      summary: Read one immutable safely projected audit event
+      operationId: getAuditEvent
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+        - in: path
+          name: eventId
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Safe before/after fields, no raw JSON, email, IP, secret or verifier. Oversized metadata is withheld.
+          content:
+            application/json:
+              schema: {$ref: './public-audit-event.schema.json'}
+        '404':
+          description: Event absent or inaccessible; indistinguishable for foreign organizations.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '503':
+          description: Storage unavailable or feature disabled.
 
+  /admin/v1/tenants/{tenantId}/projects/{projectId}/usage/history:
+    get:
+      summary: Read authoritative daily admission usage for one active authorized project
+      operationId: readDailyUsageHistory
+      description: Requires current quotas.read. At most 90 UTC days, start inclusive/end exclusive, ending no later than tomorrow. Historical policy was not snapshotted; historical limits/utilization/exceeded state are unknown. Current-policy reference percentages are explicitly nonhistorical and include reservations. No Query/archive counters.
+      parameters:
+        - $ref: '#/components/parameters/TenantIdParam'
+        - name: projectId
+          in: path
+          required: true
+          schema: {type: string, maxLength: 64}
+        - name: start
+          in: query
+          required: true
+          schema: {type: string, format: date}
+        - name: end
+          in: query
+          required: true
+          schema: {type: string, format: date}
+      responses:
+        '200':
+          description: Bounded authoritative daily windows, pending separate; Admin adds tenantId to the public response.
+          content:
+            application/json:
+              schema:
+                description: See usage-history-response.schema.json for the BFF public projection; Admin additionally asserts tenantId.
+                type: object
+        '400': {description: Invalid or excessive UTC range}
+        '403': {description: Current usage access denied or project inactive}
+        '503': {description: Disabled or storage unavailable; no zero-data fallback}
+  /bff/organization/audit/export:
+    post:
+      summary: Download bounded matching audit history as JSON or CSV
+      operationId: exportMatchingAuditHistory
+      servers:
+        - url: /
+          description: Console origin BFF surface
+      security:
+        - BffCookieSession: []
+      description: HttpOnly session plus CSRF required. Current tenant-wide audit.read revalidated per page and before completion. Limits 1000 records, 5 MiB, 10 pages, 15 seconds, one per session and two per BFF. Fixed watermark keyset traversal, not a global snapshot. Truncation is explicit in JSON metadata, response headers and filename. Tenant/cursor/limit overrides rejected.
+      parameters:
+        - in: header
+          name: X-CSRF-Token
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: './audit-export-request.schema.json'}
+      responses:
+        '200':
+          description: Safe allowlisted attachment; X-Export-Truncated/Reason/Count/Pages/Watermark/Consistency describe traversal.
+          content:
+            application/json:
+              schema: {$ref: './audit-export-json.schema.json'}
+            text/csv:
+              schema: {type: string, description: UTF-8 quoted fields with formula neutralization; truncation metadata in response headers.}
+        '400': {description: Invalid filters/options}
+        '401': {description: Session unavailable or expired}
+        '403': {description: CSRF or current audit.read denied}
+        '429': {description: Export concurrency capacity occupied}
+        '504': {description: Deadline reached; no complete attachment}
 components:
   securitySchemes:
+    BffCookieSession:
+      type: apiKey
+      in: cookie
+      name: skyra-session
+      description: HttpOnly BFF session cookie; configured production deployments use their protected cookie name. CSRF header additionally required on POST.
     AdminBearerAuth:
       type: http
       scheme: bearer

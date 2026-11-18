@@ -1,0 +1,3 @@
+import {spawnSync} from 'node:child_process';import {root,readState,testEnvironment,isolatedAdminClient} from './isolated-postgres.mjs';import {connectIsolatedClient} from './lib/isolated-target.mjs';
+const env=testEnvironment(readState()),client=await connectIsolatedClient(env.ISOLATED_DATABASE_URL,env);await client.end();const physical=await isolatedAdminClient(readState());await physical.end();
+const r=spawnSync(process.execPath,['--test','--test-reporter=tap','tests/organization/organization.e2e.mjs'],{cwd:root,windowsHide:true,env:{...env,SKYRA_QUOTA_E2E:'true',SKYRA_ORGANIZATION_OIDC_PROTOCOL_TEST:'true',SKYRA_ORGANIZATION_EVIDENCE_LABEL:'feature008'},stdio:'inherit',timeout:500000});process.exit(r.status??1);

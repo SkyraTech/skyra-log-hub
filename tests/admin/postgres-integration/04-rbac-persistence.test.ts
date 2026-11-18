@@ -33,17 +33,17 @@ describe('PostgreSQL Integration: RBAC & Capability Persistence (Section 11)', (
     }
   });
 
-  test('2. All 22 approved capabilities exist in permissions table', async () => {
+  test('2. Current authoritative capabilities exist in permissions table', async () => {
     const res = await client.query(`SELECT code FROM permissions ORDER BY code`);
     const codes = res.rows.map((r) => r.code);
 
-    assert.equal(codes.length, 22, `Expected 22 capabilities, found: ${codes.length}`);
+    assert.equal(codes.length, STANDARD_PERMISSIONS.length, `Unexpected capability count: ${codes.length}`);
     for (const p of STANDARD_PERMISSIONS) {
       assert.ok(codes.includes(p), `Missing permission code: ${p}`);
     }
   });
 
-  test('3. OrgOwner has all 22 capabilities mapped in role_permissions', async () => {
+  test('3. OrgOwner has all current capabilities mapped in role_permissions', async () => {
     const res = await client.query(`
       SELECT p.code 
       FROM role_permissions rp
@@ -53,7 +53,7 @@ describe('PostgreSQL Integration: RBAC & Capability Persistence (Section 11)', (
       ORDER BY p.code;
     `);
 
-    assert.equal(res.rows.length, 22, 'OrgOwner must have all 22 capabilities');
+    assert.equal(res.rows.length, STANDARD_PERMISSIONS.length, 'OrgOwner must have all current capabilities');
   });
 
   test('4. Assigning tenant-wide role creates valid role_assignment record', async () => {

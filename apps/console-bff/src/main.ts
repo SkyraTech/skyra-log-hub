@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
-import { Logger } from '@nestjs/common';
+import { Logger,ForbiddenException } from '@nestjs/common';
 import fastifyCookie from '@fastify/cookie';
 import { AppModule } from './app.module.js';
 import { BffConfigService } from './config/bff-config.service.js';
@@ -40,19 +40,20 @@ async function bootstrap() {
       if (isAllowed) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS policy'), false);
+        callback(new ForbiddenException('Origin is not allowed.'), false);
       }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',
       'X-CSRF-Token',
       'X-XSRF-Token',
       'X-Correlation-ID',
       'X-Request-ID',
+      'If-Match',
     ],
-    exposedHeaders: ['X-Correlation-ID', 'X-Request-ID'],
+    exposedHeaders: ['X-Correlation-ID', 'X-Request-ID', 'ETag', 'X-Export-Truncated', 'X-Export-Reason', 'X-Export-Count', 'X-Export-Pages', 'X-Export-Consistency'],
   });
 
   // Security headers & cache control hook
@@ -67,7 +68,7 @@ async function bootstrap() {
     );
 
     // Ensure session and auth endpoints are never cached by intermediaries
-    if (request.url.startsWith('/bff/auth') || request.url.startsWith('/bff/session')) {
+    if (request.url.startsWith('/bff/auth') || request.url.startsWith('/bff/session') || request.url.startsWith('/bff/organization')) {
       reply.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       reply.header('Pragma', 'no-cache');
       reply.header('Expires', '0');

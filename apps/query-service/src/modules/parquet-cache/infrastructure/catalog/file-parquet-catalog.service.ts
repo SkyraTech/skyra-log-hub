@@ -29,22 +29,27 @@ export class FileParquetCatalogService implements IParquetCatalogPort {
     }
 
     try {
-      const paths = this.pathSafety.resolveSegmentPaths(
+      let paths = this.pathSafety.resolveSegmentPaths(
         canonicalDescriptor.tenantId,
         canonicalDescriptor.projectId,
         canonicalDescriptor.environment,
         canonicalDescriptor.date,
         canonicalDescriptor.segmentFilename,
+        undefined,canonicalDescriptor.sha256Checksum,
       );
 
+      if(!fs.existsSync(paths.metadataPath)&&!fs.existsSync(paths.parquetPath))paths=this.pathSafety.resolveSegmentPaths(canonicalDescriptor.tenantId,canonicalDescriptor.projectId,canonicalDescriptor.environment,canonicalDescriptor.date,canonicalDescriptor.segmentFilename);
       if (!fs.existsSync(paths.metadataPath) || !fs.existsSync(paths.parquetPath)) {
         return null;
       }
 
+      if(fs.lstatSync(paths.metadataPath).isSymbolicLink()||!fs.lstatSync(paths.metadataPath).isFile()||fs.statSync(paths.metadataPath).size>65536)return null;
+      this.pathSafety.validateParquetFileContainment(paths.parquetPath);
       const rawMeta = fs.readFileSync(paths.metadataPath, 'utf8');
       const meta = JSON.parse(rawMeta) as DerivedParquetMetadata;
 
       // Invariant: Only 'READY' state is eligible for query planning
+      if(meta.sourceTenantId!==canonicalDescriptor.tenantId||meta.sourceProjectId!==canonicalDescriptor.projectId||meta.sourceEnvironment!==canonicalDescriptor.environment||meta.sourcePartitionDate!==canonicalDescriptor.date||meta.sourceSegmentId!==canonicalDescriptor.segmentFilename||meta.sourceByteSize!==canonicalDescriptor.byteSize||meta.sourceRecordCount!==canonicalDescriptor.recordCount||meta.parquetFilename!==paths.parquetPath.split(/[\\/]/).at(-1))return null;
       if (meta.state !== 'READY') {
         return null;
       }
@@ -130,14 +135,19 @@ export class FileParquetCatalogService implements IParquetCatalogPort {
   }
 
   public async recordMaterialization(metadata: DerivedParquetMetadata): Promise<void> {
-    const paths = this.pathSafety.resolveSegmentPaths(
+    let paths = this.pathSafety.resolveSegmentPaths(
       metadata.sourceTenantId,
       metadata.sourceProjectId,
       metadata.sourceEnvironment,
       metadata.sourcePartitionDate,
       metadata.sourceSegmentId,
+      undefined,metadata.sourceChecksum,
     );
 
+    if(metadata.parquetFilename!==paths.parquetPath.split(/[\\/]/).at(-1)){
+      const legacy=this.pathSafety.resolveSegmentPaths(metadata.sourceTenantId,metadata.sourceProjectId,metadata.sourceEnvironment,metadata.sourcePartitionDate,metadata.sourceSegmentId);
+      if(metadata.parquetFilename!==legacy.parquetPath.split(/[\\/]/).at(-1))throw Error('Metadata filename does not match derived namespace');paths=legacy;
+    }
     this.pathSafety.ensureDirectoryExists(paths.directory);
     fs.writeFileSync(paths.metadataPath, JSON.stringify(metadata, null, 2), 'utf8');
   }

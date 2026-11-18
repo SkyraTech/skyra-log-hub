@@ -6,11 +6,24 @@ import { createEnvironmentInjector, EnvironmentInjector, Injector } from '@angul
 import { Router, UrlTree } from '@angular/router';
 import { AuthService } from '../src/app/core/auth/auth.service';
 import { AppConfigService } from '../src/app/core/config/app-config.service';
+import {HttpClient} from '@angular/common/http';
+import {of} from 'rxjs';
 import { authGuard, orgAdminGuard, roleGuard } from '../src/app/core/auth/auth.guard';
 
 describe('Auth Guards — Route Protection & RBAC Entitlements', () => {
   let injector: EnvironmentInjector;
   let authService: AuthService;
+
+  it('hydrates a real BFF cookie session for direct guarded navigation when preview is disabled',async()=>{
+    const config=new AppConfigService();config.updateConfig({previewMode:false});let authenticated=true;
+    const scoped=createEnvironmentInjector([{provide:AppConfigService,useValue:config},AuthService,{provide:Router,useValue:{createUrlTree:(commands:string[],extra:any)=>({commands,extra})}},{provide:HttpClient,useValue:{get:()=>of(authenticated?{authenticated:true,user:{id:'persisted-user',email:'user@test.invalid',name:'Persisted owner',roles:['OrgOwner']},activeTenantId:'persisted-tenant',availableProjects:[],csrfToken:'unit-only',expiresAt:'2030-01-01T00:00:00Z'}:{authenticated:false})}}],Injector.NULL as unknown as EnvironmentInjector);
+    try{const service=scoped.get(AuthService);assert.equal(service.isAuthenticated(),false);
+      assert.equal(await scoped.runInContext(()=>authGuard({} as any,{url:'/overview'} as any)),true);
+      assert.equal(service.isPreviewSession(),false);assert.equal(service.currentUser()?.id,'persisted-user');
+      authenticated=false;service.logout();const denied=await scoped.runInContext(()=>authGuard({} as any,{url:'/overview'} as any)) as any;
+      assert.deepEqual(denied.commands,['/login']);assert.equal(denied.extra.queryParams.returnUrl,'/overview');
+    }finally{scoped.destroy();}
+  });
 
   const mockRouter = {
     createUrlTree: (commands: string[], navigationExtras?: { queryParams?: Record<string, string> }) => ({

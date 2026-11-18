@@ -14,6 +14,7 @@ export interface AggregationItemDto {
 }
 
 export interface AggregateRequestDto {
+  include_empty_buckets?: boolean;
   time_range: TimeRangeDto;
   projects?: string[];
   environments?: string[];

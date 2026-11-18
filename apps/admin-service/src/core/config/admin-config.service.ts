@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional, Inject } from '@nestjs/common';
 
 @Injectable()
 export class AdminConfigService {
+  public readonly dashboardPreferencesEnabled:boolean;
+  public readonly savedSearchesEnabled:boolean;
+  public readonly auditHistoryEnabled:boolean;
+  public readonly advancedAuditUsageEnabled:boolean;
+  public readonly quotaUsageEnabled:boolean;
   public readonly port: number;
   public readonly nodeEnv: string;
   public readonly trustedIssuers: string[];
@@ -10,8 +15,14 @@ export class AdminConfigService {
   public readonly internalJwtAudience: string;
   public readonly persistenceEnabled: boolean;
   public readonly databaseUrl?: string;
+  public readonly internalJwtConfigured: boolean;
 
-  constructor(env: Record<string, string | undefined> = process.env) {
+  constructor(@Optional() @Inject('ADMIN_ENV') env: Record<string, string | undefined> = process.env) {
+    this.dashboardPreferencesEnabled=env['DASHBOARD_PREFERENCES_ENABLED']==='true';
+    this.savedSearchesEnabled=env['SAVED_SEARCHES_ENABLED']==='true';
+    this.auditHistoryEnabled=env['AUDIT_HISTORY_ENABLED']==='true';
+    this.advancedAuditUsageEnabled=env['ADVANCED_AUDIT_USAGE_ENABLED']==='true';
+    this.quotaUsageEnabled=env['QUOTA_USAGE_ENABLED']==='true';
     this.port = parseInt(env['PORT'] ?? '3300', 10);
     this.nodeEnv = env['NODE_ENV'] ?? 'development';
     this.trustedIssuers = (env['TRUSTED_OIDC_ISSUERS'] ?? 'https://accounts.google.com,https://auth.skyra.internal,https://login.microsoftonline.com')
@@ -24,6 +35,7 @@ export class AdminConfigService {
     // GATE A SAFETY INVARIANT: Live database persistence is disabled by default
     this.persistenceEnabled = env['ADMIN_PERSISTENCE_ENABLED'] === 'true';
     this.databaseUrl = env['DATABASE_URL'];
+    this.internalJwtConfigured = (env['INTERNAL_JWT_SECRET']?.length ?? 0) >= 32;
   }
 
   public get isProduction(): boolean {

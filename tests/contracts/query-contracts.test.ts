@@ -143,6 +143,9 @@ describe('LOGHUB-QUERY-001: Query Contracts & Schema Verification Suite', () => 
 
     const valid = validateSearchResponse(validResponse);
     assert.ok(valid, `Validation failed: ${JSON.stringify(validateSearchResponse.errors)}`);
+    assert.ok(validateSearchResponse({...validResponse,statistics:{...validResponse.statistics,partial_results:true,unavailable_segments:1}}));
+    assert.equal(validateSearchResponse({...validResponse,statistics:{...validResponse.statistics,partial_results:true,unavailable_segments:-1}}),false);
+    assert.equal(validateSearchResponse({...validResponse,statistics:{...validResponse.statistics,internal_path:'/private/archive'}}),false);
   });
 
   it('Aggregate Request & Response: Validates analytical aggregations schema', () => {
@@ -158,6 +161,8 @@ describe('LOGHUB-QUERY-001: Query Contracts & Schema Verification Suite', () => 
       ],
     };
     assert.ok(validateAggregateRequest(validAggRequest));
+    assert.ok(validateAggregateRequest({...validAggRequest,include_empty_buckets:true}));
+    assert.equal(validateAggregateRequest({...validAggRequest,include_empty_buckets:'yes'}),false);
 
     const validAggResponse = {
       aggregations: {
@@ -188,6 +193,8 @@ describe('LOGHUB-QUERY-001: Query Contracts & Schema Verification Suite', () => 
       },
     };
     assert.ok(validateAggregateResponse(validAggResponse));
+    assert.ok(validateAggregateResponse({...validAggResponse,query_range:{...validAggRequest.time_range,timezone:'UTC'},statistics:{...validAggResponse.statistics,partial_results:true,unavailable_segments:1}}));
+    assert.equal(validateAggregateResponse({...validAggResponse,statistics:{...validAggResponse.statistics,unavailable_segments:-1}}),false);
   });
 
   it('Facets Request & Response: Validates filter discovery schema', () => {

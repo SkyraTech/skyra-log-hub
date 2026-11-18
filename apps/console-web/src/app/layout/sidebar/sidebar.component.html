@@ -25,7 +25,7 @@
   <!-- Navigation items -->
   <nav class="sidebar-nav">
     <ul class="nav-list">
-      @for (item of navItems; track item.route) {
+      @for (item of navItems(); track item.route) {
         <li class="nav-item">
           <a
             [routerLink]="item.route"

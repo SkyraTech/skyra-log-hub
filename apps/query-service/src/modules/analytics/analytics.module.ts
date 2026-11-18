@@ -1,3 +1,5 @@
+import {DashboardController} from './api/dashboard.controller.js';
+import {DashboardUseCase} from './application/dashboard.use-case.js';
 import { Module } from '@nestjs/common';
 import { QueryExecutionModule } from '../query-execution/query-execution.module.js';
 import { AuthModule } from '../auth/auth.module.js';
@@ -11,9 +13,9 @@ import { FacetsValidationPipe } from './api/pipes/facets-validation.pipe.js';
 
 @Module({
   imports: [QueryExecutionModule, AuthModule, AuditModule],
-  controllers: [AnalyticsController],
+  controllers: [AnalyticsController,DashboardController],
   providers: [
-    AggregateLogsUseCase,
+    AggregateLogsUseCase,DashboardUseCase,
     DiscoverFacetsUseCase,
     AnalyticsResponseMapper,
     AggregateValidationPipe,

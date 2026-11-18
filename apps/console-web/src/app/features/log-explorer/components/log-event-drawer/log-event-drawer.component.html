@@ -1,5 +1,5 @@
 @if (log(); as item) {
-  <skyra-tech-drawer
+  <skyra-tech-drawer title="Log event details"
     [attr.open]="isOpen() ? '' : null"
     position="right"
     size="lg"
@@ -86,9 +86,10 @@
                   </button>
                 </div>
               </div>
+              @if(item.correlationId){<div class="attr-row"><span class="attr-label">Correlation ID</span><span class="attr-val font-mono">{{item.correlationId}}</span><skyra-tech-button variant="outline" (click)="copyToClipboard('correlationId',item.correlationId)" aria-label="Copy correlation ID">Copy correlation ID</skyra-tech-button><skyra-tech-button variant="outline" (click)="investigateCorrelation.emit(item.correlationId)">Filter this correlation</skyra-tech-button></div>}
               @if (item.traceId) {
                 <div class="attribute-item">
-                  <span class="attr-label">Trace ID</span>
+                  <span class="attr-label">Trace ID</span><skyra-tech-button variant="outline" (click)="investigateTrace.emit(item.traceId!)">Investigate trace</skyra-tech-button>
                   <div class="copyable-val">
                     <span class="attr-val font-mono">{{ item.traceId }}</span>
                     <button
@@ -147,7 +148,7 @@
               <div class="ecs-props-list">
                 <div class="ecs-row">
                   <span class="ecs-key font-mono">ecs.version</span>
-                  <span class="ecs-val font-mono">{{ item.rawEvent.ecs.version }}</span>
+                  <span class="ecs-val font-mono">{{ item.rawEvent['ecs.version'] || item.rawEvent.ecs?.version || 'Not provided' }}</span>
                 </div>
                 <div class="ecs-row">
                   <span class="ecs-key font-mono">service.name</span>

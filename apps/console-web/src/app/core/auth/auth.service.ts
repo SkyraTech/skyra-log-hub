@@ -26,6 +26,7 @@ export class AuthService implements OnDestroy {
     isPreviewSession: true // Explicitly identified as dev preview mode
   });
 
+  private authEpoch=0;
   private broadcastChannel: BroadcastChannel | null = null;
 
   constructor() {
@@ -35,8 +36,11 @@ export class AuthService implements OnDestroy {
     } catch {
       // In direct non-DI unit tests
     }
+    if(this.configService&&!this.configService.config().previewMode)this._session.set({isAuthenticated:false,user:null,expiresAt:null,idleExpiresAt:null,csrfToken:null,isPreviewSession:false});
     this.initBroadcastChannel();
   }
+
+  readonly sessionUnavailable=signal(false);
 
   readonly session = this._session.asReadonly();
   readonly isAuthenticated = computed(() => this._session().isAuthenticated);
@@ -71,6 +75,7 @@ export class AuthService implements OnDestroy {
     if (!msg || typeof msg !== 'object') return;
 
     if (msg.type === 'AUTH_LOGOUT') {
+      this.authEpoch++;
       this._session.set({
         isAuthenticated: false,
         user: null,
@@ -117,6 +122,7 @@ export class AuthService implements OnDestroy {
   }
 
   public logout(): void {
+    this.authEpoch++;
     this._session.set({
       isAuthenticated: false,
       user: null,
@@ -129,12 +135,14 @@ export class AuthService implements OnDestroy {
   }
 
   public async logoutFromBff(): Promise<void> {
-    const csrf = this._session().csrfToken;
+    let providerLogoutUrl:string|undefined;
+    let csrf = this._session().csrfToken;
+    if(!csrf||(this.http&&!this.isPreviewSession())){const hydrated=await this.bootstrapSession();if(!hydrated){if(this.sessionUnavailable())throw new Error('Sign-out is unavailable. Retry when the service recovers.');this.logout();return;}csrf=this._session().csrfToken;}
     const bffUrl = this.configService?.config().adminApiBaseUrl || 'http://127.0.0.1:3200';
 
     try {
       if (this.http) {
-        await this.http.post(
+        const result=await this.http.post<{providerLogoutUrl?:string}>(
           `${bffUrl}/bff/auth/logout`,
           {},
           {
@@ -142,12 +150,17 @@ export class AuthService implements OnDestroy {
             headers: csrf ? { 'X-CSRF-Token': csrf } : {},
           },
         ).toPromise();
+        providerLogoutUrl=result?.providerLogoutUrl;
       }
-    } catch {
-      // Proceed with local logout regardless of network status
+    } catch (error:any) {
+      if(error?.status!==401&&error?.status!==419){this.sessionUnavailable.set(true);throw new Error('Sign-out is unavailable. Retry when the service recovers.');}
     }
 
     this.logout();
+    if(providerLogoutUrl && typeof window!=='undefined') {
+      const destination=new URL(providerLogoutUrl);
+      if(destination.protocol==='https:' || (destination.protocol==='http:' && destination.hostname==='127.0.0.1'))window.location.assign(destination.href);
+    }
   }
 
   public loginWithOidc(returnUrl?: string): void {
@@ -161,14 +174,18 @@ export class AuthService implements OnDestroy {
   public async bootstrapSession(): Promise<boolean> {
     const bffUrl = this.configService?.config().adminApiBaseUrl || 'http://127.0.0.1:3200';
     if (!this.http) return false;
+    const epoch=this.authEpoch;
 
     try {
       const data = await this.http.get<BffSessionDto>(`${bffUrl}/bff/session`, {
         withCredentials: true,
       }).toPromise();
 
+      if(epoch!==this.authEpoch)return false;
       if (data && data.authenticated && data.user) {
+        this.sessionUnavailable.set(false);
         const roles: UserRole[] = data.user.roles.map((r) => {
+          if (['OrgOwner','OrgAdmin','ProjectAdmin','Developer','Viewer'].includes(r)) return r as UserRole;
           if (['admin', 'OrgAdmin'].includes(r)) return 'OrgAdmin';
           if (['analyst', 'Developer'].includes(r)) return 'Developer';
           return 'Viewer';
@@ -181,7 +198,7 @@ export class AuthService implements OnDestroy {
             email: data.user.email,
             fullName: data.user.name,
             roles,
-            tenantId: data.activeTenantId ?? 'default-tenant',
+            tenantId: data.activeTenantId ?? '',
             allowedProjects: data.availableProjects.map((p) => p.projectId),
           },
           expiresAt: data.expiresAt,
@@ -191,14 +208,18 @@ export class AuthService implements OnDestroy {
         });
         return true;
       }
-    } catch {
-      // Session does not exist or unauthenticated
+    } catch (error:any) {
+      if(epoch!==this.authEpoch)return false;
+      if(error?.status!==401&&error?.status!==419){this.sessionUnavailable.set(true);return false;}
     }
+    this.sessionUnavailable.set(false);
 
+    this.logout();
     return false;
   }
 
   public loginPreview(user: UserProfile): void {
+    if(this.configService&&!this.configService.config().previewMode)return;
     this._session.set({
       isAuthenticated: true,
       user,

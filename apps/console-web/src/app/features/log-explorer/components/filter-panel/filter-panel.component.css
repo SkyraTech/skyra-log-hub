@@ -122,7 +122,7 @@
 .facet-pill.active {
   background-color: var(--skyra-primary-light, rgba(10, 88, 202, 0.1));
   border-color: var(--skyra-primary, #0A58CA);
-  color: var(--skyra-primary, #0A58CA);
+  color: var(--skyra-text);
   font-weight: 600;
 }
 

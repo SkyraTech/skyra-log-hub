@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DailyQuotaPolicyUpdate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "enabled",
+    "dailyEvents",
+    "dailyBytes"
+  ],
+  "properties": {
+    "enabled": {
+      "type": "boolean"
+    },
+    "dailyEvents": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(0|[1-9][0-9]{0,15})$",
+      "description": "Decimal integer at most 9007199254740991, or null for unlimited. Server validates the exact upper bound."
+    },
+    "dailyBytes": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(0|[1-9][0-9]{0,15})$",
+      "description": "Decimal integer at most 9007199254740991, or null for unlimited. Server validates the exact upper bound."
+    }
+  }
+}

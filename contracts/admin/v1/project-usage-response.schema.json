@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ProjectDailyUsage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenantId",
+    "projectId",
+    "projectName",
+    "period",
+    "periodStart",
+    "periodEnd",
+    "policy",
+    "events",
+    "bytes",
+    "completeness",
+    "updatedAt",
+    "measuredAt",
+    "byteDefinition"
+  ],
+  "properties": {
+    "tenantId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "projectId": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "projectName": {
+      "type": "string"
+    },
+    "period": {
+      "type": "string",
+      "format": "date"
+    },
+    "periodStart": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "periodEnd": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "policy": {
+      "title": "DailyQuotaPolicy",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "dailyEvents",
+        "dailyBytes",
+        "version",
+        "canManage"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "dailyEvents": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(0|[1-9][0-9]{0,15})$",
+          "description": "Decimal integer at most 9007199254740991, or null for unlimited. Server validates the exact upper bound."
+        },
+        "dailyBytes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(0|[1-9][0-9]{0,15})$",
+          "description": "Decimal integer at most 9007199254740991, or null for unlimited. Server validates the exact upper bound."
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\"q[0-9]{1,16}\"$"
+        },
+        "canManage": {
+          "type": "boolean"
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accepted",
+        "reserved",
+        "limit",
+        "remaining",
+        "utilization"
+      ],
+      "properties": {
+        "accepted": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,15})$"
+        },
+        "reserved": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,15})$"
+        },
+        "limit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(0|[1-9][0-9]{0,15})$",
+          "description": "Decimal integer at most 9007199254740991, or null for unlimited. Server validates the exact upper bound."
+        },
+        "remaining": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(0|[1-9][0-9]{0,15})$",
+          "description": "Decimal integer at most 9007199254740991, or null for unlimited. Server validates the exact upper bound."
+        },
+        "utilization": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accepted",
+        "reserved",
+        "limit",
+        "remaining",
+        "utilization"
+      ],
+      "properties": {
+        "accepted": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,15})$"
+        },
+        "reserved": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,15})$"
+        },
+        "limit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(0|[1-9][0-9]{0,15})$",
+          "description": "Decimal integer at most 9007199254740991, or null for unlimited. Server validates the exact upper bound."
+        },
+        "remaining": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(0|[1-9][0-9]{0,15})$",
+          "description": "Decimal integer at most 9007199254740991, or null for unlimited. Server validates the exact upper bound."
+        },
+        "utilization": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "completeness": {
+      "enum": [
+        "COMPLETE",
+        "RECONCILING"
+      ]
+    },
+    "updatedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "measuredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "byteDefinition": {
+      "type": "string"
+    }
+  }
+}

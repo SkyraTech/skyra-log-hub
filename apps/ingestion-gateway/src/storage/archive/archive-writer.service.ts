@@ -1,3 +1,5 @@
+import {publishWalFrame} from './wal-publisher.js';
+import type {WalFrame} from '../storage.interface.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as crypto from 'node:crypto';
@@ -335,6 +337,9 @@ export class ArchiveWriterService implements OnModuleDestroy {
 
     return manifest;
   }
+
+  private publication:Promise<void>=Promise.resolve();
+  public publishCommittedFrame(frame:WalFrame,segment:string):Promise<void>{const next=this.publication.then(()=>publishWalFrame(this.archiveRoot,this.segmentRepo,frame,segment));this.publication=next.catch(()=>{});return next;}
 
   public async closeAll(): Promise<void> {
     for (const [key, fd] of this.openFds.entries()) {

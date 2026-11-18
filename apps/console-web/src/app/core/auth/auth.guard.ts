@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { AuthService } from './auth.service';
+import { AppConfigService } from '../config/app-config.service';
 
 export const authGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,
@@ -13,9 +14,8 @@ export const authGuard: CanActivateFn = (
     return true;
   }
 
-  return router.createUrlTree(['/login'], {
-    queryParams: { returnUrl: state.url },
-  });
+  const denied=()=>router.createUrlTree(['/login'],{queryParams:{returnUrl:state.url}});
+  return inject(AppConfigService).config().previewMode?denied():authService.bootstrapSession().then(ok=>ok||denied());
 };
 
 export const orgAdminGuard: CanActivateFn = () => {
@@ -23,6 +23,7 @@ export const orgAdminGuard: CanActivateFn = () => {
   const router = inject(Router);
 
   if (!authService.isAuthenticated()) {
+    if(!inject(AppConfigService).config().previewMode)return authService.bootstrapSession().then(ok=>!ok?router.createUrlTree(['/login']):authService.isOrgAdmin()?true:router.createUrlTree(['/unauthorized']));
     return router.createUrlTree(['/login']);
   }
 
@@ -39,6 +40,7 @@ export const roleGuard = (requiredRole: 'OrgOwner' | 'OrgAdmin' | 'ProjectAdmin'
     const router = inject(Router);
 
     if (!authService.isAuthenticated()) {
+      if(!inject(AppConfigService).config().previewMode)return authService.bootstrapSession().then(ok=>!ok?router.createUrlTree(['/login']):authService.hasRole(requiredRole)||authService.isOrgAdmin()?true:router.createUrlTree(['/unauthorized']));
       return router.createUrlTree(['/login']);
     }
 

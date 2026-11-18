@@ -288,15 +288,20 @@ describe('Query Security & Tenant Isolation Tests (LOGHUB-QUERY-003 / P0)', () =
     );
   });
 
-  it('SEC-5: DuckDB runtime restricts untrusted extension installation', async () => {
+  it('SEC-5: DuckDB disables automatic extension loading and rejects an unsigned local extension', async () => {
     const conn = await instanceManager.createConnection();
     try {
+      const settings=await conn.runAndReadAll("SELECT current_setting('autoinstall_known_extensions'),current_setting('autoload_known_extensions'),current_setting('allow_unsigned_extensions')");
+      assert.deepEqual(settings.getRows()[0],[false,false,false]);
+      const unsigned=path.join(tempDir,'unsigned.duckdb_extension');
+      fs.writeFileSync(unsigned,Buffer.alloc(512));
       await assert.rejects(
         async () => {
-          await conn.run('INSTALL non_existent_arbitrary_extension;');
+          await conn.run("LOAD '"+unsigned.replaceAll('\\','/').replaceAll("'","''")+"';");
         },
         (err: unknown) => {
           assert.ok(err instanceof Error);
+          assert.match(err.message,/signature|unsigned|metadata|footer|invalid extension|not a.*extension|too small/i);
           return true;
         },
       );

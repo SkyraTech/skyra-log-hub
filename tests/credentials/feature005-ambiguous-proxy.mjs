@@ -1,0 +1,7 @@
+import http from 'node:http';import {createHash} from 'node:crypto';
+/** Harness-only connection loss AFTER the actual Gateway response has been fully received. */
+export async function ambiguousProxy(origin,options={}){
+ let dropped=false;const attempts=[];let injected=false;const received=[];
+ const server=http.createServer(async(req,res)=>{try{let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>5*1024*1024)throw Error('Test proxy bound');}const batch=JSON.parse(body);received.push({batchId:batch.batch_id,sha256:createHash('sha256').update(body).digest('hex'),at:performance.now()});if(options.retryAfter&&!injected){injected=true;res.writeHead(503,{'Content-Type':'application/json','Retry-After':'1'});res.end(JSON.stringify({error:{code:'STORAGE_NOT_READY',retryable:true}}));return;}const upstream=await fetch(origin+'/ingest/v1/logs',{method:'POST',headers:{Authorization:req.headers.authorization,'Content-Type':'application/json'},body});const text=await upstream.text();attempts.push({batchId:batch.batch_id,status:upstream.status,duplicate:JSON.parse(text).duplicate});if(!dropped){dropped=true;res.destroy();return;}res.writeHead(upstream.status,{'Content-Type':'application/json'});res.end(text);}catch{res.writeHead(503);res.end();}});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));return {endpoint:'http://127.0.0.1:'+server.address().port+'/ingest/v1/logs',attempts,received,stop:()=>new Promise(r=>{server.closeAllConnections();server.close(r);})};
+}

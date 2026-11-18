@@ -19,6 +19,10 @@ export class WriteQueue {
   private flushPromises: Array<{ resolve: () => void; reject: (err: Error) => void }> = [];
   private acceptedCount = 0;
   private droppedCount = 0;
+  private inFlightCount = 0;
+  private inFlightBytes = 0;
+  private failure: Error | undefined;
+  private flushOperation: Promise<void> | undefined;
 
   constructor(
     private readonly limits: ResourceLimits,
@@ -171,11 +175,17 @@ export class WriteQueue {
 
       this.currentBytes = Math.max(0, this.currentBytes - batchBytes);
 
+      this.inFlightCount = batch.length;
+      this.inFlightBytes = batchBytes;
       try {
         await this.writeHandler(batch);
       } catch (err) {
         emitInternalDiagnostic('WriteHandlerError', 'Transport write batch failed', err);
+        this.failure ??= err instanceof Error ? err : new Error('Transport write failed');
         // Do not re-enqueue repeatedly to prevent infinite error loops
+      } finally {
+        this.inFlightCount = 0;
+        this.inFlightBytes = 0;
       }
     }
 
@@ -186,7 +196,7 @@ export class WriteQueue {
       const waiters = [...this.flushPromises];
       this.flushPromises = [];
       for (const w of waiters) {
-        w.resolve();
+        if (this.failure) w.reject(this.failure); else w.resolve();
       }
     }
   }
@@ -195,14 +205,18 @@ export class WriteQueue {
    * Returns a promise that resolves when all currently queued records have been written.
    */
   public async flush(): Promise<void> {
+    if (this.flushOperation) return this.flushOperation;
     if (this.queue.length === 0 && !this.isProcessing) {
+      if (this.failure) throw this.failure;
       return;
     }
 
-    return new Promise<void>((resolve, reject) => {
+    const operation = new Promise<void>((resolve, reject) => {
       this.flushPromises.push({ resolve, reject });
       this.scheduleProcessing();
     });
+    this.flushOperation = operation;
+    try { await operation; } finally { this.flushOperation = undefined; }
   }
 
   /**
@@ -223,6 +237,8 @@ export class WriteQueue {
       droppedCount: this.droppedCount,
       isClosed: this.isClosed,
       isProcessing: this.isProcessing,
+      inFlightCount: this.inFlightCount,
+      inFlightBytes: this.inFlightBytes,
     };
   }
 }

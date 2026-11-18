@@ -64,7 +64,7 @@ interface BarData {
             <thead>
               <tr>
                 <th scope="col">Time Window (UTC)</th>
-                <th scope="col" class="num-col">Event Count</th>
+                <th scope="col" class="num-col">{{valueLabel()}}</th>
                 <th scope="col">Action</th>
               </tr>
             </thead>
@@ -89,7 +89,7 @@ interface BarData {
           <svg
             viewBox="0 0 800 200"
             class="chart-svg"
-            role="img"
+            role="group"
             [attr.aria-label]="title() + ' time-series chart'"
           >
             <!-- Background grid lines -->
@@ -114,12 +114,12 @@ interface BarData {
                 [class.active]="hoveredPoint()?.timestamp === bar.point.timestamp"
                 tabindex="0"
                 role="button"
-                [attr.aria-label]="bar.point.formattedTime + ': ' + bar.point.count + ' events. Press Enter to inspect.'"
+                [attr.aria-label]="bar.point.formattedTime + ': ' + bar.point.count + ' ' + valueLabel() + '. Press Enter to inspect.'"
                 (mouseenter)="setHover(bar.point, $event)"
                 (focus)="setHover(bar.point, $event)"
                 (click)="onPointSelect(bar.point)"
                 (keydown.enter)="onPointSelect(bar.point)"
-                (keydown.space)="onPointSelect(bar.point)"
+                (keydown.space)="$event.preventDefault();onPointSelect(bar.point)"
               />
             }
           </svg>
@@ -134,7 +134,7 @@ interface BarData {
               <div class="tooltip-time">{{ hp.formattedDate }} {{ hp.formattedTime }} UTC</div>
               <div class="tooltip-count">
                 <span class="count-value font-mono">{{ hp.count.toLocaleString() }}</span>
-                <span class="count-label">events</span>
+                <span class="count-label">{{valueLabel()}}</span>
               </div>
               <div class="tooltip-hint">Click to drill down</div>
             </div>
@@ -367,6 +367,7 @@ interface BarData {
 export class TimeSeriesChartComponent {
   readonly points = input.required<TimeSeriesPoint[]>();
   readonly title = input<string>('Log Volume Trend');
+  readonly valueLabel = input<string>('events');
   readonly subtitle = input<string>('');
   readonly loading = input<boolean>(false);
 

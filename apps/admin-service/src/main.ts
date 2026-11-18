@@ -24,8 +24,8 @@ async function bootstrap() {
   // Graceful shutdown hooks
   app.enableShutdownHooks();
 
-  await app.listen(config.port, '0.0.0.0');
-  logger.log(`Skyra Administration Backend active on http://0.0.0.0:${config.port} (Env: ${config.nodeEnv}, Gate A mode)`);
+  await app.listen(config.port, process.env['ADMIN_HOST'] ?? '127.0.0.1');
+  logger.log(`Skyra Administration Backend active on port ${config.port} (Env: ${config.nodeEnv}, persistence=${config.persistenceEnabled})`);
 }
 
 bootstrap().catch((err: unknown) => {

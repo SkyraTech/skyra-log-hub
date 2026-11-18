@@ -69,6 +69,7 @@ export class WorkspaceContextService implements OnDestroy {
     } catch {
       // In direct non-DI unit tests
     }
+    if(this.configService && !this.configService.config().previewMode)this.clearAuthorizedWorkspaces();
     this.initBroadcastChannel();
   }
 
@@ -103,8 +104,8 @@ export class WorkspaceContextService implements OnDestroy {
 
   readonly hasActiveTenant = computed(() => this._activeTenant() !== null);
   readonly currentContext = computed(() => ({
-    tenantId: this._activeTenant()?.code ?? 'default-tenant',
-    projectId: this._selectedProjectIds()[0] ?? 'default-project',
+    tenantId: this._activeTenant()?.code ?? (this.configService?.config().previewMode!==false?'default-tenant':''),
+    projectId: this._selectedProjectIds()[0] ?? (this.configService?.config().previewMode!==false?'default-project':''),
     environment: this._selectedEnvironment(),
   }));
   readonly selectedProjectNames = computed(() => {
@@ -145,14 +146,6 @@ export class WorkspaceContextService implements OnDestroy {
     const bffUrl = this.configService?.config().adminApiBaseUrl || 'http://127.0.0.1:3200';
     const csrf = this.authService?.csrfToken() || '';
 
-    // Clear sensitive previous-workspace data and reset in-flight state
-    this._selectedProjectIds.set([projectId]);
-
-    const matchingTenant = this._availableTenants().find((t) => t.code === tenantId || t.id === tenantId);
-    if (matchingTenant) {
-      this._activeTenant.set(matchingTenant);
-    }
-
     if (this.http) {
       try {
         await this.http.post(
@@ -164,6 +157,9 @@ export class WorkspaceContextService implements OnDestroy {
           },
         ).toPromise();
 
+        this._selectedProjectIds.set([projectId]);
+        const matchingTenant=this._availableTenants().find(t=>t.id===tenantId||t.code===tenantId);
+        if(matchingTenant)this._activeTenant.set(matchingTenant);
         // Notify other tabs
         if (this.broadcastChannel) {
           this.broadcastChannel.postMessage({
@@ -186,6 +182,7 @@ export class WorkspaceContextService implements OnDestroy {
   public async loadWorkspacesFromBff(): Promise<void> {
     const bffUrl = this.configService?.config().adminApiBaseUrl || 'http://127.0.0.1:3200';
     if (!this.http) return;
+    if(this.configService && !this.configService.config().previewMode)this.clearAuthorizedWorkspaces();
 
     try {
       const data = await this.http.get<BffWorkspaceResponse>(`${bffUrl}/bff/workspaces`, {
@@ -215,17 +212,15 @@ export class WorkspaceContextService implements OnDestroy {
           }));
           this._availableProjects.set(projects);
 
-          if (data.activeProjectId) {
-            this._selectedProjectIds.set([data.activeProjectId]);
-          } else if (projects[0]) {
-            this._selectedProjectIds.set([projects[0].id]);
-          }
+          this._selectedProjectIds.set(data.activeProjectId&&projects.some(p=>p.id===data.activeProjectId)?[data.activeProjectId]:[]);
         }
       }
     } catch {
-      // Retain default or dev preview workspaces
+      if(this.configService && !this.configService.config().previewMode)this.clearAuthorizedWorkspaces();
     }
   }
+
+  private clearAuthorizedWorkspaces(){this._activeTenant.set(null);this._availableTenants.set([]);this._availableProjects.set([]);this._selectedProjectIds.set([]);}
 
   private calculateTimeRange(preset: TimeRangePreset): TimeRangeBoundary {
     const now = new Date();

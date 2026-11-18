@@ -26,6 +26,7 @@
             "IDEMPOTENCY_CONFLICT",
             "UNSUPPORTED_PROTOCOL_VERSION",
             "RATE_LIMIT_EXCEEDED",
+            "PROJECT_QUOTA_EXCEEDED",
             "STORAGE_NOT_READY",
             "JOURNAL_UNAVAILABLE"
           ],

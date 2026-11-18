@@ -13,6 +13,7 @@ const ALLOWED_ENVELOPE_KEYS = new Set([
   'services',
   'levels',
   'query_text',
+  'correlation_id',
   'trace_id',
   'event_id',
   'filters',
@@ -103,6 +104,7 @@ export class SearchValidationPipe implements PipeTransform<unknown, SearchReques
     if (Number.isNaN(startMs) || Number.isNaN(endMs)) {
       throw new InvalidArgumentException('time_range timestamps must be valid date-times.');
     }
+    if(new Date(startMs).toISOString().slice(0,10)!==(tr['start'] as string).slice(0,10)||new Date(endMs).toISOString().slice(0,10)!==(tr['end'] as string).slice(0,10))throw new InvalidArgumentException('time_range dates must be valid calendar dates without rollover.');
     if (endMs <= startMs) {
       throw new InvalidArgumentException('time_range.end must be strictly greater than time_range.start.');
     }
@@ -177,6 +179,7 @@ export class SearchValidationPipe implements PipeTransform<unknown, SearchReques
       }
     }
 
+    if (raw['correlation_id'] !== undefined && (typeof raw['correlation_id'] !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(raw['correlation_id']))) throw new InvalidArgumentException('Invalid correlation ID.');
     // 8. Validate trace_id
     if (raw['trace_id'] !== undefined) {
       if (typeof raw['trace_id'] !== 'string' || !TRACE_ID_REGEX.test(raw['trace_id'])) {

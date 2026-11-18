@@ -22,6 +22,19 @@
     "test:query": "pnpm --filter @skyra/query-service test",
     "test:admin": "pnpm --filter @skyra/admin-service test",
     "test:admin:postgres": "node scripts/run-isolated-pg-tests.mjs",
+    "test:organization:persistence": "node --test tests/organization/persistence.test.mjs",
+    "test:organization:e2e": "node --test tests/organization/organization.e2e.mjs",
+    "db:isolated:credentials": "node scripts/prepare-credential-tests.mjs",
+    "test:credentials:persistence": "node --test tests/credentials/persistence.test.mjs",
+    "test:credentials:e2e": "node scripts/run-credentials-e2e.mjs",
+    "db:isolated:organization": "node scripts/prepare-organization-tests.mjs",
+    "test:admin:postgres:hardened": "node scripts/run-isolated-pg-tests.mjs hardened",
+    "test:admin:target-guards": "node --test tests/admin/isolated-target.test.mjs",
+    "test:postgres:compatibility": "node scripts/run-isolated-compatibility.mjs",
+    "verify:backend-dependencies": "node scripts/verify-backend-dependencies.mjs",
+    "db:isolated": "node scripts/isolated-postgres.mjs",
+    "db:isolated:rehearse": "node scripts/rehearse-admin-migration.mjs baseline",
+    "db:isolated:harden": "node scripts/rehearse-admin-migration.mjs harden",
     "test:bff": "pnpm --filter @skyra/console-bff test",
     "test:console": "pnpm --filter @skyra/console-web test",
     "test:python": "python -m unittest discover -s packages/logger-python/tests",
@@ -48,6 +61,7 @@
     "pixelmatch": "^8.0.0",
     "playwright": "^1.64.1",
     "pngjs": "^7.0.0",
+    "tsx": "4.20.6",
     "typescript": "^7.0.2"
   }
 }

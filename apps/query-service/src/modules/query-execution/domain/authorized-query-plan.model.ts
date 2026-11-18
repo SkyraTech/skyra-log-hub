@@ -31,6 +31,7 @@ export interface StableCursorPosition {
 }
 
 export interface AuthorizedLogQueryPlan {
+  readonly unavailableSegmentCount?:number;
   readonly queryId: string;
   readonly tenantId: string;
   readonly authorizedProjects: readonly string[];

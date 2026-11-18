@@ -61,7 +61,14 @@
 }
 
 .drawer-platform-tabs {
+  --skyra-primary:var(--skyra-text);
   width: 100%;
+}
+
+.drawer-platform-tabs skyra-tech-tab {
+  padding: .65rem .7rem;
+  font-size: .75rem;
+  line-height: 1.4;
 }
 
 .drawer-tabs {

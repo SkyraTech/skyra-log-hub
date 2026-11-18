@@ -37,6 +37,12 @@
     </select>
   </div>
 
+  @if(timeRange()==='custom'){
+    <div class="control-group"><label for="explorer-start">Start (UTC)</label><input id="explorer-start" type="datetime-local" step="0.001" [value]="customStart().replace('Z','')" (change)="customRangeChange.emit({start:$any($event.target).value? $any($event.target).value+'Z':'',end:customEnd()})" /></div>
+    <div class="control-group"><label for="explorer-end">End (UTC, exclusive)</label><input id="explorer-end" type="datetime-local" step="0.001" [value]="customEnd().replace('Z','')" (change)="customRangeChange.emit({start:customStart(),end:$any($event.target).value? $any($event.target).value+'Z':''})" /></div>
+  }
+  <div class="control-group"><skyra-tech-input id="explorer-trace" label="Trace ID" placeholder="32 hex characters" [value]="traceId()" (input)="traceIdChange.emit($any($event.target).value)"></skyra-tech-input></div>
+  <p class="search-help">Literal message substring search. Time bounds use UTC: start inclusive, end exclusive.</p>
   <!-- Page Size Dropdown -->
   <div class="control-group">
     <label for="page-size-select" class="control-label">Rows</label>
@@ -56,11 +62,11 @@
   <!-- Action buttons -->
   <div class="actions-group">
     @if (loading()) {
-      <skyra-button
+      <skyra-tech-button
         id="btn-cancel-search"
-        variant="danger"
-        size="md"
-        (clicked)="triggerCancel()"
+        variant="outline"
+        size="md" full-width
+        (click)="triggerCancel()"
         aria-label="Cancel active search"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -68,13 +74,13 @@
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
         <span>Cancel</span>
-      </skyra-button>
+      </skyra-tech-button>
     } @else {
-      <skyra-button
+      <skyra-tech-button
         id="btn-run-search"
-        variant="primary"
-        size="md"
-        (clicked)="triggerSearch()"
+        variant="outline"
+        size="md" full-width
+        (click)="triggerSearch()"
         aria-label="Execute search"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -82,13 +88,14 @@
           <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
         </svg>
         <span>Search</span>
-      </skyra-button>
+      </skyra-tech-button>
     }
   </div>
 </div>
 
 @if (loading()) {
-  <div class="query-progress-bar" role="progressbar" aria-valuetext="Executing search query" aria-busy="true">
+  <div class="query-progress-bar" role="progressbar" aria-label="Searching logs" aria-valuetext="Executing search query" aria-busy="true">
     <div class="progress-indicator"></div>
   </div>
 }
+<div class="control-group"><skyra-tech-input id="explorer-correlation" label="Correlation ID" placeholder="Exact workflow ID (case sensitive)" [value]="correlationId()" (input)="correlationIdChange.emit($any($event.target).value)"></skyra-tech-input></div>

@@ -22,7 +22,7 @@ export class AuthService {
   }
 
   public async authenticate(rawToken: string): Promise<AuthenticatedIdentity> {
-    if (!rawToken || typeof rawToken !== 'string' || rawToken.trim().length === 0) {
+    if (!rawToken || typeof rawToken !== 'string' || rawToken.trim().length === 0 || rawToken.length > 4096 || /[\u0000-\u001f\u007f]/.test(rawToken)) {
       throw new GatewayException(
         ErrorCode.UNAUTHORIZED,
         'Authorization Bearer token is missing or empty',
@@ -30,11 +30,15 @@ export class AuthService {
       );
     }
 
-    const keyHash = this.hashToken(rawToken.trim());
-    const credential = await this.credentialRepo.findByKeyHash(keyHash);
+    const token=rawToken.trim();
+    if(token.startsWith('skyra_live_')&&!/^skyra_live_[a-f0-9]{64}$/.test(token))throw new GatewayException(ErrorCode.UNAUTHORIZED,'Invalid ingestion credential',HttpStatus.UNAUTHORIZED);
+    const keyHash = this.hashToken(token);
+    let credential: Awaited<ReturnType<ICredentialRepository['findByKeyHash']>>;
+    try{credential=await this.credentialRepo.findByKeyHash(keyHash);}catch{throw new GatewayException(ErrorCode.STORAGE_NOT_READY,'Credential verification unavailable',HttpStatus.SERVICE_UNAVAILABLE,{retryable:true});}
+    if(credential&&(!/^[a-f0-9]{64}$/.test(credential.keyHash)||!crypto.timingSafeEqual(Buffer.from(keyHash,'hex'),Buffer.from(credential.keyHash,'hex'))))credential=null;
 
     if (!credential) {
-      this.logger.warn(`Authentication failed: invalid credential hash prefix ${keyHash.substring(0, 8)}...`);
+      this.logger.warn('Authentication failed: invalid ingestion credential');
       throw new GatewayException(
         ErrorCode.UNAUTHORIZED,
         'Invalid or unrecognized ingestion credential',
@@ -51,8 +55,8 @@ export class AuthService {
       );
     }
 
-    if (new Date() > credential.expiresAt) {
-      this.logger.warn(`Authentication failed: credential ID ${credential.id} expired at ${credential.expiresAt.toISOString()}`);
+    if (!Number.isFinite(credential.expiresAt.getTime()) || Date.now() >= credential.expiresAt.getTime()) {
+      this.logger.warn('Authentication failed: ingestion credential expired');
       throw new GatewayException(
         ErrorCode.UNAUTHORIZED,
         'Ingestion credential has expired',
@@ -61,7 +65,8 @@ export class AuthService {
     }
 
     // Verify tenant status
-    const tenant = await this.tenantRepo.findById(credential.tenantId);
+    let tenant: Awaited<ReturnType<ITenantRepository['findById']>>;
+    try{tenant=await this.tenantRepo.findById(credential.tenantId);}catch{throw new GatewayException(ErrorCode.STORAGE_NOT_READY,'Credential authorization unavailable',HttpStatus.SERVICE_UNAVAILABLE,{retryable:true});}
     if (!tenant || tenant.status !== 'ACTIVE') {
       this.logger.warn(`Authorization rejected: tenant ${credential.tenantId} status is ${tenant?.status ?? 'NOT_FOUND'}`);
       throw new GatewayException(
@@ -73,7 +78,7 @@ export class AuthService {
 
     // Update last used asynchronously without blocking request pipeline
     void this.credentialRepo.updateLastUsed(credential.id, new Date()).catch((err: unknown) => {
-      this.logger.error(`Failed to update credential lastUsedAt: ${String(err)}`);
+      this.logger.error('Credential authentication timestamp update failed');
     });
 
     return {

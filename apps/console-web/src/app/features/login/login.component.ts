@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { AppConfigService } from '../../core/config/app-config.service';
 import { ThemeService } from '../../core/theme/theme.service';
 
 @Component({
@@ -38,6 +39,10 @@ import { ThemeService } from '../../core/theme/theme.service';
           <span>{{ errorMessage() }}</span>
         </div>
 
+        @if(sessionUnavailable()){
+          <div class="alert-box error-alert" role="alert">Session service is temporarily unavailable. Try again.</div>
+          <button type="button" class="sso-button" (click)="retrySession()" [disabled]="isLoading()">Retry session</button>
+        }
         <!-- Form / Action Block -->
         <div class="action-block">
           <p class="login-instructions">
@@ -60,6 +65,7 @@ import { ThemeService } from '../../core/theme/theme.service';
           </button>
         </div>
 
+        @if(previewAllowed()){
         <!-- Dev / Sandbox Quick Switcher -->
         <div class="sandbox-divider">
           <span>or develop locally</span>
@@ -76,9 +82,10 @@ import { ThemeService } from '../../core/theme/theme.service';
           </button>
         </div>
 
+        }
         <!-- Footer Security Notes -->
         <div class="card-footer">
-          <div class="footer-tag">Session: __Host-skyra-session (HTTP-only)</div>
+          <div class="footer-tag">Server session (HTTP-only)</div>
           <div class="footer-tag">RFC 7807 Protected</div>
         </div>
       </div>
@@ -150,12 +157,7 @@ import { ThemeService } from '../../core/theme/theme.service';
       border: 1px solid rgba(10, 88, 202, 0.2);
       border-radius: var(--skyra-radius-sm, 6px);
       font-size: 0.75rem;
-      color: var(--skyra-primary, #0A58CA);
-    }
-
-    :host-context([data-theme="dark"]) .security-banner,
-    [data-theme="dark"] .security-banner {
-      color: #93c5fd;
+      color: var(--skyra-text, #0f172a);
     }
 
     .alert-box {
@@ -274,6 +276,9 @@ import { ThemeService } from '../../core/theme/theme.service';
 })
 export class LoginComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly config = inject(AppConfigService);
+  readonly sessionUnavailable=this.authService.sessionUnavailable;
+  readonly previewAllowed=()=>this.config.config().previewMode;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -295,12 +300,15 @@ export class LoginComponent implements OnInit {
     });
   }
 
+  async retrySession():Promise<void>{this.isLoading.set(true);try{if(await this.authService.bootstrapSession())await this.router.navigateByUrl(this.returnUrl);}finally{this.isLoading.set(false);}}
+
   onSsoLogin(): void {
     this.isLoading.set(true);
     this.authService.loginWithOidc(this.returnUrl);
   }
 
   onDeveloperLogin(): void {
+    if(!this.previewAllowed())return;
     this.authService.loginPreview({
       id: 'usr-arch-dinesh',
       email: 'lead-architect@skyra.dev',

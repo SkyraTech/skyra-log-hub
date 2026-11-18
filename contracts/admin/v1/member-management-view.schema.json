@@ -1,0 +1,17 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://specs.skyra-tech.com/schemas/admin/v1/member-management-view.schema.json",
+  "title":"ExistingMembershipViewV1",
+  "type":"object","additionalProperties":false,
+  "required":["id","displayName","email","identityStatus","status","roles","projectRoles","scope","version","self","lastOwner","permittedRoles","actions","createdAt","updatedAt"],
+  "$defs":{"role":{"enum":["OrgOwner","OrgAdmin","ProjectAdmin","Developer","Viewer"]}},
+  "properties":{
+    "id":{"type":"string","format":"uuid"},"userId":{"type":"string","format":"uuid","description":"Internal Admin projection only; omitted by Console BFF."},
+    "displayName":{"type":"string"},"email":{"type":"string","format":"email"},"identityStatus":{"enum":["ACTIVE","SUSPENDED","DEACTIVATED"]},
+    "status":{"enum":["PENDING_INVITE","ACTIVE","SUSPENDED","REVOKED"]},"roles":{"type":"array","items":{"$ref":"#/$defs/role"}},
+    "projectRoles":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["role","projectId"],"properties":{"role":{"$ref":"#/$defs/role"},"projectId":{"type":"string"}}}},
+    "scope":{"const":"organization"},"version":{"type":"string","pattern":"^\"m[0-9a-fA-F-]{36}:[0-9]+\"$"},"self":{"type":"boolean"},"lastOwner":{"type":"boolean"},"permittedRoles":{"type":"array","items":{"$ref":"#/$defs/role"}},
+    "actions":{"type":"object","additionalProperties":false,"required":["changeRole","suspend","reactivate","revoke"],"properties":{"changeRole":{"type":"boolean"},"suspend":{"type":"boolean"},"reactivate":{"type":"boolean"},"revoke":{"type":"boolean"}}},
+    "createdAt":{"type":"string","format":"date-time"},"updatedAt":{"type":"string","format":"date-time"}
+  }
+}

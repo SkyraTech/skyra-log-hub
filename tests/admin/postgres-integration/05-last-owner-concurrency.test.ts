@@ -14,7 +14,7 @@ describe('PostgreSQL Integration: Last-Owner Concurrency Safety (Section 12 & 13
 
   before(async () => {
     mainClient = await getTestClient();
-    pool = getTestPool();
+    pool = await getTestPool();
     const roleMap = await seedStandardRolesAndPermissions(mainClient);
     ownerRoleId = roleMap.get('OrgOwner')!;
   });

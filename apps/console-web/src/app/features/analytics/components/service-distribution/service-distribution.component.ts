@@ -20,13 +20,13 @@ import { DistributionItem } from '../../domain/analytics-metric.model';
           <span>No reporting service records</span>
         </div>
       } @else {
-        <div class="services-list" role="list">
+        <div class="services-list" role="group" [attr.aria-label]="title()">
           @for (item of items(); track item.key) {
             <button
               type="button"
               class="service-row"
-              role="listitem"
-              [attr.aria-label]="item.label + ': ' + item.count.toLocaleString() + ' logs, ' + item.percentage + ' percent. Click to inspect service logs.'"
+
+              [attr.aria-label]="item.label + ': ' + item.count.toLocaleString() + ' logs, ' + item.percentage + ' percent. Inspect matching logs.'"
               (click)="onServiceClick(item.key)"
             >
               <div class="service-info">

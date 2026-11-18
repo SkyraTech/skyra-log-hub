@@ -202,6 +202,7 @@ export interface SkyraLogEvent {
   service: EcsService;
   skyra: SkyraMetadata;
   host?: EcsHost;
+  correlation?: { id: string };
   trace?: EcsTrace;
   span?: EcsSpan;
   http?: EcsHttp;

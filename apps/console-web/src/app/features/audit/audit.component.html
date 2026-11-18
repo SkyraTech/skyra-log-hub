@@ -1,0 +1,37 @@
+<section class="audit-page" aria-labelledby="audit-title">
+  <header><p class="eyebrow">Organization administration</p><h1 id="audit-title">Audit History</h1><p>Read-only history of administrative actions in your current organization.</p></header>
+  @if(!denied()){
+    <form class="filters panel" aria-label="Audit filters" (submit)="$event.preventDefault();apply()">
+      <label>Action<select aria-label="Action filter" [value]="action()" (change)="action.set($any($event.target).value)"><option value="">All actions</option>@if(unknownAction()){<option [value]="action()">Historical action: {{action()}}</option>}@for(option of navigation.actions();track option.value){<option [value]="option.value">{{option.label}}</option>}</select></label>
+      @if(advanced()){<skyra-tech-input label="Administrative correlation ID" helper-text="Exact operation identifier; separate from application log correlation." [value]="correlation()" (input)="correlation.set($any($event.target).value)"></skyra-tech-input>}
+      <skyra-tech-input label="Actor ID" helper-text="Exact historical user UUID; no actor directory is exposed." [value]="actor()" (input)="actor.set($any($event.target).value)"></skyra-tech-input>
+      <label>Resource type<select aria-label="Resource type filter" [value]="resourceType()" (change)="resourceType.set($any($event.target).value)"><option value="">All resources</option>@for(type of ['tenant','membership','project','credential','quota','retention'];track type){<option [value]="type">{{type}}</option>}</select></label>
+      <skyra-tech-input label="Resource ID" [value]="resourceId()" (input)="resourceId.set($any($event.target).value)"></skyra-tech-input>
+      <skyra-tech-input label="Project ID" helper-text="Project, credential and quota events for this project." [value]="projectId()" (input)="projectId.set($any($event.target).value)"></skyra-tech-input>
+      <label>Start (UTC, inclusive)<input type="datetime-local" step="0.001" [value]="start()" (input)="start.set($any($event.target).value)"></label>
+      <label>End (UTC, exclusive)<input type="datetime-local" step="0.001" [value]="end()" (input)="end.set($any($event.target).value)"></label>
+      <label>Page size<select aria-label="Audit page size" [value]="limit()" (change)="limit.set($any($event.target).value)"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label>
+      <div class="actions"><skyra-tech-button type="button" (click)="apply()">Apply filters</skyra-tech-button><skyra-tech-button type="button" variant="outline" (click)="clear()">Clear filters</skyra-tech-button><skyra-tech-button type="button" variant="outline" (click)="load()">Refresh history</skyra-tech-button></div>
+    </form>
+    @if(activeFilters().length){<p class="active-filters" aria-label="Active audit filters">Filters: {{activeFilters().join(' · ')}}</p>}
+  }
+  @if(advanced()&&!denied()){<section class="panel" aria-label="Audit export"><h2>Export matching audit records</h2><p>Applied filters, up to 1,000 records, 5 MiB, ten pages and 15 seconds. Truncation is explicit. Names reflect current permitted member display information; actor IDs remain historical.</p><div class="actions"><skyra-tech-button variant="outline" [disabled]="exportBusy()||loading()||!page()" (click)="exportMatching('json')">Export audit JSON</skyra-tech-button><skyra-tech-button variant="outline" [disabled]="exportBusy()||loading()||!page()" (click)="exportMatching('csv')">Export audit CSV</skyra-tech-button>@if(exportBusy()){<skyra-tech-button variant="outline" (click)="cancelExport()">Cancel audit export</skyra-tech-button>}</div><p role="status" aria-live="polite">{{exportStatus()}}</p></section>}
+  @if(loading()){<div class="panel" aria-busy="true"><skyra-spinner label="Loading audit history" show-label></skyra-spinner></div>}
+  @if(error()){<p role="alert" class="panel">{{error()}}</p>@if(!denied()){<div class="actions"><skyra-tech-button variant="outline" (click)="load()">Retry</skyra-tech-button><skyra-tech-button variant="outline" (click)="first()">Return to first page</skyra-tech-button></div>}}
+  @if(!loading()&&page();as result){
+    @if(result.items.length){<div class="table-panel" role="region" aria-label="Audit history results" tabindex="0"><skyra-tech-data-table [data]="rows()" [columns]="columns" [features]="features" aria-label="Audit events">@for(row of result.items;track row.id){<span [attr.slot]="'audit-resource-'+row.id" class="audit-resource-cell">{{row.resourceType}} / {{row.resourceId}}</span><span [attr.slot]="'audit-summary-'+row.id" class="audit-summary-cell">{{row.summary}}</span><skyra-tech-button [attr.slot]="'row-actions-'+row.id" size="sm" variant="outline" (click)="openDetails(row.id,$event)">Details<span class="sr-only"> {{row.id}}</span></skyra-tech-button>}</skyra-tech-data-table></div>}
+    @else{<div class="panel" role="status"><h2>No audit events</h2><p>No authorized events match these filters. Clear filters or change the UTC range.</p></div>}
+    <nav class="actions pagination" aria-label="Audit pagination"><skyra-tech-button variant="outline" [disabled]="!history().length" (click)="previous()">Previous page</skyra-tech-button><p aria-live="polite">Page {{history().length+1}} · {{result.items.length}} events · Newest first</p><skyra-tech-button variant="outline" [disabled]="!result.nextCursor" (click)="next()">Next page</skyra-tech-button></nav>
+    <p class="note">Actor references identify the recorded user; historical email addresses and IP addresses are not exposed. Metadata is allowlisted. Unknown or oversized details are withheld.</p>
+  }
+  <skyra-tech-dialog #detailsDialog [open]="dialogOpen()" size="lg" (skyra-close)="closeDetails()" (keydown)="trapDetails($event)"><span slot="title">Audit event details</span>
+    @if(detailLoading()){<div aria-busy="true"><skyra-spinner label="Loading audit details" show-label></skyra-spinner></div>}
+    @if(detailError()){<p role="alert">{{detailError()}}</p>}
+    @if(detail();as d){<div class="detail"><h2>{{d.actionLabel}}</h2><dl><div><dt>Event ID</dt><dd class="selectable">{{d.id}}</dd></div><div><dt>Timestamp (UTC)</dt><dd><time [attr.datetime]="d.timestamp">{{d.timestamp}}</time></dd></div><div><dt>Canonical action</dt><dd>{{d.action}}</dd></div><div><dt>Actor</dt><dd>{{d.actorLabel}}</dd></div><div><dt>Resource</dt><dd>{{d.resourceType}} / {{d.resourceId}}</dd></div><div><dt>Correlation ID</dt><dd>{{d.correlationId||'Not recorded'}}</dd></div></dl>
+      <h3>Recorded before/after values</h3>@for(change of d.changes;track change.field){<section class="change"><h4>{{change.label}}</h4><dl><div><dt>Before</dt><dd>{{value(change.before,change.beforeAvailable)}}</dd></div><div><dt>After</dt><dd>{{value(change.after,change.afterAvailable)}}</dd></div></dl></section>}@empty{<p>No safe before/after values were recorded for this historical event.</p>}
+      @if(d.metadataOmitted){<p>Unknown or oversized metadata has been withheld.</p>}
+      <skyra-tech-button variant="outline" (click)="copy()">Copy event ID</skyra-tech-button><p role="status">{{copyStatus()}}</p>
+    </div>}
+    <div slot="footer"><skyra-tech-button variant="outline" (click)="closeDetails()">Close details</skyra-tech-button></div>
+  </skyra-tech-dialog>
+</section>

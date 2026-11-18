@@ -1,0 +1,13 @@
+# The versioned audit correction has an explicit byte identity across checkouts.
+# Do not renormalize historical ADMIN-002 as part of environment recovery.
+docs/admin/migrations/FEATURE-001A-001/migration.sql text eol=lf
+docs/admin/migrations/FEATURE-001B-001/migration.sql text eol=lf
+docs/admin/migrations/FEATURE-001B-002/runtime-privileges.sql text eol=lf
+docs/admin/migrations/FEATURE-002-001/migration.sql text eol=lf
+docs/admin/migrations/FEATURE-002-002/runtime-privileges.sql text eol=lf
+
+docs/admin/migrations/FEATURE-003-001/migration.sql text eol=lf
+docs/admin/migrations/FEATURE-003-002/runtime-privileges.sql text eol=lf
+
+docs/admin/migrations/FEATURE-004-001/migration.sql text eol=lf
+docs/admin/migrations/FEATURE-004-002/runtime-privileges.sql text eol=lf

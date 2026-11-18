@@ -11,6 +11,9 @@ skyra-tech-app-shell {
   width: 100%;
 }
 
+skyra-tech-app-shell::part(main) { height: 100%; min-height: 0; }
+skyra-tech-app-shell::part(content) { min-height: 0; overflow: auto; }
+
 .content-outlet {
   flex: 1;
   overflow-y: auto;

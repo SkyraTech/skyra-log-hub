@@ -37,11 +37,11 @@ export class EffectivePermissionResolver {
         continue;
       }
 
-      const isTenantWide = !assignment.projectId;
+      const isTenantWide = assignment.projectId === null || assignment.projectId === undefined;
       const isMatchingProject = projectId && assignment.projectId === projectId;
 
       if (isTenantWide || isMatchingProject) {
-        const caps = RBAC_ROLE_CAPABILITIES[assignment.role] ?? [];
+        const caps = Object.hasOwn(RBAC_ROLE_CAPABILITIES, assignment.role) ? RBAC_ROLE_CAPABILITIES[assignment.role] : [];
         for (const cap of caps) {
           effective.add(cap);
         }

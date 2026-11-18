@@ -19,6 +19,7 @@ import { sanitizeMetadata, sanitizeMessage } from './internal/limits.js';
 
 export interface LogContext {
   component?: string;
+  correlationId?: string;
   traceId?: string;
   spanId?: string;
   action?: string;
@@ -171,6 +172,12 @@ export function buildCanonicalLogEvent(
     },
   };
 
+  if (sanitized['correlationId'] !== undefined) {
+    const id = sanitized['correlationId'];
+    if (typeof id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(id)) throw new Error('Invalid correlation ID');
+    canonicalEvent.correlation = { id };
+  }
+
   // 10. Optional Tracing (strictly validated W3C 32-hex trace ID and 16-hex span ID, non-zero)
   const rawTraceId = sanitized['traceId'] || sanitized['trace_id'] || (sanitized['trace'] as any)?.id;
   if (
@@ -221,7 +228,7 @@ export function buildCanonicalLogEvent(
   // 12. Business custom metadata
   // Extract custom unmapped fields into skyra.business
   const knownKeys = new Set([
-    'component', 'traceId', 'trace_id', 'trace', 'spanId', 'span_id', 'span',
+    'component', 'correlationId', 'traceId', 'trace_id', 'trace', 'spanId', 'span_id', 'span',
     'action', 'outcome', 'category', 'duration', 'durationMs', 'durationNs',
     'error', 'labels', 'tags', 'http', 'database', 'job', 'user', 'client', 'url',
     'audit', 'security', 'skyra',
@@ -271,6 +278,7 @@ export function buildCanonicalLogEvent(
   redactedEvent.service.environment = normalizeEnvironment(config.environment);
   redactedEvent.skyra.project_id = config.projectId;
   redactedEvent.skyra.schema_version = '1.0';
+  if (canonicalEvent.correlation) redactedEvent.correlation = canonicalEvent.correlation;
   if (canonicalEvent.trace) {
     redactedEvent.trace = canonicalEvent.trace;
   }

@@ -55,7 +55,7 @@ export class MaterializeSegmentUseCase {
     }
 
     // 2. Concurrency guard: Prevent duplicate concurrent materialization of same segment
-    const segmentKey = `${canonicalDescriptor.tenantId}:${canonicalDescriptor.projectId}:${canonicalDescriptor.segmentFilename}`;
+    const segmentKey = `${canonicalDescriptor.tenantId}:${canonicalDescriptor.projectId}:${canonicalDescriptor.environment}:${canonicalDescriptor.serviceName}:${canonicalDescriptor.date}:${canonicalDescriptor.segmentFilename}:${canonicalDescriptor.sha256Checksum}`;
     if (this.activeJobs.has(segmentKey)) {
       this.logger.debug(`Materialization job already in progress for ${canonicalDescriptor.segmentFilename}`);
       return {

@@ -1,4 +1,7 @@
+import {resolveTimeRange} from '../../log-explorer/domain/log-search.model';
 import { TimeRangePreset } from '../../log-explorer/domain/log-search.model';
+
+export const INTERVAL_WIDTHS:Record<BucketInterval,number>={'1m':60000,'5m':300000,'15m':900000,'1h':3600000,'6h':21600000,'1d':86400000};
 
 export type BucketInterval = '1m' | '5m' | '15m' | '1h' | '6h' | '1d';
 
@@ -47,9 +50,7 @@ export function resolveAnalyticsTimeRange(
   customEnd?: string,
   now: Date = new Date(),
 ): ResolvedTimeRange {
-  if (preset === 'custom' && customStart && customEnd) {
-    return { start: customStart, end: customEnd };
-  }
+  if(preset==='custom')return resolveTimeRange(preset,customStart,customEnd,now.getTime());
 
   const end = now.toISOString();
   let msAgo = 15 * 60 * 1000; // default 15m

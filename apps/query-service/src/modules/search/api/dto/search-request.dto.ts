@@ -31,6 +31,7 @@ export interface SearchRequestDto {
   readonly services?: readonly string[];
   readonly levels?: readonly string[];
   readonly query_text?: string;
+  readonly correlation_id?: string;
   readonly trace_id?: string;
   readonly event_id?: string;
   readonly filters?: readonly StructuredFilterDto[];

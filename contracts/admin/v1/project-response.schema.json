@@ -4,7 +4,14 @@
   "title": "ProjectResponseV1",
   "description": "Observability project representation.",
   "type": "object",
-  "required": ["id", "tenantId", "name", "status", "createdAt", "updatedAt"],
+  "required": [
+    "id",
+    "tenantId",
+    "name",
+    "status",
+    "createdAt",
+    "updatedAt"
+  ],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -22,7 +29,11 @@
     },
     "status": {
       "type": "string",
-      "enum": ["ACTIVE", "SUSPENDED", "ARCHIVED"]
+      "enum": [
+        "ACTIVE",
+        "SUSPENDED",
+        "ARCHIVED"
+      ]
     },
     "createdAt": {
       "type": "string",
@@ -31,6 +42,34 @@
     "updatedAt": {
       "type": "string",
       "format": "date-time"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\"p[^\":]{1,64}:[0-9]+\"$"
+    },
+    "actions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "update",
+        "suspend",
+        "reactivate",
+        "archive"
+      ],
+      "properties": {
+        "update": {
+          "type": "boolean"
+        },
+        "suspend": {
+          "type": "boolean"
+        },
+        "reactivate": {
+          "type": "boolean"
+        },
+        "archive": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

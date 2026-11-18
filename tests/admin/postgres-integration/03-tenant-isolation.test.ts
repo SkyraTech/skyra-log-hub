@@ -148,7 +148,7 @@ describe('PostgreSQL Integration: Multi-Tenant & Project Isolation (Section 10)'
     assert.equal(checkRes.rows.length, 0, 'Child membership must be cascaded on tenant deletion');
   });
 
-  test('8. Audit trail immutability: Deleting actor user sets actor_user_id to NULL while retaining audit trail', async () => {
+  test('8. Original ADMIN-002 actor deletion retains audit row but nulls its actor reference', async () => {
     // Create temporary actor user
     const uRes = await client.query(
       `INSERT INTO users (issuer, subject, email, display_name) 

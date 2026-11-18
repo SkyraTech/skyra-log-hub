@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.skyra-tech.com/schemas/admin/v1/organization-console.schema.json",
+  "title": "ConsoleOrganizationView",
+  "type": "object", "additionalProperties": false,
+  "required": ["id","code","name","status","createdAt","updatedAt","version","capabilities"],
+  "properties": {
+    "id": {"type":"string","format":"uuid"},
+    "code": {"type":"string"},
+    "name": {"type":"string","minLength":2,"maxLength":255},
+    "status": {"enum":["ACTIVE","SUSPENDED","DECOMMISSIONED"]},
+    "createdAt": {"type":"string","format":"date-time"},
+    "updatedAt": {"type":"string","format":"date-time"},
+    "version": {"type":"string","pattern":"^\"o[0-9a-f-]{36}:[0-9]+\"$"},
+    "capabilities": {"type":"array","uniqueItems":true,"items":{"enum":["tenant.read","tenant.update"]}}
+  }
+}

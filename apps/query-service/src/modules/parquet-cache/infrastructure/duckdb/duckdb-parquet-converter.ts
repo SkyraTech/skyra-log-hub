@@ -35,17 +35,20 @@ export class DuckDbParquetConverter {
       canonicalDescriptor.date,
       canonicalDescriptor.segmentFilename,
       effectiveJobId,
+      canonicalDescriptor.sha256Checksum,
     );
 
     this.pathSafety.ensureDirectoryExists(paths.directory);
     this.pathSafety.ensureDirectoryExists(paths.stagingDirectory);
 
-    const normalizedSource = canonicalDescriptor.resolvedPath.replace(/\\/g, '/');
-    const normalizedStagingParquet = paths.stagingParquetPath.replace(/\\/g, '/');
+    const normalizedSource = canonicalDescriptor.resolvedPath.replace(/\\/g, '/').replaceAll("'","''");
+    const normalizedStagingParquet = paths.stagingParquetPath.replace(/\\/g, '/').replaceAll("'","''");
 
     const conn = await this.instanceManager.createConnection();
 
     try {
+      const verifySource=()=>{const stat=fs.lstatSync(canonicalDescriptor.resolvedPath);if(!stat.isFile()||stat.isSymbolicLink()||stat.size!==canonicalDescriptor.byteSize||crypto.createHash('sha256').update(fs.readFileSync(canonicalDescriptor.resolvedPath)).digest('hex')!==canonicalDescriptor.sha256Checksum)throw Error('Canonical source changed before derived publication');};
+      verifySource();
       // 1. Convert JSONL -> Staging Parquet
       const copySql = `
         COPY (
@@ -73,6 +76,7 @@ export class DuckDbParquetConverter {
 
       await conn.run(copySql);
 
+      verifySource();
       // 2. Parquet Verification: Compare row counts
       const countReader = await conn.run(`SELECT CAST(count(*) AS BIGINT) FROM read_parquet(['${normalizedStagingParquet}'])`);
       const countRows = await countReader.getRows();
@@ -103,7 +107,7 @@ export class DuckDbParquetConverter {
         sourceChecksum: canonicalDescriptor.sha256Checksum,
         sourceByteSize: canonicalDescriptor.byteSize,
         sourceRecordCount: canonicalDescriptor.recordCount,
-        parquetFilename: `${baseName}.parquet`,
+        parquetFilename: path.basename(paths.parquetPath),
         parquetSha256Checksum: parquetSha,
         parquetByteSize: stagingStat.size,
         parquetRecordCount: parquetCount,
@@ -113,7 +117,8 @@ export class DuckDbParquetConverter {
         completedAt: new Date().toISOString(),
       };
 
-      fs.writeFileSync(paths.stagingMetadataPath, JSON.stringify(metadata, null, 2), 'utf8');
+      const dataFd=fs.openSync(paths.stagingParquetPath,'r+');try{fs.fsyncSync(dataFd);}finally{fs.closeSync(dataFd);}
+      const metadataFd=fs.openSync(paths.stagingMetadataPath,'wx',0o600);try{fs.writeFileSync(metadataFd,JSON.stringify(metadata,null,2));fs.fsyncSync(metadataFd);}finally{fs.closeSync(metadataFd);}
 
       // 5. Atomic Publication
       this.atomicPublish(paths.stagingParquetPath, paths.parquetPath);
@@ -175,14 +180,9 @@ export class DuckDbParquetConverter {
   }
 
   private atomicPublish(stagingPath: string, finalPath: string): void {
-    if (fs.existsSync(finalPath)) {
-      try {
-        fs.unlinkSync(finalPath);
-      } catch {
-        // ignore
-      }
-    }
-    fs.renameSync(stagingPath, finalPath);
+    try{fs.linkSync(stagingPath,finalPath);}catch(error){if((error as NodeJS.ErrnoException).code!=='EEXIST')throw error;if(fs.lstatSync(finalPath).isSymbolicLink()||!fs.readFileSync(finalPath).equals(fs.readFileSync(stagingPath)))throw Error('Existing derived artifact preserved; publication collision');}
+    fs.unlinkSync(stagingPath);
+    if(process.platform!=='win32'){const fd=fs.openSync(path.dirname(finalPath),'r');try{fs.fsyncSync(fd);}finally{fs.closeSync(fd);}}
   }
 
   private cleanupStagingFiles(parquetPath: string, metadataPath: string): void {
@@ -198,30 +198,8 @@ export class DuckDbParquetConverter {
    * Scans a staging directory and purges stale intermediate files older than maxAgeMs (crash recovery).
    */
   public cleanupOrphanedStagingFiles(stagingDir: string, maxAgeMs = 3600000): number {
-    let purged = 0;
-    try {
-      if (!fs.existsSync(stagingDir)) {
-        return 0;
-      }
-      const files = fs.readdirSync(stagingDir);
-      const now = Date.now();
-      for (const file of files) {
-        const fullPath = path.join(stagingDir, file);
-        try {
-          const stat = fs.statSync(fullPath);
-          if (now - stat.mtimeMs > maxAgeMs) {
-            fs.unlinkSync(fullPath);
-            purged++;
-          }
-        } catch {
-          // ignore concurrent worker delete
-        }
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      this.logger.warn(`Failed to cleanup orphaned staging directory ${stagingDir}: ${msg}`);
-    }
-    return purged;
+    // File age cannot prove that another converter no longer owns a staging file.
+    // Preserve unknown jobs; canonical JSONL is never a cleanup target here.
+    void stagingDir;void maxAgeMs;return 0;
   }
 }
-

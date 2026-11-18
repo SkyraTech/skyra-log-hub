@@ -33,6 +33,7 @@ export class ParquetPathSafetyService {
     date: string,
     segmentFilename: string,
     jobId?: string,
+    sourceChecksum?: string,
   ): ParquetSegmentPaths {
     this.validatePathComponent('tenantId', tenantId);
     this.validatePathComponent('projectId', projectId);
@@ -44,7 +45,9 @@ export class ParquetPathSafetyService {
       throw new PathTraversalException(`Invalid date partition format: "${date}". Expected YYYY-MM-DD.`);
     }
 
-    const baseName = segmentFilename.replace(/\.jsonl$/i, '');
+    if(jobId)this.validatePathComponent('jobId',jobId);
+    if(sourceChecksum&&!/^[a-f0-9]{64}$/.test(sourceChecksum))throw new PathTraversalException('Invalid source checksum namespace');
+    const baseName = segmentFilename.replace(/\.jsonl$/i, '')+(sourceChecksum?'--'+sourceChecksum:'');
     const parquetFilename = `${baseName}.parquet`;
     const metadataFilename = `${baseName}.meta.json`;
 
@@ -69,6 +72,7 @@ export class ParquetPathSafetyService {
     const stagingParquetPath = path.resolve(stagingDirectory, `${baseName}.${stagingUuid}.tmp-conv`);
     const stagingMetadataPath = path.resolve(stagingDirectory, `${baseName}.${stagingUuid}.tmp-meta.json`);
 
+    this.rejectLinks(directory);
     return {
       directory,
       stagingDirectory,
@@ -86,6 +90,7 @@ export class ParquetPathSafetyService {
       throw new PathTraversalException(`Cannot create directory escaping cache root: "${directoryPath}".`);
     }
 
+    this.rejectLinks(directoryPath);
     if (!fs.existsSync(directoryPath)) {
       fs.mkdirSync(directoryPath, { recursive: true });
     }
@@ -104,6 +109,8 @@ export class ParquetPathSafetyService {
       throw new PathTraversalException(`Parquet file does not exist: "${resolved}".`);
     }
 
+    this.rejectLinks(path.dirname(resolved));
+    if(fs.lstatSync(resolved).isSymbolicLink()||!fs.lstatSync(resolved).isFile())throw new PathTraversalException('Unverified Parquet file');
     // Resolve symlinks to prevent symlink escape
     const real = fs.realpathSync(resolved);
     if (!real.startsWith(rootWithSep)) {
@@ -112,6 +119,8 @@ export class ParquetPathSafetyService {
 
     return real;
   }
+
+  private rejectLinks(directory:string){const root=this.getCacheRoot();let current=root;if(fs.existsSync(root)&&fs.lstatSync(root).isSymbolicLink())throw new PathTraversalException('Redirected Parquet root');for(const part of path.relative(root,directory).split(path.sep).filter(Boolean)){current=path.join(current,part);if(fs.existsSync(current)&&fs.lstatSync(current).isSymbolicLink())throw new PathTraversalException('Redirected Parquet directory');}}
 
   private validatePathComponent(name: string, val: string): void {
     if (!val || typeof val !== 'string') {

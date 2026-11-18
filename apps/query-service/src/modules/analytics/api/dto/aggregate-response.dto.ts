@@ -9,6 +9,7 @@ export interface TermsBucketDto {
 }
 
 export interface DateHistogramAggregationResultDto {
+  interval_ms?: number;
   type: 'date_histogram';
   buckets: DateHistogramBucketDto[];
 }
@@ -26,9 +27,12 @@ export interface CardinalityAggregationResultDto {
 export type AggregationBucketResultDto =
   | DateHistogramAggregationResultDto
   | TermsAggregationResultDto
-  | CardinalityAggregationResultDto;
+  | CardinalityAggregationResultDto
+  | {type:'service_trend';buckets:{service:string;timestamp:string;count:number;errors:number;warnings:number}[]};
 
 export interface QueryStatisticsDto {
+  partial_results?: boolean;
+  unavailable_segments?: number;
   scanned_bytes: number;
   scanned_segments: number;
   execution_time_ms: number;
@@ -41,6 +45,7 @@ export interface QueryScopeDto {
 }
 
 export interface AggregateResponseDto {
+  query_range?: {start:string;end:string;timezone:'UTC'};
   aggregations: Record<string, AggregationBucketResultDto>;
   statistics: QueryStatisticsDto;
   scope: QueryScopeDto;

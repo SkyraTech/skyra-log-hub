@@ -1,11 +1,11 @@
 <div class="explorer-container">
-  <div class="explorer-main-content" [attr.aria-hidden]="selectedRow() !== null ? 'true' : null">
+  <div class="explorer-main-content" [attr.aria-hidden]="selectedRow() !== null ? 'true' : null" [attr.inert]="selectedRow() !== null ? '' : null">
     <!-- Page Header with Active Workspace Context -->
     <skyra-page-header
       title="Log Explorer"
-      description="Real-time live log investigation workstation with keyset pagination, dynamic facets, and deep inspection."
+      description="Search finalized logs by time, service, severity and trace."
     >
-      <div header-actions class="header-context-tags">
+      <div header-action class="header-context-tags">
         @if (context(); as ctx) {
           <span class="context-badge font-mono" title="Active Tenant">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -26,7 +26,7 @@
 
     <!-- Search Toolbar -->
     <skyra-search-toolbar
-      [queryText]="queryText()"
+      [correlationId]="filterService.correlationId()" (correlationIdChange)="filterService.correlationId.set($event)" [queryText]="queryText()" [traceId]="filterService.traceId()" [customStart]="filterService.customStart()" [customEnd]="filterService.customEnd()" (traceIdChange)="filterService.setTraceId($event)" (customRangeChange)="onCustomRangeChange($event)"
       [timeRange]="timeRange()"
       [pageSize]="pagination().pageSize"
       [loading]="loading()"
@@ -37,6 +37,21 @@
       (cancel)="onCancel()"
     />
 
+<div class="export-action"><skyra-tech-button variant="outline" [disabled]="loading()||exportBusy()||!rows().length" (click)="exportPage()">Export current page JSON</skyra-tech-button><span>Only displayed, authorized results; maximum 500 events / 5 MiB.</span></div>
+
+@if(advancedEnabled()){
+<section class="advanced-panel" aria-labelledby="saved-search-title">
+<h2 id="saved-search-title">Saved searches</h2>
+<div class="advanced-controls"><label for="saved-search-list">My and project-shared searches</label><select id="saved-search-list" aria-label="Saved searches" [value]="selectedSaved()?.id??''" (change)="applySaved($any($event.target).value)"><option value="">Select a saved search</option>@for(item of savedItems();track item.id){<option [value]="item.id">{{item.visibility==='PROJECT'?'Project shared':'My search'}}: {{item.name}}</option>}</select><skyra-tech-button variant="outline" (click)="reloadSaved()">Reload saved searches</skyra-tech-button>@if(savedNext()){<skyra-tech-button variant="outline" (click)="reloadSaved(true)">More saved searches</skyra-tech-button>}@if(selectedSaved()){<skyra-tech-button variant="outline" (click)="applySaved(selectedSaved()!.id)">Apply saved search</skyra-tech-button>}</div>
+<div class="advanced-controls"><skyra-tech-input id="saved-search-name" label="Saved search name" [value]="savedName()" (input)="savedName.set($any($event.target).value)"></skyra-tech-input><skyra-tech-input id="saved-search-description" label="Saved search description" [value]="savedDescription()" (input)="savedDescription.set($any($event.target).value)"></skyra-tech-input><label for="saved-search-sharing">Sharing</label><select id="saved-search-sharing" [value]="savedVisibility()" (change)="savedVisibility.set($any($event.target).value)"><option value="PRIVATE">Private — only me</option><option value="PROJECT" [disabled]="!canShare()">Project shared</option></select></div>
+<p>Save the current filters. Relative presets are evaluated when applied; custom UTC bounds remain fixed. Shared search changes require project management permission.</p>
+<div class="advanced-controls"><skyra-tech-button variant="outline" [disabled]="advancedBusy()||!savedName().trim()" (click)="saveSearch()">Save as new search</skyra-tech-button><skyra-tech-button variant="outline" [disabled]="advancedBusy()||!selectedSaved()?.canEdit" (click)="saveSearch(true)">Update or rename saved search</skyra-tech-button><skyra-tech-button variant="outline" [disabled]="advancedBusy()||!selectedSaved()?.canEdit" (click)="deleteSaved()">Delete saved search</skyra-tech-button></div>
+<h2>Download results</h2><div class="advanced-controls"><label for="export-scope">Export scope</label><select id="export-scope" [value]="exportScope()" (change)="exportScope.set($any($event.target).value)"><option value="matching">Matching results</option><option value="page">Current page</option></select><label for="export-format">Export format</label><select id="export-format" [value]="exportFormat()" (change)="exportFormat.set($any($event.target).value)"><option value="json">JSON</option><option value="csv">CSV</option></select><skyra-tech-button variant="outline" [disabled]="loading()||exportBusy()" (click)="exportResults()">Download selected results</skyra-tech-button>@if(exportBusy()){<skyra-tech-button variant="outline" (click)="cancelExport()">Cancel export</skyra-tech-button>}</div>
+<p>Downloads use the last successful search. Press Search to apply changed filters. Matching results: at most 1,000 events, 5 MiB, 10 pages and 15 seconds. Results may change during export; effective filters and time bounds remain fixed. Truncation is reported before you use the file.</p>
+@if(advancedBusy()||exportBusy()){<p role="status" aria-live="polite">Preparing your request…</p>}
+@if(advancedMessage()){<p role="status">{{advancedMessage()}}</p>}@if(advancedError()){<p role="alert">{{advancedError()}}</p>}
+</section>
+}
     <!-- Dynamic Filter & Facets Panel -->
     <skyra-filter-panel
       [facets]="facets()"
@@ -65,6 +80,7 @@
 
     <!-- Primary Results Area -->
     <div class="results-wrapper">
+      @if(error()){<p role="status">Results are unavailable until the search succeeds. Use Search to retry.</p>}@else{
       <skyra-log-table
         [logs]="rows()"
         [loading]="loading()"
@@ -73,6 +89,7 @@
         (rowSelect)="onRowSelect($event)"
         (densityChange)="onDensityChange($event)"
       />
+      }
     </div>
   </div>
 
@@ -82,6 +99,6 @@
     [isOpen]="selectedRow() !== null"
     [loading]="detailLoading()"
     [error]="detailError()"
-    (close)="closeDrawer()"
+    (investigateCorrelation)="onInvestigateCorrelation($event)" (close)="closeDrawer()" (investigateTrace)="onInvestigateTrace($event)"
   />
 </div>

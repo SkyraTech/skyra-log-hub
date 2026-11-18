@@ -29,9 +29,13 @@ export interface CardinalityAggregationSpec {
 export type AggregationSpec =
   | DateHistogramSpec
   | TermsAggregationSpec
-  | CardinalityAggregationSpec;
+  | CardinalityAggregationSpec
+  | {readonly name:string;readonly type:'service_trend';readonly field:'service.name';readonly interval:DateHistogramInterval;readonly size:number};
 
 export interface AuthorizedAggregationPlan {
+  readonly deduplicateEvents?: boolean;
+  readonly unavailableSegmentCount?: number;
+  readonly archiveWatermark?: string;
   readonly queryId: string;
   readonly tenantId: string;
   readonly authorizedProjects: readonly string[];
@@ -80,7 +84,8 @@ export interface CardinalityResult {
 export type SingleAggregationResult =
   | DateHistogramResult
   | TermsResult
-  | CardinalityResult;
+  | CardinalityResult
+  | {readonly type:'service_trend';readonly buckets:readonly {service:string;timestamp:string;count:number;errors:number;warnings:number}[]};
 
 export interface AggregationQueryResult {
   readonly aggregations: Record<string, SingleAggregationResult>;

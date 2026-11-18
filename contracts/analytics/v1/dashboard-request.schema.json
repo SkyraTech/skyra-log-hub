@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Advanced dashboard request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "projects",
+    "time_range"
+  ],
+  "properties": {
+    "projects": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_-]{1,64}$"
+      }
+    },
+    "time_range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$"
+        }
+      }
+    },
+    "interval": {
+      "enum": [
+        "1m",
+        "5m",
+        "15m",
+        "1h",
+        "6h",
+        "1d"
+      ]
+    },
+    "top_n": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "correlation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "services": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_.-]{1,64}$"
+      }
+    },
+    "levels": {
+      "type": "array",
+      "maxItems": 6,
+      "items": {
+        "enum": [
+          "trace",
+          "debug",
+          "info",
+          "warn",
+          "error",
+          "fatal"
+        ]
+      }
+    },
+    "environments": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "enum": [
+          "production",
+          "staging",
+          "development",
+          "test",
+          "local"
+        ]
+      }
+    }
+  },
+  "$comment": "Runtime additionally enforces ordered half-open UTC ranges <=7 days, <=240 buckets and a 4096-byte request. Tenant/owner authority is never supplied by this document."
+}

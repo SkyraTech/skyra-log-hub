@@ -1,0 +1,50 @@
+<section class="organization-page" aria-labelledby="organization-title">
+  <header>
+    <p class="eyebrow">Organization</p>
+    <h1 id="organization-title">{{ settings ? 'Organization settings' : 'Organization overview' }}</h1>
+    <p class="subtitle">{{ settings ? 'Manage the display name of your current organization.' : 'Your current organization and management access.' }}</p>
+  </header>
+  @if (loading()) {
+    <div class="panel" aria-busy="true"><skyra-spinner label="Loading organization" show-label></skyra-spinner></div>
+  } @else {
+    @if (error()) {
+      <div class="feedback"><skyra-notification-bar type="error" duration="0">{{ error() }}</skyra-notification-bar></div>
+      @if (!denied()) { <skyra-tech-button variant="secondary" (click)="reload()" [disabled]="saving()">{{ conflict() ? 'Reload latest values' : 'Retry' }}</skyra-tech-button> }
+    }
+    @if (organization(); as org) {
+      <skyra-audit-link resourceType="tenant" [resourceId]="org.id"></skyra-audit-link>
+      @if (success()) { <div role="status" class="feedback"><skyra-notification-bar type="success" duration="0">Organization name saved.</skyra-notification-bar></div> }
+      @if (settings) {
+        <div class="panel">
+          <h2>Display name</h2>
+          <p class="subtitle">Your organization ID and code remain unchanged.</p>
+          <form (submit)="$event.preventDefault(); save()" aria-label="Organization settings" [attr.aria-busy]="saving()">
+            <skyra-tech-input label="Organization name" name="organizationName" [value]="name()" (input)="change($event)"
+              [disabled]="saving()" [attr.readonly]="!canEdit() ? '' : null" required
+              [attr.error]="validation() || null" [attr.invalid]="validation() ? '' : null"
+              helper-text="2–255 characters. Leading and trailing spaces are removed." (keydown.enter)="$event.preventDefault(); save()"></skyra-tech-input>
+            @if (!canEdit()) { <p role="status">{{ org.status === 'ACTIVE' ? 'You have read-only access to these settings.' : 'Organization is not active. Settings are read-only.' }}</p> }
+            <div class="actions">
+              <skyra-tech-button type="button" (click)="save()" [disabled]="saving() || !canEdit() || !dirty() || !!validation() || conflict()">{{ saving() ? 'Saving…' : 'Save changes' }}</skyra-tech-button>
+              <skyra-tech-button type="button" variant="secondary" (click)="cancel()" [disabled]="saving() || !dirty()">Cancel changes</skyra-tech-button>
+              <skyra-tech-button type="button" variant="secondary" (click)="overview()" [disabled]="saving()">Back to overview</skyra-tech-button>
+            </div>
+          </form>
+        </div>
+      } @else {
+        <div class="panel">
+          <div class="organization-heading"><h2>{{ org.name }}</h2><skyra-tech-badge variant="neutral">{{ org.status }}</skyra-tech-badge></div>
+          <dl>
+            <div><dt>Organization code</dt><dd>{{ org.code }}</dd></div>
+            <div><dt>Organization ID</dt><dd class="identifier">{{ org.id }}</dd></div>
+            <div><dt>Created</dt><dd>{{ org.createdAt | date:'medium' }}</dd></div>
+            <div><dt>Your management access</dt><dd>{{ canEdit() ? 'Can manage organization settings' : 'Read only' }}</dd></div>
+          </dl>
+          @if (canEdit()) { <skyra-tech-button (click)="edit()">Edit settings</skyra-tech-button> }
+        </div>
+      }
+    } @else if (!error()) {
+      <skyra-tech-empty-state title="No organization selected" description="Choose an organization from your authorized workspace."></skyra-tech-empty-state>
+    }
+  }
+</section>

@@ -1,0 +1,30 @@
+<section class="usage-page" aria-labelledby="usage-title">
+  <header><p class="eyebrow">Project resource management</p><h1 id="usage-title">Quotas &amp; usage</h1><p>Daily ingestion budgets and authoritative accepted usage.</p></header>
+  <div class="actions"><skyra-tech-button variant="outline" (click)="back()">Back to project</skyra-tech-button><skyra-tech-button variant="outline" [disabled]="busy()" (click)="reload()">{{conflict()?'Reload policy':'Refresh usage'}}</skyra-tech-button></div>
+  @if(loading()){<div class="panel" aria-busy="true"><skyra-spinner label="Loading usage" show-label></skyra-spinner></div>}
+  @if(error()){<p role="alert" class="panel">{{error()}}</p>}
+  @if(success()){<p role="status" class="panel">{{success()}}</p>}
+  @if(!loading()&&data();as d){
+    <div class="panel"><h2>{{d.projectName}}</h2><p>Project: {{d.projectId}}</p><p>UTC day: <strong>{{d.period}}</strong> · Ends {{d.periodEnd | date:'medium':'UTC'}} UTC</p><p>Window includes its start and excludes its end. Admission time determines the day.</p>
+      <p role="status">{{d.completeness==='RECONCILING'?'Reconciling: pending reservations already consume capacity.':'Meter complete for admitted batches.'}}</p><p>Measured {{d.measuredAt | date:'medium':'UTC'}} UTC. {{d.updatedAt?'Last usage change: '+(d.updatedAt | date:'medium':'UTC')+' UTC.':'No usage recorded for this day.'}}</p>
+    </div>
+    <div class="cards">@for(card of cards();track card.name){<article class="panel"><h2>{{card.name}}</h2><p class="value">{{card.metric.accepted | number}} <span>accepted</span></p><dl><div><dt>Pending reservation</dt><dd>{{card.metric.reserved | number}}</dd></div><div><dt>Daily limit</dt><dd>{{card.metric.limit===null?'Unlimited':(card.metric.limit | number)}}</dd></div><div><dt>Remaining capacity</dt><dd>{{card.metric.remaining===null?'Unlimited':(card.metric.remaining | number)}}</dd></div></dl>
+      @if(card.metric.utilization!==null){<label [attr.for]="card.name==='Events'?'events-progress':'bytes-progress'">{{card.metric.utilization}}% of capacity</label><progress [id]="card.name==='Events'?'events-progress':'bytes-progress'" max="100" [value]="card.metric.utilization">{{card.metric.utilization}}%</progress>@if(card.metric.remaining==='0'){<p class="warning">Quota exhausted. New batches must fit both limits.</p>}@else if(card.metric.utilization>=80){<p class="warning">Approaching the daily limit.</p>}}
+    </article>}</div>
+    <div class="panel"><h2>Quota policy</h2><skyra-audit-link resourceType="quota" [resourceId]="d.projectId"></skyra-audit-link><p>{{d.policy.enabled?'Hard daily budgets enabled. Null limits are unlimited.':'Daily limits disabled. Usage continues to be metered.'}}</p><p>Whole batches are accepted or rejected. Lowering a limit preserves usage and can block new ingestion. Policy changes apply to new reservations.</p>
+      @if(!editing()){@if(d.policy.canManage){<skyra-tech-button (click)="edit()">Edit quota policy</skyra-tech-button>}@else{<p>Read-only policy. Quota management requires the organization owner permission.</p>}}
+      @if(editing()){
+        <form (submit)="$event.preventDefault();requestSave()" aria-label="Quota policy settings">
+          <label class="check"><input type="checkbox" [checked]="enabled()" (change)="enabled.set($any($event.target).checked)" [disabled]="busy()"> Enforce daily budgets</label>
+          <skyra-tech-input label="Daily event limit" helper-text="Empty means unlimited; zero blocks new events." [value]="events()" (input)="events.set($any($event.target).value)" [disabled]="busy()"></skyra-tech-input>
+          <skyra-tech-input label="Daily byte limit" helper-text="Canonical ingestion bytes. Empty means unlimited." [value]="bytes()" (input)="bytes.set($any($event.target).value)" [disabled]="busy()"></skyra-tech-input>
+          @if(!valid()){<p role="alert">Use whole nonnegative numbers up to 9007199254740991, or leave empty.</p>}
+          <div class="actions"><skyra-tech-button type="submit" [disabled]="!valid()||!dirty()||busy()||conflict()" (click)="requestSave()">Review changes</skyra-tech-button><skyra-tech-button type="button" variant="outline" [disabled]="busy()" (click)="cancel()">Cancel</skyra-tech-button></div>
+        </form>
+        @if(confirming()){<section class="confirmation" aria-label="Confirm quota changes"><h3>Confirm quota changes</h3><p>Enforcement: {{enabled()?'enabled':'disabled'}}. Events: {{events()||'unlimited'}}. Bytes: {{bytes()||'unlimited'}}. Reductions below current usage reject new batches.</p><div class="actions"><skyra-tech-button (click)="save()">Confirm and save</skyra-tech-button><skyra-tech-button variant="outline" (click)="confirming.set(false)">Keep editing</skyra-tech-button></div></section>}
+      }
+    </div>
+    @if(advanced()){<skyra-usage-history [projectId]="d.projectId"/>}
+    <div class="panel"><h2>What is measured</h2><p>{{d.byteDefinition}}</p><p>Duplicate retries do not add usage. Invalid and rejected batches are not accepted usage. Daily counters are separate from stored archive size and Analytics event counts.</p></div>
+  }
+</section>

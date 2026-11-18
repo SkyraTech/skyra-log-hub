@@ -1,0 +1,5 @@
+import fs from 'node:fs';import {createSkyraLogger,HttpTransport}from'@skyra/logger-node';
+const expected=[];class Observed extends HttpTransport{async write(level,line,bytes){expected.push(JSON.parse(line));return super.write(level,line,bytes);}}
+const records=JSON.parse(fs.readFileSync(process.env.SDK_RECORDS_FILE,'utf8'));let clock=records[0].timestamp;const transport=new Observed({endpoint:process.env.SDK_ENDPOINT,credential:process.env.SDK_CREDENTIAL,retryBaseDelayMs:20,retryJitter:0,retryBudgetMs:2000}),logger=createSkyraLogger({projectId:process.env.SDK_PROJECT,serviceName:'usage-history-sdk',environment:'production',instanceId:'dev017',level:'trace',validationMode:'strict',clock:()=>new Date(clock)},transport);
+let failed=false;try{for(const r of records){clock=r.timestamp;logger.info(r.message,{labels:{run:r.run}});}await logger.flush();await logger.close();}catch{failed=true;}
+const status=logger.getStatus();console.log(JSON.stringify({runtime:process.version,expected,accepted:!failed&&status.totalEventsDropped===0&&status.totalEventsWritten===records.length,status:{written:status.totalEventsWritten,dropped:status.totalEventsDropped}}));

@@ -198,3 +198,5 @@ describe('LogExplorerFacade — Search Execution, Facets & Keyset Navigation', (
     assert.ok(facade.error()?.includes('Internal query gateway timeout'));
   });
 });
+
+it('cursor paging freezes relative time bounds until an explicit new search',async()=>{const {facade,mockQueryClient}=createMockFacade();const requests:SearchLogsRequest[]=[];const search=mockQueryClient.searchLogs;mockQueryClient.searchLogs=(request:SearchLogsRequest)=>{requests.push(request);return search(request);};facade.executeSearch(true);await new Promise(r=>setTimeout(r,10));facade.nextPage();assert.deepEqual(requests[1].time_range,requests[0].time_range);await new Promise(r=>setTimeout(r,10));facade.executeSearch(true);assert.notDeepEqual(requests[2].time_range,requests[0].time_range);});

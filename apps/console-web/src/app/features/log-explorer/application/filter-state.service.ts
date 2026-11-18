@@ -11,6 +11,7 @@ export class FilterStateService {
   readonly selectedLevels = signal<string[]>([]);
   readonly selectedServices = signal<string[]>([]);
   readonly selectedEnvironments = signal<string[]>([]);
+  readonly correlationId = signal<string>('');
   readonly traceId = signal<string>('');
 
   /** Active chips representing all currently applied filters */
@@ -27,6 +28,7 @@ export class FilterStateService {
       });
     }
 
+    if(this.correlationId())chips.push({id:'correlation',category:'correlation',label:'correlation: '+this.correlationId().slice(0,24),value:this.correlationId()});
     const tid = this.traceId().trim();
     if (tid) {
       chips.push({
@@ -70,6 +72,7 @@ export class FilterStateService {
   readonly hasActiveFilters = computed<boolean>(() => {
     return (
       this.queryText().trim().length > 0 ||
+      this.correlationId().length > 0 ||
       this.traceId().trim().length > 0 ||
       this.selectedLevels().length > 0 ||
       this.selectedServices().length > 0 ||
@@ -83,7 +86,7 @@ export class FilterStateService {
   }
 
   setTraceId(traceId: string): void {
-    this.traceId.set(traceId);
+    this.traceId.set(traceId.trim().toLowerCase());
   }
 
   setTimeRange(preset: TimeRangePreset, customStart?: string, customEnd?: string): void {
@@ -128,6 +131,7 @@ export class FilterStateService {
       case 'query':
         this.queryText.set('');
         break;
+      case 'correlation': this.correlationId.set(''); break;
       case 'trace':
         this.traceId.set('');
         break;
@@ -145,6 +149,7 @@ export class FilterStateService {
 
   clearAllFilters(): void {
     this.queryText.set('');
+    this.correlationId.set('');
     this.traceId.set('');
     this.selectedLevels.set([]);
     this.selectedServices.set([]);
@@ -163,6 +168,7 @@ export class FilterStateService {
       levels: this.selectedLevels(),
       services: this.selectedServices(),
       environments: this.selectedEnvironments(),
+      correlationId: this.correlationId() || undefined,
       traceId: this.traceId().trim() || undefined,
       limit,
     };

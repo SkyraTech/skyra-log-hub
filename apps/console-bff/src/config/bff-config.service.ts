@@ -3,6 +3,17 @@ import type { BffConfig } from './bff-config.types.js';
 
 @Injectable()
 export class BffConfigService {
+  readonly advancedAuditUsageEnabled=process.env['ADVANCED_AUDIT_USAGE_ENABLED']==='true';
+  readonly advancedAnalyticsEnabled=process.env['ADVANCED_ANALYTICS_ENABLED']==='true';
+  readonly advancedExplorerEnabled=process.env['ADVANCED_EXPLORER_ENABLED']==='true';
+  readonly sessionStoreBackend=process.env['SESSION_STORE_BACKEND']??'postgres';
+  readonly sessionDatabaseUrl=process.env['BFF_SESSION_DATABASE_URL']??'';
+  readonly sessionDataKey=process.env['BFF_SESSION_DATA_KEY']??'';
+  readonly oidcDiscoveryUrl=process.env['OIDC_DISCOVERY_URL']??'';
+  readonly oidcTrustedOrigins=(process.env['OIDC_TRUSTED_ENDPOINT_ORIGINS']??'').split(',').map(v=>v.trim()).filter(Boolean);
+  readonly oidcTenantId=process.env['OIDC_TENANT_ID']??'';
+  readonly oidcLoopbackTest=process.env['NODE_ENV']==='test' && process.env['SKYRA_ISOLATED_TEST_ENV']==='true' && process.env['OIDC_ALLOW_LOOPBACK_TEST']==='true';
+  readonly oidcPostLogoutRedirectUri=process.env['OIDC_POST_LOGOUT_REDIRECT_URI']??'';
   private readonly config: BffConfig;
 
   constructor() {
@@ -58,6 +69,46 @@ export class BffConfigService {
       adminServiceUrl: process.env['ADMIN_SERVICE_URL'] ?? 'http://127.0.0.1:3300',
       useAuthoritativeMembership: process.env['BFF_USE_AUTHORITATIVE_MEMBERSHIP'] === 'true',
     };
+    if(!this.config.mockOidcEnabled) {
+      for(const key of ['OIDC_ISSUER_URL','OIDC_CLIENT_ID','OIDC_CLIENT_SECRET','OIDC_REDIRECT_URI','OIDC_DISCOVERY_URL','OIDC_TRUSTED_ENDPOINT_ORIGINS']) {
+        if(!process.env[key]?.trim())throw new Error(`Real OIDC requires ${key}.`);
+      }
+      for(const value of [this.config.oidcIssuerUrl,this.oidcDiscoveryUrl,...this.oidcTrustedOrigins]) {
+        const url=new URL(value);const local=this.oidcLoopbackTest && url.protocol==='http:' && url.hostname==='127.0.0.1';
+        if((url.protocol!=='https:'&&!local)||url.username||url.password||url.search||url.hash)throw new Error('Invalid OIDC trust URL.');
+      }
+      if(this.config.oidcClientSecret.length<32)throw new Error('Real OIDC requires a strong OIDC_CLIENT_SECRET.');
+      const callback=new URL(this.config.oidcRedirectUri);
+      if((callback.protocol!=='https:' && !(callback.protocol==='http:' && ['127.0.0.1','localhost'].includes(callback.hostname) && !isProduction)) || callback.username || callback.password || callback.hash || callback.search)throw new Error('Invalid OIDC callback.');
+      if(this.oidcPostLogoutRedirectUri){const logout=new URL(this.oidcPostLogoutRedirectUri);if(!envOrigins.includes(logout.origin)||logout.username||logout.password||logout.hash||logout.search||(logout.protocol!=='https:'&&!(logout.protocol==='http:'&&!isProduction&&['127.0.0.1','localhost'].includes(logout.hostname))))throw new Error('Invalid logout redirect.');}
+      if(this.oidcTrustedOrigins.some(v=>new URL(v).origin!==v))throw new Error('OIDC trusted endpoints must be exact origins.');
+      if(!this.oidcLoopbackTest && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(this.oidcTenantId))throw new Error('Real Entra requires OIDC_TENANT_ID.');
+    }
+    // Fixture authorization is only allowed by the isolated test harness. Protected
+    // activation must explicitly configure its trust roots and session keys.
+    if (this.config.useAuthoritativeMembership && nodeEnv !== 'test') {
+      if (this.config.mockOidcEnabled) throw new Error('Authoritative membership requires real OIDC.');
+      for (const key of ['OIDC_ISSUER_URL', 'OIDC_CLIENT_ID', 'OIDC_REDIRECT_URI', 'ADMIN_SERVICE_URL', 'BFF_ALLOWED_ORIGINS']) {
+        if (!process.env[key]?.trim()) throw new Error(`Authoritative membership requires ${key}.`);
+      }
+      for (const key of ['OIDC_CLIENT_SECRET', 'INTERNAL_JWT_SECRET', 'SESSION_SECRET', 'CSRF_SECRET']) {
+        if ((process.env[key]?.length ?? 0) < 32) throw new Error(`Authoritative membership requires a strong configured ${key}.`);
+      }
+      const issuer = new URL(this.config.oidcIssuerUrl);
+      if (issuer.protocol !== 'https:' || issuer.username || issuer.password || issuer.search || issuer.hash) {
+        throw new Error('OIDC issuer must be a fixed HTTPS URL without credentials, query, or fragment.');
+      }
+      for (const value of [this.config.oidcRedirectUri, this.config.adminServiceUrl, ...envOrigins]) {
+        const url = new URL(value);
+        const localHttp = !isProduction && url.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname);
+        if ((url.protocol !== 'https:' && !localHttp) || url.username || url.password || url.hash) throw new Error('Invalid activation endpoint or origin.');
+      }
+      if (!['lax', 'strict'].includes(this.config.cookieSameSite) ||
+          !Number.isFinite(this.config.sessionIdleTimeoutMs) || this.config.sessionIdleTimeoutMs <= 0 ||
+          !Number.isFinite(this.config.sessionAbsoluteLifetimeMs) || this.config.sessionAbsoluteLifetimeMs < this.config.sessionIdleTimeoutMs) {
+        throw new Error('Invalid session security configuration.');
+      }
+    }
   }
 
   get host(): string {

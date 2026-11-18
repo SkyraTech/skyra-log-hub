@@ -20,22 +20,26 @@
   <div class="topbar-right">
     <!-- Workspace & Tenant badge -->
     <div class="context-pill" title="Active Tenant & Project Context">
-      <span class="tenant-label">{{ currentContext().tenantId }}</span>
-      <span class="context-divider">/</span>
-      <span class="project-label">{{ currentContext().projectId }}</span>
+      <span class="tenant-label">{{ organizationPage() ? currentUser()?.tenantId : projectsPage() ? (activeTenant()?.name || currentUser()?.tenantId || 'Select organization') : currentContext().tenantId }}</span>
+      @if (!organizationPage()) {
+        <span class="context-divider">/</span>
+        <span class="project-label">{{ projectsPage() ? (selectedProjectNames().join(', ') || 'Select project') : currentContext().projectId }}</span>
+      }
     </div>
 
     <!-- Environment pill -->
+    @if (!organizationPage()) {
     <div class="env-badge" [class.prod]="currentContext().environment === 'production'">
       <span class="env-dot"></span>
       <span class="env-name">{{ currentContext().environment }}</span>
     </div>
+    }
 
     <!-- Theme Toggle -->
     <skyra-theme-toggle />
 
     <!-- User Profile indicator -->
-    <div class="user-profile" [title]="currentUser() ? currentUser()?.email : 'Unauthenticated / Dev Mode'">
+    <div class="user-profile" [title]="currentUser() ? currentUser()?.email : 'Unauthenticated'">
       <div class="avatar" aria-hidden="true">
         @if (currentUser()) {
           {{ currentUser()?.fullName?.substring(0, 2)?.toUpperCase() }}
@@ -48,10 +52,10 @@
       </div>
       <div class="user-meta">
         <span class="user-name">
-          {{ currentUser() ? currentUser()?.fullName : 'Dev Preview' }}
+          {{ currentUser() ? currentUser()?.fullName : 'Signed out' }}
         </span>
         <span class="user-role">
-          {{ currentUser() ? currentUser()?.roles?.[0] : 'Local UI Mode' }}
+          {{ currentUser() ? currentUser()?.roles?.[0] : 'No active session' }}
         </span>
       </div>
     </div>

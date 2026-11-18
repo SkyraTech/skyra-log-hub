@@ -1,3 +1,5 @@
+import {QuotaAccountingService} from './quota-accounting.service.js';
+import {WalPublicationService} from './archive/wal-publication.service.js';
 import { Module, type DynamicModule, Global } from '@nestjs/common';
 import { WalJournalService, type WalJournalOptions } from './wal/wal-journal.service.js';
 import { ReceiptService } from './receipt/receipt.service.js';
@@ -46,6 +48,8 @@ export class StorageModule {
       module: StorageModule,
       imports: [MetadataModule],
       providers: [
+        WalPublicationService,
+        QuotaAccountingService,
         {
           provide: WalJournalService,
           useFactory: () => new WalJournalService(undefined, options?.wal),
@@ -72,6 +76,7 @@ export class StorageModule {
         },
       ],
       exports: [
+        QuotaAccountingService,
         WalJournalService,
         DeduplicationLockService,
         RECEIPT_CACHE,

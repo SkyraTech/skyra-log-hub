@@ -14,7 +14,9 @@ describe('MetricCardComponent Unit Tests (LOGHUB-CONSOLE-005)', () => {
       (comp as any).value = () => 1429810;
       (comp as any).unit = () => 'logs';
 
-      assert.equal(comp.formattedValue(), '1,429,810');
+      // The component follows the host locale (en-IN and en-US use different grouping).
+      // Keep an exact formatted-value assertion without assuming the developer's locale.
+      assert.equal(comp.formattedValue(), new Intl.NumberFormat().format(1429810));
       assert.equal(comp.ariaLabel(), 'Total Ingested Events: 1429810 logs');
     });
   });

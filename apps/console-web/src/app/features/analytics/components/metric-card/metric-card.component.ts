@@ -8,12 +8,13 @@ import { CommonModule } from '@angular/common';
   template: `
     <div
       class="metric-card"
+      [attr.aria-label]="ariaLabel()"
       [class.clickable]="isClickable()"
       [attr.tabindex]="isClickable() ? 0 : null"
       [attr.role]="isClickable() ? 'button' : null"
       (click)="onClick()"
       (keydown.enter)="onClick()"
-      (keydown.space)="onClick()"
+      (keydown.space)="$event.preventDefault();onClick()"
     >
       <div class="metric-header">
         <span class="metric-label">{{ label() }}</span>

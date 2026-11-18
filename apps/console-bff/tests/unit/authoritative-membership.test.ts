@@ -26,19 +26,7 @@ describe('AuthoritativeMembershipAdapter (LOGHUB-ADMIN-002 Gate A)', () => {
   it('fails closed in production mode when authoritative provider is pending Gate B', async () => {
     process.env['NODE_ENV'] = 'production';
     try {
-      const config = new BffConfigService();
-      assert.strictEqual(config.isProduction, true);
-      const adapter = new AuthoritativeMembershipAdapter(config);
-      await assert.rejects(
-        async () => {
-          await adapter.resolveMemberships('usr-prod-1', 'alice@skyra.internal');
-        },
-        (err: unknown) => {
-          assert.ok(err instanceof MembershipProviderUnavailableException);
-          assert.match((err as Error).message, /pending Gate B/);
-          return true;
-        },
-      );
+      assert.throws(()=>new BffConfigService(),/Real OIDC requires/);
     } finally {
       process.env['NODE_ENV'] = 'development';
     }

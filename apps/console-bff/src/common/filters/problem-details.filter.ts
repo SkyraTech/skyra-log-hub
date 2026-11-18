@@ -74,7 +74,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
       title,
       status,
       detail,
-      instance: `${request.url}?req_id=${correlationId}`,
+      instance: `${request.url.split('?')[0]}?req_id=${encodeURIComponent(String(correlationId).slice(0,128))}`,
       code,
       ...(invalidParams && invalidParams.length > 0 ? { invalid_params: invalidParams } : {}),
     };
@@ -92,6 +92,11 @@ export class ProblemDetailsFilter implements ExceptionFilter {
         return 'FORBIDDEN';
       case HttpStatus.NOT_FOUND:
         return 'NOT_FOUND';
+      case HttpStatus.CONFLICT:
+      case HttpStatus.PRECONDITION_FAILED:
+        return 'CONCURRENCY_CONFLICT';
+      case 428:
+        return 'PRECONDITION_REQUIRED';
       case HttpStatus.GATEWAY_TIMEOUT:
         return 'UPSTREAM_TIMEOUT';
       case HttpStatus.BAD_GATEWAY:

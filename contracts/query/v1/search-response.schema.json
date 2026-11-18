@@ -4,7 +4,12 @@
   "title": "SkyraQuerySearchResponseV1",
   "description": "Response envelope for POST /query/v1/logs/search.",
   "type": "object",
-  "required": ["events", "pagination", "statistics", "scope"],
+  "required": [
+    "events",
+    "pagination",
+    "statistics",
+    "scope"
+  ],
   "additionalProperties": false,
   "properties": {
     "events": {
@@ -16,7 +21,11 @@
     },
     "pagination": {
       "type": "object",
-      "required": ["has_more", "next_cursor", "total_returned"],
+      "required": [
+        "has_more",
+        "next_cursor",
+        "total_returned"
+      ],
       "additionalProperties": false,
       "properties": {
         "has_more": {
@@ -24,7 +33,10 @@
           "description": "True if additional matching records exist beyond this page."
         },
         "next_cursor": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Opaque cursor string for requesting the next page. Null when has_more is false."
         },
         "total_returned": {
@@ -36,7 +48,12 @@
     },
     "statistics": {
       "type": "object",
-      "required": ["scanned_bytes", "scanned_segments", "execution_time_ms", "archive_watermark"],
+      "required": [
+        "scanned_bytes",
+        "scanned_segments",
+        "execution_time_ms",
+        "archive_watermark"
+      ],
       "additionalProperties": false,
       "properties": {
         "scanned_bytes": {
@@ -58,12 +75,24 @@
           "type": "string",
           "format": "date-time",
           "description": "UTC timestamp of the latest finalized archive segment visible to this query."
+        },
+        "partial_results": {
+          "type": "boolean",
+          "description": "Results are incomplete because relevant catalogued archive segments are unavailable or corrupt."
+        },
+        "unavailable_segments": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unavailable/corrupt relevant catalog segments excluded from this query."
         }
       }
     },
     "scope": {
       "type": "object",
-      "required": ["tenant_id", "searched_projects"],
+      "required": [
+        "tenant_id",
+        "searched_projects"
+      ],
       "additionalProperties": false,
       "properties": {
         "tenant_id": {

@@ -40,7 +40,6 @@
   --color-text-inverse: #FFFFFF;
   --skyra-text-primary: var(--skyra-text, #0f172a);
   --skyra-text-secondary: var(--skyra-text-muted, #64748b);
-  --skyra-text-muted: var(--skyra-text-muted, #64748b);
 
   /* Borders & Dividers */
   --color-border-subtle: var(--skyra-border, #e2e8f0);
@@ -150,7 +149,6 @@
   --color-text-inverse: #0B111E;
   --skyra-text-primary: var(--skyra-text, #f1f5f9);
   --skyra-text-secondary: var(--skyra-text-muted, #94a3b8);
-  --skyra-text-muted: var(--skyra-text-muted, #94a3b8);
 
   /* Borders & Dividers */
   --color-border-subtle: var(--skyra-border, rgba(255, 255, 255, 0.08));

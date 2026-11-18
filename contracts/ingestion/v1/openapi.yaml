@@ -83,7 +83,7 @@ paths:
                       committed_at: "2026-10-24T00:00:00.123Z"
                       content_digest: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         '400':
-          description: Malformed JSON, non-JSON payload, duplicate keys, empty batch, or batch size mismatch.
+          description: Malformed JSON, non-JSON payload, duplicate keys or unsupported protocol version. Empty batches and batch size mismatch are validation failures (422).
           content:
             application/json:
               schema:
@@ -175,7 +175,7 @@ paths:
             Retry-After:
               schema:
                 type: integer
-              description: Recommended wait time in seconds before retrying.
+              description: Present for credential rate limiting, in seconds. Hard project quota exhaustion is not automatically retryable.
           content:
             application/json:
               schema:
@@ -188,6 +188,13 @@ paths:
                       message: "Rate limit exceeded for project 'skyra-tech'. Retry after specified interval."
                       requestId: "req_rate_limit_1"
                       retryable: true
+                project_quota_exhausted:
+                  value:
+                    error:
+                      code: "PROJECT_QUOTA_EXCEEDED"
+                      message: "Project daily ingestion quota exceeded."
+                      requestId: "example-request"
+                      retryable: false
         '503':
           description: Ingestion gateway or durable journal storage is unavailable. Clients must retry with backoff.
           content:

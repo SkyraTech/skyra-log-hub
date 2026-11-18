@@ -34,6 +34,10 @@ export class AppShellComponent {
   closeMobileNav(): void {
     this.mobileNavOpen.set(false);
   }
+  onPlatformSidebarToggle(event: Event): void {
+    const detail = (event as CustomEvent<{ open?: boolean }>).detail;
+    if (typeof detail?.open === 'boolean') this.mobileNavOpen.set(detail.open);
+  }
 
   @HostListener('window:keydown.escape')
   onEscape(): void {

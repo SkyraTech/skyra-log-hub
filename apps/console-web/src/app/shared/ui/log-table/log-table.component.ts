@@ -53,8 +53,7 @@ export class LogTableComponent {
     try {
       const date = new Date(iso);
       if (isNaN(date.getTime())) return iso;
-      const pad = (n: number, z = 2) => ('00' + n).slice(-z);
-      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.${pad(date.getMilliseconds(), 3)}`;
+      return date.toISOString().replace('T', ' ').replace('Z', '');
     } catch {
       return iso;
     }

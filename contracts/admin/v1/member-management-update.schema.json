@@ -1,0 +1,10 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://specs.skyra-tech.com/schemas/admin/v1/member-management-update.schema.json",
+  "title":"ExistingMembershipUpdateV1",
+  "description":"Exactly one existing membership role or status change. No identity creation, email linking, invitations or project-role mutation.",
+  "oneOf":[
+    {"type":"object","required":["role"],"additionalProperties":false,"properties":{"role":{"enum":["OrgOwner","OrgAdmin","ProjectAdmin","Developer","Viewer"]}}},
+    {"type":"object","required":["status"],"additionalProperties":false,"properties":{"status":{"enum":["ACTIVE","SUSPENDED","REVOKED"]}}}
+  ]
+}

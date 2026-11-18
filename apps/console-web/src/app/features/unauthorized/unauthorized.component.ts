@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -41,6 +41,7 @@ import { AuthService } from '../../core/auth/auth.service';
           <button type="button" class="btn btn-primary" (click)="goBack()">
             Return to Overview
           </button>
+          @if(logoutError()){<p role="alert">{{logoutError()}}</p>}
           <button type="button" class="btn btn-secondary" (click)="logout()">
             Sign out & Switch Account
           </button>
@@ -168,14 +169,12 @@ export class UnauthorizedComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  readonly logoutError=signal('');
   readonly user = this.authService.currentUser;
 
   goBack(): void {
     this.router.navigate(['/overview']);
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
+  async logout():Promise<void>{try{await this.authService.logoutFromBff();await this.router.navigate(['/login']);}catch{this.logoutError.set('Sign-out is unavailable. Retry when the service recovers.');}}
 }

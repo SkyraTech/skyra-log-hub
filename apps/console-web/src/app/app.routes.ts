@@ -1,7 +1,23 @@
+import type { CredentialsComponent } from './features/credentials/credentials.component';
+const credentialChangesGuard:CanDeactivateFn<CredentialsComponent>=c=>c.canLeave();
+import type { CanDeactivateFn } from '@angular/router';
+import type { ProjectsComponent } from './features/projects/projects.component';
+const projectChangesGuard:CanDeactivateFn<ProjectsComponent>=c=>c.canLeave();
 import { Routes } from '@angular/router';
 import { authGuard, orgAdminGuard } from './core/auth/auth.guard';
+import { organizationSessionGuard, organizationChangesGuard } from './features/organization/organization.guard';
+import {memberChangesGuard} from './features/members/members.guard';
 
 export const routes: Routes = [
+  {path:'developer/getting-started',canActivate:[organizationSessionGuard],loadComponent:()=>import('./features/developer/getting-started.component').then(m=>m.GettingStartedComponent),title:'Developer getting started - Skyra LogHub'},
+  {path:'projects/:projectId/usage',canActivate:[organizationSessionGuard],canDeactivate:[(c:any)=>c.canLeave()],loadComponent:()=>import('./features/usage/usage.component').then(m=>m.UsageComponent),title:'Quotas & usage � Skyra LogHub'},
+  ...[{path:'projects/:projectId/credentials/new',data:{create:true}},{path:'projects/:projectId/credentials/:credentialId'},{path:'projects/:projectId/credentials'}].map(route=>({...route,canActivate:[organizationSessionGuard],canDeactivate:[credentialChangesGuard],loadComponent:()=>import('./features/credentials/credentials.component').then(m=>m.CredentialsComponent),title:'Ingestion credentials — Skyra LogHub'})),
+  ...[{path:'projects/new',data:{create:true}},{path:'projects/:projectId/settings',data:{settings:true}},{path:'projects/:projectId'}].map(route=>({...route,canActivate:[organizationSessionGuard],canDeactivate:[projectChangesGuard],loadComponent:()=>import('./features/projects/projects.component').then(m=>m.ProjectsComponent),title:'Projects — Skyra LogHub'})),
+  {path:'organization/audit',canActivate:[organizationSessionGuard],loadComponent:()=>import('./features/audit/audit.component').then(m=>m.AuditComponent),title:'Audit History - Skyra LogHub'},
+  {path:'organization/members/:membershipId',canActivate:[organizationSessionGuard],canDeactivate:[memberChangesGuard],loadComponent:()=>import('./features/members/members.component').then(m=>m.MembersComponent),title:'Member details — Skyra LogHub'},
+  {path:'organization/members',canActivate:[organizationSessionGuard],loadComponent:()=>import('./features/members/members.component').then(m=>m.MembersComponent),title:'Members & roles — Skyra LogHub'},
+  { path: 'organization', canActivate: [organizationSessionGuard], loadComponent: () => import('./features/organization/organization.component').then(m => m.OrganizationComponent), title: 'Organization — Skyra LogHub' },
+  { path: 'organization/settings', canActivate: [organizationSessionGuard], canDeactivate: [organizationChangesGuard], data: { settings: true }, loadComponent: () => import('./features/organization/organization.component').then(m => m.OrganizationComponent), title: 'Organization settings — Skyra LogHub' },
   {
     path: '',
     redirectTo: 'overview',
@@ -34,7 +50,7 @@ export const routes: Routes = [
   },
   {
     path: 'logs',
-    canActivate: [authGuard],
+    canActivate: [organizationSessionGuard],
     loadComponent: () =>
       import('./features/log-explorer/log-explorer.component').then(
         (m) => m.LogExplorerComponent
@@ -43,7 +59,7 @@ export const routes: Routes = [
   },
   {
     path: 'analytics',
-    canActivate: [authGuard],
+    canActivate: [organizationSessionGuard],
     loadComponent: () =>
       import('./features/analytics/analytics.component').then(
         (m) => m.AnalyticsComponent
@@ -52,7 +68,7 @@ export const routes: Routes = [
   },
   {
     path: 'projects',
-    canActivate: [authGuard],
+    canActivate: [organizationSessionGuard],
     loadComponent: () =>
       import('./features/projects/projects.component').then(
         (m) => m.ProjectsComponent

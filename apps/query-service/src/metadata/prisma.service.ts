@@ -10,7 +10,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     super({
       datasources: {
         db: {
-          url: config.databaseUrl,
+          url: readOnlyDatabaseUrl(config.databaseUrl),
         },
       },
     });
@@ -46,4 +46,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       return false;
     }
   }
+}
+
+/** Apply read-only defaults to every pooled Query connection, including reconnects. */
+function readOnlyDatabaseUrl(databaseUrl:string):string {
+  const url=new URL(databaseUrl);
+  url.searchParams.set('options','-c default_transaction_read_only=on');
+  return url.href;
 }

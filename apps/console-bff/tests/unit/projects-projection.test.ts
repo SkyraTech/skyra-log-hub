@@ -1,0 +1,4 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {publicProject} from '../../src/modules/auth/api/projects.controller.js';
+const value={id:'test-project',tenantId:'tenant',name:'Test',status:'ACTIVE',createdAt:'2026-11-04T00:00:00Z',updatedAt:'2026-11-04T00:00:00Z',version:'"ptest-project:123"',actions:{update:true,suspend:true,reactivate:false,archive:true}};
+test('project BFF explicitly projects metadata and removes credentials, identity and tokens',()=>{assert.deepEqual(publicProject({...value,clientSecret:'secret',issuer:'issuer',subject:'sub',sessionId:'session',credential:{key:'key'}},'tenant'),value);});
+test('project BFF rejects foreign tenant, malformed version and unsafe actions',()=>{for(const raw of [null,{...value,tenantId:'foreign'},{...value,version:'"pother:123"'},{...value,actions:{update:'true'}},{...value,status:'DELETED'}])assert.throws(()=>publicProject(raw,'tenant'));});

@@ -42,6 +42,7 @@ export class SearchLogsUseCase {
       levels: request.levels,
       query_text: request.query_text,
       trace_id: request.trace_id,
+      ...(request.correlation_id !== undefined ? {correlation_id:request.correlation_id}:{}),
       event_id: request.event_id,
       filters: request.filters,
       sort_direction: sortDirection,
@@ -71,6 +72,7 @@ export class SearchLogsUseCase {
         levels: request.levels,
         query_text: request.query_text,
         trace_id: request.trace_id,
+      ...(request.correlation_id !== undefined ? {correlation_id:request.correlation_id}:{}),
         event_id: request.event_id,
         filters: request.filters,
         sort: {

@@ -52,7 +52,7 @@ export class MembershipService {
     const projectRolesMap = new Map<string, SystemRole[]>();
 
     for (const ra of roleAssignments) {
-      if (!ra.projectId) {
+      if (ra.projectId === null || ra.projectId === undefined) {
         tenantRoles.push(ra.role);
       } else {
         const existing = projectRolesMap.get(ra.projectId) ?? [];

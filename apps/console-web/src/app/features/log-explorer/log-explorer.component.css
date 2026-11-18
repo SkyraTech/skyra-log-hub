@@ -1,3 +1,16 @@
+:host {
+  --skyra-text-muted: var(--skyra-text);
+  --skyra-text-subtle: var(--skyra-text);
+  --text-muted: var(--skyra-text);
+  --text-secondary: var(--skyra-text);
+}
+
+/* Supported Platform badge part; retain semantic borders and explicit severity labels. */
+:host ::ng-deep skyra-tech-badge::part(badge) {
+  color: var(--skyra-text);
+  background: var(--skyra-surface);
+}
+
 .explorer-container {
   display: flex;
   flex-direction: column;
@@ -33,7 +46,7 @@
 }
 
 .project-badge {
-  color: var(--skyra-primary, #0A58CA);
+  color: var(--skyra-text);
   border-color: rgba(10, 88, 202, 0.3);
   background-color: var(--skyra-primary-light, rgba(10, 88, 202, 0.08));
 }
@@ -52,3 +65,19 @@
     gap: 12px;
   }
 }
+
+:host ::ng-deep .facet-pill:not(.active),
+:host ::ng-deep .density-btn:not(.active),
+:host ::ng-deep .filter-chip { color:var(--skyra-text);background:var(--skyra-surface); }
+:host ::ng-deep .chip-text { color:var(--skyra-text); }
+:host ::ng-deep .facet-pill.active { color:var(--skyra-text); }
+:host ::ng-deep skyra-tech-button[variant="outline"] {
+  --skyra-primary:var(--skyra-text);
+  --skyra-primary-light:var(--skyra-surface);
+}
+
+.header-context-tags{flex-wrap:wrap;max-width:100%;min-width:0}.context-badge{max-width:100%;overflow-wrap:anywhere;min-width:0}:host ::ng-deep skyra-page-header .page-header{flex-wrap:wrap}:host ::ng-deep skyra-page-header .header-actions{max-width:100%}
+
+.advanced-panel{margin:var(--space-4) 0;padding:var(--space-4);border:1px solid var(--skyra-border);border-radius:var(--radius-lg);background:var(--skyra-surface);color:var(--skyra-text);min-width:0}
+.advanced-panel h2{font-size:1.1rem;margin:var(--space-4) 0 var(--space-2)}.advanced-controls{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);min-width:0}.advanced-controls select{max-width:100%;min-height:40px;padding:var(--space-2);background:var(--skyra-surface);color:var(--skyra-text);border:1px solid var(--skyra-border);border-radius:var(--radius-md)}.advanced-controls skyra-tech-input{min-width:0;flex:1 1 220px}.advanced-panel p{overflow-wrap:anywhere;line-height:1.6}
+@media(max-width:600px){.advanced-controls{align-items:stretch;flex-direction:column}.advanced-controls skyra-tech-input{flex-basis:auto;width:100%}.advanced-controls select{width:100%}}

@@ -11,6 +11,7 @@ export interface LogExplorerRow {
   readonly service: string;
   readonly environment: string;
   readonly action?: string;
+  readonly correlationId?: string;
   readonly traceId?: string;
   readonly spanId?: string;
   readonly message: string;
@@ -47,6 +48,7 @@ export function mapCanonicalEventToRow(
     service,
     environment,
     action,
+    correlationId: event.correlation?.id,
     traceId,
     spanId,
     message,

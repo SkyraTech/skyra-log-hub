@@ -1,6 +1,6 @@
 export interface FilterChip {
   id: string;
-  category: 'level' | 'service' | 'environment' | 'query' | 'time' | 'trace' | 'event';
+  category: 'level' | 'service' | 'environment' | 'query' | 'time' | 'trace' | 'correlation' | 'event';
   label: string;
   value: string;
 }

@@ -1,141 +1,63 @@
-<div class="analytics-container">
-  <skyra-page-header
-    title="Analytics & Telemetry Explorer"
-    description="Multi-dimensional faceted analysis, time-series distributions, and error classifications across your workspace."
-  >
-    <div header-actions class="header-badges">
-      <span class="scope-tag font-mono">Tenant: {{ context().tenantId }}</span>
-      <span class="scope-tag font-mono">Project: {{ context().projectId }}</span>
-    </div>
-  </skyra-page-header>
-
-  <!-- Error Banner if RFC 7807 occurred -->
-  @if (error()) {
-    <div class="error-banner" role="alert">
-      <div class="error-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
+<div class="analytics-container" [attr.aria-busy]="loading()||refreshing()" [attr.data-interval-ms]="applied()?.intervalMs">
+  <skyra-page-header title="Analytics" description="Investigate finalized log volume, severity and service activity."><div header-action class="header-badges"><span class="scope-tag">Project: {{context().projectId||'None selected'}}</span></div></skyra-page-header>
+  <div class="project-control"><label for="analytics-project">Analytics project</label><select id="analytics-project" [value]="context().projectId" (change)="onProjectChange($any($event.target).value)"><option value="" disabled>Select an authorized project</option>@for(project of projects();track project.id){<option [value]="project.id" [selected]="project.id===context().projectId">{{project.name}}</option>}</select></div>
+  <skyra-analytics-toolbar [customStart]="customStart()" [customEnd]="customEnd()" [timeRange]="timeRange()" [interval]="interval()" [environment]="environment()" [loading]="loading()" [refreshing]="refreshing()" [lastUpdated]="lastUpdated()" [executionTimeMs]="kpis().executionTimeMs" [scannedBytes]="kpis().scannedBytes" (timeRangeChange)="onTimeRangeChange($event)" (intervalChange)="onIntervalChange($event)" (environmentChange)="onEnvironmentChange($event)" (refresh)="onRefresh()" (customRangeApply)="onCustomRangeApply($event)" />
+  @if(advanced()){
+    <section class="advanced-analytics-controls" aria-labelledby="advanced-analytics-title">
+      <h2 id="advanced-analytics-title">Dashboard preferences and filters</h2>
+      <div class="advanced-controls">
+        <skyra-tech-input id="analytics-correlation" label="Analytics correlation ID" placeholder="Exact case-sensitive workflow ID" [value]="correlation()" (input)="correlation.set($any($event.target).value)" />
+        <skyra-tech-input id="analytics-service" label="Analytics service" placeholder="Canonical service name, or empty for all" [value]="service()" (input)="service.set($any($event.target).value)" />
+        <skyra-tech-button variant="outline" (click)="applyAdvancedFilters()">Apply analytics filters</skyra-tech-button>
+        <skyra-tech-button variant="outline" (click)="clearAdvancedFilters()">Clear analytics filters</skyra-tech-button>
+        <label for="analytics-auto-refresh">Automatic refresh</label><select id="analytics-auto-refresh" [value]="autoRefresh()" (change)="onAutoRefresh(+$any($event.target).value)"><option value="0">Off</option><option value="15">15 seconds</option><option value="30">30 seconds</option><option value="60">60 seconds</option><option value="300">5 minutes</option></select>
+        <label for="analytics-top-n">Top services limit</label><select id="analytics-top-n" [value]="topN()" (change)="topN.set(+$any($event.target).value);applyAdvancedFilters()"><option value="3">3</option><option value="5">5</option><option value="10">10</option></select>
+        <label for="analytics-trend-metric">Service trend metric</label><select id="analytics-trend-metric" [value]="trendMetric()" (change)="trendMetric.set($any($event.target).value)"><option value="events">Events</option><option value="errors">ERROR + FATAL</option><option value="warnings">WARN</option></select>
       </div>
-      <div class="error-content">
-        <div class="error-title">{{ error() }}</div>
-        @if (errorCorrelationId()) {
-          <div class="error-correlation font-mono">Correlation ID: {{ errorCorrelationId() }}</div>
-        }
-      </div>
-      <button type="button" class="retry-btn" (click)="onRefresh()">Retry</button>
-    </div>
+      <p>Auto-refresh pauses in hidden tabs, waits for requests to finish and backs off after failures. Preferences store presentation settings; correlation and custom UTC bounds remain query filters.</p>
+      <div class="advanced-controls"><skyra-tech-button variant="outline" [disabled]="preferenceBusy()||!preference()" (click)="savePreferences()">Save dashboard preferences</skyra-tech-button><skyra-tech-button variant="outline" [disabled]="preferenceBusy()" (click)="restorePreferences()">Restore dashboard preferences</skyra-tech-button><skyra-tech-button variant="outline" [disabled]="preferenceBusy()||!preference()" (click)="savePreferences(true)">Reset dashboard preferences</skyra-tech-button></div>
+      @if(preferenceMessage()){<p role="status">{{preferenceMessage()}}</p>}
+      @if(stale()){<p role="status" class="partial-warning">Stale data: the displayed evaluation has not been replaced by a successful refresh.</p>}
+      @if(dashboard();as d){<p role="status">Current data: {{d.current.completeness}} · Previous period: {{d.previous.completeness}} · Last evaluated: {{d.generatedAt}} · UTC</p>}
+    </section>
   }
-
-  <!-- Analytical Controls Toolbar -->
-  <skyra-analytics-toolbar
-    [timeRange]="timeRange()"
-    [interval]="interval()"
-    [environment]="environment()"
-    [showIntervalSelector]="true"
-    [loading]="loading()"
-    [refreshing]="refreshing()"
-    [lastUpdated]="lastUpdated()"
-    [executionTimeMs]="kpis().executionTimeMs"
-    [scannedBytes]="kpis().scannedBytes"
-    (timeRangeChange)="onTimeRangeChange($event)"
-    (intervalChange)="onIntervalChange($event)"
-    (environmentChange)="onEnvironmentChange($event)"
-    (refresh)="onRefresh()"
-    (customRangeApply)="onCustomRangeApply($event)"
-  />
-
-  <!-- Top KPI Metrics -->
-  <div class="kpi-grid">
-    <skyra-metric-card
-      label="Total Scanned Events"
-      [value]="kpis().totalLogs"
-      description="Authorized logs evaluated"
-      badgeText="DuckDB"
-      badgeVariant="neutral"
-      [isClickable]="true"
-      (cardClick)="onExploreAllLogs()"
-    />
-
-    <skyra-metric-card
-      label="Error & Fatal Volume"
-      [value]="kpis().errorCount"
-      [description]="kpis().errorRatePercent + '% of analyzed traffic'"
-      [badgeText]="kpis().errorRatePercent + '% Error Rate'"
-      [badgeVariant]="kpis().errorCount > 0 ? 'error' : 'success'"
-      [isClickable]="true"
-      (cardClick)="onExploreErrors()"
-    />
-
-    <skyra-metric-card
-      label="Warnings"
-      [value]="kpis().warningCount"
-      description="Non-critical warning logs"
-      badgeText="Warn Level"
-      badgeVariant="warning"
-      [isClickable]="true"
-      (cardClick)="onExploreWarnings()"
-    />
-
-    <skyra-metric-card
-      label="Unique Services"
-      [value]="kpis().activeServicesCount"
-      description="Cardinality on service.name"
-      [badgeText]="context().projectId"
-      badgeVariant="brand"
-      [isClickable]="true"
-      (cardClick)="onExploreAllLogs()"
-    />
-  </div>
-
-  <!-- Primary Time-Series Volume Chart -->
-  <div class="chart-section">
-    <skyra-time-series-chart
-      title="High-Resolution Time Series"
-      [subtitle]="'Event intake rate grouped by ' + interval() + ' intervals. Click any bar to drill down.'"
-      [points]="volumeTrend()"
-      [loading]="loading()"
-      (bucketClick)="onBucketSelect($event)"
-    />
-  </div>
-
-  <!-- 3-Column Distribution Grid -->
-  <div class="distribution-grid">
-    <!-- Severity Breakdown -->
-    <skyra-severity-chart
-      title="Severity Breakdown"
-      subtitle="Canonical ECS log.level"
-      [items]="severityDistribution()"
-      (levelClick)="onExploreLevel($event)"
-    />
-
-    <!-- Top Reporting Services -->
-    <skyra-service-distribution
-      title="Top Services"
-      subtitle="Volume by service.name"
-      [items]="serviceDistribution()"
-      (serviceClick)="onExploreService($event)"
-    />
-
-    <!-- Top Exception Types -->
-    <skyra-error-breakdown
-      title="Top Exception Types"
-      subtitle="Grouped by error.type"
-      [items]="errorBreakdown()"
-      (errorClick)="onExploreErrorType($event)"
-    />
-  </div>
-
-  <!-- Event Actions Dimension Breakdown -->
-  @if (eventActionBreakdown().length > 0) {
-    <div class="actions-section">
-      <skyra-service-distribution
-        title="Event Actions Distribution"
-        subtitle="Ranked by event.action"
-        [items]="eventActionBreakdown()"
-      />
+  @if(!context().projectId){<p role="status">Select an authorized project to view analytics.</p>}
+  @if(error()){<div class="error-banner" role="alert"><span>{{error()}}</span><button type="button" class="retry-btn" (click)="onRefresh()">Retry</button></div>}
+  @if(loading()||refreshing()){
+    <div class="kpi-grid" role="status" aria-label="Loading analytics">@for(n of [1,2,3,4];track n){<div class="loading-card"><skyra-skeleton width="100%" height="76px" /></div>}</div>
+  }@else if(applied()&&(!error()||(advanced()&&stale()))){
+    @if(partial()){<div role="alert" class="partial-warning">Incomplete analytics: archived segments are unavailable or the data changed between queries. Counts below may be partial. Retry after storage recovery.</div>}
+    <p class="query-context">{{applied()!.start}} ≤ event time &lt; {{applied()!.end}} · UTC · {{partial()?'Partial counts':'Finalized archives'}}. Errors include ERROR + FATAL; warnings include WARN. @if(advanced()){Applied correlation: {{applied()!.correlationId||'All'}} · Applied services: {{applied()!.services.join(', ')||'All'}}. Press Apply analytics filters to use edited inputs.}</p>
+    <div class="kpi-grid">
+      <skyra-metric-card label="Total logs" [value]="kpis().totalLogs" description="Matching finalized events" [isClickable]="true" (cardClick)="onExploreAllLogs()" />
+      <skyra-metric-card label="Error logs" [value]="kpis().errorCount" description="ERROR + FATAL" [isClickable]="true" (cardClick)="onExploreErrors()" />
+      <skyra-metric-card label="Warning logs" [value]="kpis().warningCount" description="WARN severity" [isClickable]="true" (cardClick)="onExploreWarnings()" />
+      <skyra-metric-card label="Error rate" [value]="kpis().errorRatePercent" unit="%" description="Error logs / total logs" [isClickable]="true" (cardClick)="onExploreErrors()" />
+    </div>
+    @if(advanced()&&dashboard();as d){
+      <section class="comparison-panel" aria-labelledby="comparison-title"><h2 id="comparison-title">Compared with previous period</h2>
+        <p>{{d.previous.range.start}} ≤ previous event time &lt; {{d.previous.range.end}} · UTC</p>
+        @if(!d.comparison.complete){<p role="alert" class="partial-warning">Comparison incomplete. Direction and percentage changes are withheld because source data is unavailable, partial or changed between evaluations.</p>}
+        <div class="comparison-table"><table><caption>Current and immediately preceding equal-duration periods</caption><thead><tr><th scope="col">Metric</th><th scope="col">Current</th><th scope="col">Previous</th><th scope="col">Change</th></tr></thead><tbody>
+          <tr><th scope="row">Total events</th><td>{{d.current.metrics?.total??'Unavailable'}}</td><td>{{d.previous.metrics?.total??'Unavailable'}}</td><td>{{changeText(d.comparison.changes?.total)}}</td></tr>
+          <tr><th scope="row">ERROR + FATAL</th><td>{{d.current.metrics?.errors??'Unavailable'}}</td><td>{{d.previous.metrics?.errors??'Unavailable'}}</td><td>{{changeText(d.comparison.changes?.errors)}}</td></tr>
+          <tr><th scope="row">WARN</th><td>{{d.current.metrics?.warnings??'Unavailable'}}</td><td>{{d.previous.metrics?.warnings??'Unavailable'}}</td><td>{{changeText(d.comparison.changes?.warnings)}}</td></tr>
+          <tr><th scope="row">Error rate</th><td>{{d.current.metrics?(d.current.metrics.errorRate|number:'1.0-2')+'%':'Unavailable'}}</td><td>{{d.previous.metrics?(d.previous.metrics.errorRate|number:'1.0-2')+'%':'Unavailable'}}</td><td>{{changeText(d.comparison.changes?.errorRate,true)}}</td></tr>
+          <tr><th scope="row">Unique services</th><td>{{d.current.metrics?.services??'Unavailable'}}</td><td>{{d.previous.metrics?.services??'Unavailable'}}</td><td>{{changeText(d.comparison.changes?.services,false,'services')}}</td></tr>
+        </tbody></table></div>
+      </section>
+    }
+    @if(kpis().totalLogs===0){<p role="status">No matching finalized events in this time window. Error rate is 0%.</p>}
+    <skyra-time-series-chart title="Log volume over time" [subtitle]="'UTC buckets · '+interval()+' · select a bucket to investigate'" [points]="volumeTrend()" (bucketClick)="onBucketSelect($event)" />
+    <div class="trend-grid">
+      <skyra-time-series-chart title="Error and fatal trend" subtitle="ERROR + FATAL in aligned UTC buckets" [points]="errorTrend()" (bucketClick)="onBucketSelect($event,['error','fatal'])" />
+      <skyra-time-series-chart title="Warning trend" subtitle="WARN in aligned UTC buckets" [points]="warningTrend()" (bucketClick)="onBucketSelect($event,['warn'])" />
+    </div>
+    @if(advanced()&&dashboard();as d){<section aria-labelledby="service-trends-title"><h2 id="service-trends-title">Service-level trends</h2><p>{{d.serviceTrends.isTopN?'Top-N view: additional services are not shown.':'Services under the applied scope.'}} Top {{d.serviceTrends.topN}} by event volume; equal counts use service-name order. {{d.serviceTrends.complete?'Complete buckets include zeros.':'Incomplete buckets are not zero-filled.'}}</p><div class="service-trend-grid">@for(item of d.serviceTrends.services;track item.service){<article><h3>{{item.service}}</h3><p>{{serviceSummary(item).events}} events · {{serviceSummary(item).errors}} ERROR/FATAL · {{serviceSummary(item).warnings}} WARN · {{serviceSummary(item).errorRate|number:'1.0-2'}}% error rate</p><skyra-time-series-chart [title]="item.service+' · '+trendMetric()" subtitle="UTC buckets; select to investigate this service" [points]="servicePoints(item)" (bucketClick)="onServiceBucket(item.service,$event)" /></article>}</div></section>}
+    <div class="distribution-grid">
+      <skyra-severity-chart title="Severity distribution" subtitle="Canonical severity counts" [items]="severityDistribution()" (levelClick)="onExploreLevel($event)" />
+      <skyra-service-distribution title="Top services" [subtitle]="advanced()?'Top '+topN()+' · percentages of all matching logs':'Top 10 · percentages of all matching logs'" [items]="serviceDistribution()" (serviceClick)="onExploreService($event)" />
+      <skyra-service-distribution title="Environment distribution" subtitle="Matching logs by environment" [items]="environments()" (serviceClick)="onExploreEnvironment($event)" />
     </div>
   }
 </div>

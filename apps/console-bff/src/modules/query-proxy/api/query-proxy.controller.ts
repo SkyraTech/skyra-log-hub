@@ -1,3 +1,5 @@
+import {validateAggregateRequest} from './aggregate-validation.js';
+import {validateSearchRequest} from './search-validation.js';
 import {
   Controller,
   Post,
@@ -40,6 +42,7 @@ export class QueryProxyController {
     @Res() reply: FastifyReply,
     @Body() body: Record<string, unknown>,
   ): Promise<void> {
+    if(!body||typeof body!=='object'||Array.isArray(body))validateSearchRequest(body);
     const session = req.session!;
     const projectFromList = Array.isArray(body['projects']) && body['projects'].length > 0 ? (body['projects'][0] as string) : undefined;
     const tenantId = (body['tenantId'] as string) || session.activeTenantId;
@@ -57,6 +60,8 @@ export class QueryProxyController {
       projectId,
     );
 
+    // Authorize scope before inspecting full search filters; never forward an invalid envelope.
+    body=validateSearchRequest(body);
     // Sanitize envelope keys to conform strictly with search-request.schema.json
     const { tenantId: _t, projectId: _p, ...cleanBody } = body;
     if (!cleanBody['projects']) {
@@ -113,9 +118,11 @@ export class QueryProxyController {
     @Res() reply: FastifyReply,
     @Body() body: Record<string, unknown>,
   ): Promise<void> {
+    if(!body||typeof body!=='object'||Array.isArray(body))throw new InvalidArgumentException('Analytics body must be a JSON object.');
     const session = req.session!;
     const projectFromList = Array.isArray(body['projects']) && body['projects'].length > 0 ? (body['projects'][0] as string) : undefined;
-    const tenantId = (body['tenantId'] as string) || session.activeTenantId;
+    if(Object.hasOwn(body,'tenantId'))throw new InvalidArgumentException('Analytics tenant comes from the authenticated session.');
+    const tenantId = session.activeTenantId;
     const projectId = (body['projectId'] as string) || projectFromList || session.activeProjectId;
 
     if (!tenantId || !projectId) {
@@ -130,6 +137,7 @@ export class QueryProxyController {
       projectId,
     );
 
+    body=validateAggregateRequest(body);
     const { tenantId: _t, projectId: _p, ...cleanBody } = body;
     if (!cleanBody['projects']) {
       cleanBody['projects'] = [projectId];
@@ -180,6 +188,7 @@ export class QueryProxyController {
     scopedToken: string,
     body?: Record<string, unknown>,
   ): Promise<void> {
+    reply.header('Cache-Control','no-store').header('Pragma','no-cache');
     const correlationId =
       (req.headers['x-correlation-id'] as string) ||
       (req.headers['x-request-id'] as string) ||
@@ -212,6 +221,8 @@ export class QueryProxyController {
       const contentType = upstreamRes.headers.get('content-type') || 'application/json';
       const responseText = await upstreamRes.text();
 
+      if(upstreamRes.status>=500){reply.status(upstreamRes.status===504?504:503).type('application/problem+json').send({type:'about:blank',title:'Log query unavailable',status:upstreamRes.status===504?504:503,detail:'The log query service is unavailable. Retry the search.'});return;}
+      if(upstreamRes.ok&&upstreamUrl.includes('/logs/search')){const data=JSON.parse(responseText);if(!Array.isArray(data.events))throw new UpstreamServiceException('Invalid log query response.');const keys=['@timestamp','ecs.version','ecs','event','log','message','service','skyra','trace','correlation','span','http','url','client','user_agent','user','database','error','job','host','process','labels','tags'];const events=Array.isArray(data.events)?data.events.map((e:Record<string,unknown>)=>Object.fromEntries(Object.entries(e).filter(([key])=>keys.includes(key)))):[];reply.status(upstreamRes.status).type('application/json').send({events,pagination:data.pagination,statistics:data.statistics,scope:data.scope});return;}
       reply.status(upstreamRes.status).header('content-type', contentType).send(responseText);
     } catch (err: unknown) {
       clearTimeout(timeout);
@@ -222,7 +233,7 @@ export class QueryProxyController {
         );
       }
 
-      this.logger.error(`Upstream proxy request to ${upstreamUrl} failed: ${String(err)}`);
+      this.logger.error('Log query upstream request failed.');
       throw new UpstreamServiceException(
         'Failed to connect to upstream Skyra LogHub Query Service.',
       );

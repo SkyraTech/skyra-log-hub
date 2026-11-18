@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test';
+import { describe, it, before } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../../src/metadata/prisma.service.js';
@@ -12,63 +12,30 @@ import { PrismaCheckpointRepository } from '../../src/metadata/repositories/pris
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-describe('Live PostgreSQL Integration & Production Repository Verification', () => {
-  let databaseUrl = process.env['DATABASE_URL'];
-  if (!databaseUrl) {
-    const envCandidates = [
-      path.resolve(process.cwd(), '.env'),
-      path.resolve(process.cwd(), 'apps/ingestion-gateway/.env'),
-    ];
-    for (const envPath of envCandidates) {
-      if (fs.existsSync(envPath)) {
-        const match = fs.readFileSync(envPath, 'utf8').match(/DATABASE_URL="?([^"\r\n]+)"?/);
-        if (match) {
-          databaseUrl = match[1];
-          process.env['DATABASE_URL'] = databaseUrl;
-          break;
-        }
-      }
-    }
-  }
-
-  const isDatabaseConfigured =
-    databaseUrl &&
-    databaseUrl.trim().length > 0 &&
-    !databaseUrl.includes('REPLACE_ME');
-
-  if (!isDatabaseConfigured) {
-    it('[BLOCKED] Live PostgreSQL tests deferred: DATABASE_URL is not configured for skyra_loghub_dev', () => {
-      console.log('\n[PostgreSQL Preflight Notice] DATABASE_URL is NOT_SET or unconfigured.');
-      console.log('[PostgreSQL Preflight Notice] Target database: skyra_loghub_dev');
-      console.log('[PostgreSQL Preflight Notice] Application role: skyra_loghub_user');
-      console.log('[PostgreSQL Preflight Notice] Status: WAITING_FOR_USER_DATABASE_SETUP');
-      assert.ok(true, 'Test execution cleanly documents pending user-controlled database checkpoint');
-    });
+describe('Live PostgreSQL Integration & Production Repository Verification', async () => {
+  const databaseUrl = process.env['ISOLATED_DATABASE_URL'];
+  if (!databaseUrl || process.env['SKYRA_ISOLATED_TEST_ENV'] !== 'true') {
+    it('requires explicitly provisioned isolated PostgreSQL', { skip: 'No isolated test environment supplied; protected .env is never loaded' }, () => {});
     return;
   }
-
-  // Preflight validation of connection string parameters (WITHOUT logging secrets)
-  const validDatabaseUrl = databaseUrl!;
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(validDatabaseUrl);
-  } catch (err: unknown) {
-    it('rejects malformed DATABASE_URL format during preflight', () => {
-      assert.fail(`Invalid DATABASE_URL format: ${String(err)}`);
-    });
-    return;
+  // Locate the shared guard from either source or compiled test working directory.
+  let repository = process.cwd();
+  while (!fs.existsSync(path.join(repository, 'pnpm-workspace.yaml'))) {
+    const parent = path.dirname(repository);
+    if (parent === repository) throw new Error('Cannot locate repository safety guard');
+    repository = parent;
   }
-
-  const dbName = parsedUrl.pathname.replace(/^\//, '');
-  if (dbName !== 'skyra_loghub_dev') {
-    it('safety gate: rejects connection if database name is not exactly skyra_loghub_dev', () => {
-      assert.fail(`Safety violation: Target database name is '${dbName}', expected exactly 'skyra_loghub_dev'`);
-    });
-    return;
-  }
-
-  // Execute live tests against dedicated development database
+  const { validateTestTarget, connectIsolatedClient } = await import(
+    pathToFileURL(path.join(repository, 'scripts/lib/isolated-target.mjs')).href
+  );
+  validateTestTarget(databaseUrl);
+  before(async () => {
+    const checked = await connectIsolatedClient(databaseUrl);
+    await checked.end();
+  });
+  // Only independently verified disposable storage can reach the mutation tests.
   const config = new GatewayConfigService({
     NODE_ENV: 'development',
     DATABASE_URL: databaseUrl,
@@ -88,7 +55,7 @@ describe('Live PostgreSQL Integration & Production Repository Verification', () 
   const testProjectId2 = 'skyra-live-isolated-project';
   const testBatchId = 'live-batch-001';
 
-  it('1. Connects to PostgreSQL skyra_loghub_dev successfully', async () => {
+  it('1. Connects to verified isolated PostgreSQL successfully', async () => {
     const isHealthy = await prismaService.isHealthy();
     assert.equal(isHealthy, true, 'PrismaService.isHealthy() must return true for live database');
 
@@ -463,9 +430,11 @@ describe('Live PostgreSQL Integration & Production Repository Verification', () 
   });
 
   it('20. Verifies database outage handling and fail-closed readiness', async () => {
+    const unavailable = new URL(databaseUrl);
+    unavailable.password = 'intentionally-wrong-isolated-password';
     const brokenConfig = new GatewayConfigService({
       NODE_ENV: 'development',
-      DATABASE_URL: 'postgresql://invalid_user:invalid_pass@127.0.0.1:5432/nonexistent_db_xyz',
+      DATABASE_URL: unavailable.href,
     });
     const brokenPrisma = new PrismaService(brokenConfig);
     const healthy = await brokenPrisma.isHealthy();

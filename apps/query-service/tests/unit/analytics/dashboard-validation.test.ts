@@ -1,0 +1,6 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {AggregateValidationPipe} from '../../../src/modules/analytics/api/pipes/aggregate-validation.pipe.js';
+const pipe=new AggregateValidationPipe(),body={time_range:{start:'2026-01-01T00:00:00Z',end:'2026-01-02T09:20:00Z'},include_empty_buckets:true,aggregations:[{name:'v',type:'date_histogram',field:'@timestamp',interval:'1m'}]};
+test('analytics validates maximum 2000 aligned buckets and preserves zero-fill opt-in',()=>{assert.equal(pipe.transform(body,{type:'body'}).include_empty_buckets,true);assert.throws(()=>pipe.transform({...body,time_range:{start:'2026-01-01T00:00:00.001Z',end:'2026-01-02T09:20:00.001Z'}},{type:'body'}));});
+test('analytics rejects normalized calendar dates and prototype names as histogram intervals',()=>{assert.throws(()=>pipe.transform({...body,time_range:{start:'2026-02-30T00:00:00Z',end:'2026-03-02T00:00:00Z'}},{type:'body'}));assert.throws(()=>pipe.transform({...body,aggregations:[{...body.aggregations[0],interval:'constructor'}]},{type:'body'}));});
+
+test('analytics refuses aggregation names that collide with object properties',()=>{for(const name of ['__proto__','constructor','prototype'])assert.throws(()=>pipe.transform({...body,aggregations:[{...body.aggregations[0],name}]},{type:'body'}));});

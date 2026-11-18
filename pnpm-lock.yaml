@@ -109,7 +109,7 @@ overrides:
   '@skyra-tech-platform/accordion': file:artifacts/platform-packages/skyra-tech-platform-accordion-0.1.0.tgz
   '@skyra-tech-platform/app-shell': file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz
   '@skyra-tech-platform/badge': file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz
-  '@skyra-tech-platform/button': file:artifacts/platform-packages/skyra-tech-platform-button-0.1.0.tgz
+  '@skyra-tech-platform/button': file:artifacts/platform-packages/skyra-tech-platform-button-0.1.1.tgz
   '@skyra-tech-platform/checkbox': file:artifacts/platform-packages/skyra-tech-platform-checkbox-0.1.0.tgz
   '@skyra-tech-platform/collapsible': file:artifacts/platform-packages/skyra-tech-platform-collapsible-0.1.0.tgz
   '@skyra-tech-platform/command-palette': file:artifacts/platform-packages/skyra-tech-platform-command-palette-0.1.0.tgz
@@ -117,7 +117,7 @@ overrides:
   '@skyra-tech-platform/data-export': file:artifacts/platform-packages/skyra-tech-platform-data-export-0.1.0.tgz
   '@skyra-tech-platform/data-table': file:artifacts/platform-packages/skyra-tech-platform-data-table-0.1.0.tgz
   '@skyra-tech-platform/date-time': file:artifacts/platform-packages/skyra-tech-platform-date-time-0.1.0.tgz
-  '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz
+  '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
   '@skyra-tech-platform/dialog': file:artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz
   '@skyra-tech-platform/drawer': file:artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz
   '@skyra-tech-platform/dropdown-menu': file:artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz
@@ -125,7 +125,7 @@ overrides:
   '@skyra-tech-platform/dynamic-select': file:artifacts/platform-packages/skyra-tech-platform-dynamic-select-0.1.0.tgz
   '@skyra-tech-platform/empty-state': file:artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz
   '@skyra-tech-platform/input': file:artifacts/platform-packages/skyra-tech-platform-input-0.1.0.tgz
-  '@skyra-tech-platform/loader': file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.0.tgz
+  '@skyra-tech-platform/loader': file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.1.tgz
   '@skyra-tech-platform/notification': file:artifacts/platform-packages/skyra-tech-platform-notification-0.1.0.tgz
   '@skyra-tech-platform/pdf-viewer': file:artifacts/platform-packages/skyra-tech-platform-pdf-viewer-0.1.0.tgz
   '@skyra-tech-platform/popover': file:artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz
@@ -163,6 +163,9 @@ importers:
       pngjs:
         specifier: ^7.0.0
         version: 7.0.0
+      tsx:
+        specifier: 4.20.6
+        version: 4.20.6
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -251,6 +254,12 @@ importers:
       fastify:
         specifier: ^4.28.1
         version: 4.29.1
+      jose:
+        specifier: 6.1.3
+        version: 6.1.3
+      pg:
+        specifier: ^8.23.1
+        version: 8.23.1
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -264,6 +273,9 @@ importers:
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
       typescript:
         specifier: ^5.7.2
         version: 5.7.3
@@ -298,8 +310,8 @@ importers:
         specifier: file:../../artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz
       '@skyra-tech-platform/button':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-button-0.1.0.tgz
-        version: file:artifacts/platform-packages/skyra-tech-platform-button-0.1.0.tgz
+        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-button-0.1.1.tgz
+        version: file:artifacts/platform-packages/skyra-tech-platform-button-0.1.1.tgz
       '@skyra-tech-platform/checkbox':
         specifier: file:../../artifacts/platform-packages/skyra-tech-platform-checkbox-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-checkbox-0.1.0.tgz
@@ -313,8 +325,8 @@ importers:
         specifier: file:../../artifacts/platform-packages/skyra-tech-platform-date-time-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-date-time-0.1.0.tgz
       '@skyra-tech-platform/design-tokens':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz
-        version: file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz
+        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
+        version: file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
       '@skyra-tech-platform/dialog':
         specifier: file:../../artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz
@@ -323,7 +335,7 @@ importers:
         version: file:artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz
       '@skyra-tech-platform/dropdown-menu':
         specifier: file:../../artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz
-        version: file:artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz(@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz)
+        version: file:artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz(@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz)
       '@skyra-tech-platform/empty-state':
         specifier: file:../../artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz
@@ -331,14 +343,14 @@ importers:
         specifier: file:../../artifacts/platform-packages/skyra-tech-platform-input-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-input-0.1.0.tgz
       '@skyra-tech-platform/loader':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-loader-0.1.0.tgz
-        version: file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.0.tgz
+        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-loader-0.1.1.tgz
+        version: file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.1.tgz
       '@skyra-tech-platform/notification':
         specifier: file:../../artifacts/platform-packages/skyra-tech-platform-notification-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-notification-0.1.0.tgz
       '@skyra-tech-platform/popover':
         specifier: file:../../artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz
-        version: file:artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz(@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz)
+        version: file:artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz(@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz)
       '@skyra-tech-platform/switch':
         specifier: file:../../artifacts/platform-packages/skyra-tech-platform-switch-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-switch-0.1.0.tgz
@@ -363,7 +375,7 @@ importers:
     devDependencies:
       '@angular/build':
         specifier: ^19.2.0
-        version: 19.2.27(@angular/compiler-cli@19.2.25(@angular/compiler@19.2.25)(supports-color@7.2.0)(typescript@5.7.3))(@angular/compiler@19.2.25)(@types/node@26.6.5)(chokidar@4.0.3)(postcss@8.5.31)(supports-color@7.2.0)(typescript@5.7.3)
+        version: 19.2.27(@angular/compiler-cli@19.2.25(@angular/compiler@19.2.25)(supports-color@7.2.0)(typescript@5.7.3))(@angular/compiler@19.2.25)(@types/node@26.6.5)(chokidar@4.0.3)(postcss@8.5.31)(supports-color@7.2.0)(tsx@4.20.6)(typescript@5.7.3)
       '@angular/cli':
         specifier: ^19.2.0
         version: 19.2.27(@types/node@26.6.5)(chokidar@4.0.3)(supports-color@7.2.0)
@@ -406,6 +418,9 @@ importers:
       fastify:
         specifier: ^4.28.1
         version: 4.29.1
+      pg:
+        specifier: ^8.23.1
+        version: 8.23.1
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -2265,9 +2280,9 @@ packages:
     resolution: {integrity: sha512-jphWxJZuFSfLhDCaPdAE0Eti63DRMUccnES2f/TKDbpWaVw21cPjjJYPeJKKcXkZMKGl6+QpxwwLcf2cyQl+qQ==, tarball: file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz}
     version: 0.1.0
 
-  '@skyra-tech-platform/button@file:artifacts/platform-packages/skyra-tech-platform-button-0.1.0.tgz':
-    resolution: {integrity: sha512-KUAbnj2bsckFrw7HDKS1+onKukvEbnagOK/UsFc5XxEhJrXXuYXklaoAXS/UUmL42PxB9f09oX5UYyfiefc7IQ==, tarball: file:artifacts/platform-packages/skyra-tech-platform-button-0.1.0.tgz}
-    version: 0.1.0
+  '@skyra-tech-platform/button@file:artifacts/platform-packages/skyra-tech-platform-button-0.1.1.tgz':
+    resolution: {integrity: sha512-rG7M/tLiIf1oNVFB6vq/TI478Ap1tMc0jGO0AlUmY3ninw+FEVBZkYGnERMLd62lUI9043M2me64Rsv5I8lamw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-button-0.1.1.tgz}
+    version: 0.1.1
 
   '@skyra-tech-platform/checkbox@file:artifacts/platform-packages/skyra-tech-platform-checkbox-0.1.0.tgz':
     resolution: {integrity: sha512-vjGM624krVuWdCMUM4HztB0rSO4aafOMqkoKAkA145HqeSgM6QSngBxVz7X3LouXC1kfyvzcF19d0RECEcfCqA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-checkbox-0.1.0.tgz}
@@ -2285,9 +2300,9 @@ packages:
     resolution: {integrity: sha512-v7T3zWVVNxKlGpwPfykjCfeNkl8+0JqIpezar1UrOCobGGyp3yEOFe8JCHihjsFOzOde2Y2XFb+Y21epnSA7zw==, tarball: file:artifacts/platform-packages/skyra-tech-platform-date-time-0.1.0.tgz}
     version: 0.1.0
 
-  '@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz':
-    resolution: {integrity: sha512-p0qhmGBH0kInFKnIkH90cimBrrS5xmDYFDIdxbEb96/xdl5wdeNY4PStQlB512vpUEJKQQO9v/0oQ5hvquk6OQ==, tarball: file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz}
-    version: 0.1.0
+  '@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz':
+    resolution: {integrity: sha512-0NxIVQWkf5aAN2w6fhDV2dFijHAxKWhBGG25HSowIwEqmXjxITB5MXMIEdBE+T1dMGftF7iALfFtdbGQChFNlA==, tarball: file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz}
+    version: 0.1.1
 
   '@skyra-tech-platform/dialog@file:artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz':
     resolution: {integrity: sha512-1w5EDzE0UgMFaxSPj0BD4wDWaqDA35WTd8tVJce7Sbcz7i0jQbZzs0sACDa9bMZxhH2d5geRvd47uLGl1N6yYg==, tarball: file:artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz}
@@ -2314,9 +2329,9 @@ packages:
     resolution: {integrity: sha512-NuG5znYW3Wozn/V+r4wJZk9/7mzGQK1Gkye8hjzFEf0fymOmvmy/ZaH7Ef06piuNfDbwbCnv5JIZn4a6KbwKuQ==, tarball: file:artifacts/platform-packages/skyra-tech-platform-input-0.1.0.tgz}
     version: 0.1.0
 
-  '@skyra-tech-platform/loader@file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.0.tgz':
-    resolution: {integrity: sha512-VEMor2RDG9CigxwLex7K1xvjzwqh6XJ5aKHae7WkG5jRPeRhcewd+qunblezg8YehpmI7uczSP65EUwgybzZQQ==, tarball: file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.0.tgz}
-    version: 0.1.0
+  '@skyra-tech-platform/loader@file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.1.tgz':
+    resolution: {integrity: sha512-Y2FNe5L0HfTKMFOVOEetlCjDzUXJC910JydhRpQDJo/Y3/XB1FPAeaowBD3d1J99UoSNnT8vSqA/iSdL5cRB2A==, tarball: file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.1.tgz}
+    version: 0.1.1
 
   '@skyra-tech-platform/notification@file:artifacts/platform-packages/skyra-tech-platform-notification-0.1.0.tgz':
     resolution: {integrity: sha512-4ngnxEtLjopUHVHrpdKNjnBghvj1teG5rNC9MG11fj/9Kk8TJdFe2zI9Z7Yuotf7vSSAbMmTvGYIq71WyjOG+A==, tarball: file:artifacts/platform-packages/skyra-tech-platform-notification-0.1.0.tgz}
@@ -3061,6 +3076,9 @@ packages:
     resolution: {integrity: sha512-sTSfBjoXBp89JvIKIefqw7U2CCebsc74kiY6awiGogKtoSGbgjYE/G/+l9sF3MWFPNc9IcoOC4ODfKHfxFmp0g==}
     engines: {node: '>= 0.4'}
 
+  get-tsconfig@4.14.3:
+    resolution: {integrity: sha512-++QEw4DIY7WGoukz+/+A/8dGYPT9l9yIadnmSgZ8Rjr3YVSVDipQSO9CdnJo9ePqFqUUqh+wk9uIaoiAwsiPkA==}
+
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
     engines: {node: '>= 6'}
@@ -3208,6 +3226,9 @@ packages:
 
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
+
+  jose@6.1.3:
+    resolution: {integrity: sha512-0TpaTfihd4QMNwrz/ob2Bp7X04yuxJkjRGi4aKmOqwhov54i6u79oCv7T+C7lo70MKH6BesI3vscD1yb/yzKXQ==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -3766,6 +3787,9 @@ packages:
     resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
     engines: {node: '>=0.10.0'}
 
+  resolve-pkg-maps@1.0.0:
+    resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
+
   resolve@1.22.10:
     resolution: {integrity: sha512-NPRy+/ncIMeDlTAsuqwKIiferiawhefFJtkNSW0qZJEqMEb+qBt/77B/jGeeek+F0uOeN05CDa6HXbbIgtVX4w==}
     engines: {node: '>= 0.4'}
@@ -4060,6 +4084,11 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
+  tsx@4.20.6:
+    resolution: {integrity: sha512-ytQKuwgmrrkDTFP4LjR0ToE2nqgy886GpvRSpU0JAnrdBYppuY5rLkRUYPU1yCryb24SsKBTL/hlDQAEFVwtZg==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+
   tuf-js@3.1.0:
     resolution: {integrity: sha512-3T3T04WzowbwV2FDiGXBbr81t64g1MUGGJRgT4x5o97N+8ArdhVCAF9IxFrxuSJmM3E5Asn7nKHkao0ibcZXAg==}
     engines: {node: ^18.17.0 || >=20.5.0}
@@ -4288,7 +4317,7 @@ snapshots:
       '@angular/core': 19.2.25(rxjs@7.8.2)(zone.js@0.15.1)
       tslib: 2.8.1
 
-  '@angular/build@19.2.27(@angular/compiler-cli@19.2.25(@angular/compiler@19.2.25)(supports-color@7.2.0)(typescript@5.7.3))(@angular/compiler@19.2.25)(@types/node@26.6.5)(chokidar@4.0.3)(postcss@8.5.31)(supports-color@7.2.0)(typescript@5.7.3)':
+  '@angular/build@19.2.27(@angular/compiler-cli@19.2.25(@angular/compiler@19.2.25)(supports-color@7.2.0)(typescript@5.7.3))(@angular/compiler@19.2.25)(@types/node@26.6.5)(chokidar@4.0.3)(postcss@8.5.31)(supports-color@7.2.0)(tsx@4.20.6)(typescript@5.7.3)':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular-devkit/architect': 0.1902.27(chokidar@4.0.3)
@@ -4299,7 +4328,7 @@ snapshots:
       '@babel/helper-split-export-declaration': 7.24.7
       '@babel/plugin-syntax-import-attributes': 7.26.0(@babel/core@7.26.10(supports-color@7.2.0))
       '@inquirer/confirm': 5.1.6(@types/node@26.6.5)
-      '@vitejs/plugin-basic-ssl': 1.2.0(vite@6.4.2(@types/node@26.6.5)(sass@1.85.0))
+      '@vitejs/plugin-basic-ssl': 1.2.0(vite@6.4.2(@types/node@26.6.5)(sass@1.85.0)(tsx@4.20.6))
       beasties: 0.3.2
       browserslist: 4.29.4
       esbuild: 0.28.0
@@ -4318,7 +4347,7 @@ snapshots:
       source-map-support: 0.5.21
       tslib: 2.8.1
       typescript: 5.7.3
-      vite: 6.4.2(@types/node@26.6.5)(sass@1.85.0)
+      vite: 6.4.2(@types/node@26.6.5)(sass@1.85.0)(tsx@4.20.6)
       watchpack: 2.4.2
     optionalDependencies:
       lmdb: 3.2.6
@@ -5556,14 +5585,14 @@ snapshots:
 
   '@skyra-tech-platform/app-shell@file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz':
     dependencies:
-      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz
+      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
       '@skyra-tech-platform/utils': file:artifacts/platform-packages/skyra-tech-platform-utils-0.1.0.tgz
 
   '@skyra-tech-platform/badge@file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz':
     dependencies:
-      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz
+      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
 
-  '@skyra-tech-platform/button@file:artifacts/platform-packages/skyra-tech-platform-button-0.1.0.tgz': {}
+  '@skyra-tech-platform/button@file:artifacts/platform-packages/skyra-tech-platform-button-0.1.1.tgz': {}
 
   '@skyra-tech-platform/checkbox@file:artifacts/platform-packages/skyra-tech-platform-checkbox-0.1.0.tgz': {}
 
@@ -5573,37 +5602,37 @@ snapshots:
 
   '@skyra-tech-platform/date-time@file:artifacts/platform-packages/skyra-tech-platform-date-time-0.1.0.tgz':
     dependencies:
-      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz
+      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
 
-  '@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz': {}
+  '@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz': {}
 
   '@skyra-tech-platform/dialog@file:artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz':
     dependencies:
-      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz
+      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
 
   '@skyra-tech-platform/drawer@file:artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz':
     dependencies:
-      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz
+      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
 
-  '@skyra-tech-platform/dropdown-menu@file:artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz(@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz)':
+  '@skyra-tech-platform/dropdown-menu@file:artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz(@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz)':
     dependencies:
-      '@skyra-tech-platform/popover': file:artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz(@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz)
+      '@skyra-tech-platform/popover': file:artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz(@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz)
     optionalDependencies:
-      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz
+      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
 
   '@skyra-tech-platform/empty-state@file:artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz':
     dependencies:
-      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz
+      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
 
   '@skyra-tech-platform/input@file:artifacts/platform-packages/skyra-tech-platform-input-0.1.0.tgz': {}
 
-  '@skyra-tech-platform/loader@file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.0.tgz': {}
+  '@skyra-tech-platform/loader@file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.1.tgz': {}
 
   '@skyra-tech-platform/notification@file:artifacts/platform-packages/skyra-tech-platform-notification-0.1.0.tgz': {}
 
-  '@skyra-tech-platform/popover@file:artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz(@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz)':
+  '@skyra-tech-platform/popover@file:artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz(@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz)':
     optionalDependencies:
-      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz
+      '@skyra-tech-platform/design-tokens': file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
 
   '@skyra-tech-platform/switch@file:artifacts/platform-packages/skyra-tech-platform-switch-0.1.0.tgz': {}
 
@@ -5753,9 +5782,9 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
-  '@vitejs/plugin-basic-ssl@1.2.0(vite@6.4.2(@types/node@26.6.5)(sass@1.85.0))':
+  '@vitejs/plugin-basic-ssl@1.2.0(vite@6.4.2(@types/node@26.6.5)(sass@1.85.0)(tsx@4.20.6))':
     dependencies:
-      vite: 6.4.2(@types/node@26.6.5)(sass@1.85.0)
+      vite: 6.4.2(@types/node@26.6.5)(sass@1.85.0)(tsx@4.20.6)
 
   '@yarnpkg/lockfile@1.1.0': {}
 
@@ -6426,6 +6455,10 @@ snapshots:
       dunder-proto: 1.0.1
       es-object-atoms: 1.1.2
 
+  get-tsconfig@4.14.3:
+    dependencies:
+      resolve-pkg-maps: 1.0.0
+
   glob-parent@5.1.2:
     dependencies:
       is-glob: 4.0.3
@@ -6561,6 +6594,8 @@ snapshots:
       '@isaacs/cliui': 8.0.2
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
+
+  jose@6.1.3: {}
 
   js-tokens@4.0.0: {}
 
@@ -7155,6 +7190,8 @@ snapshots:
 
   require-from-string@2.0.2: {}
 
+  resolve-pkg-maps@1.0.0: {}
+
   resolve@1.22.10:
     dependencies:
       is-core-module: 2.17.0
@@ -7521,6 +7558,13 @@ snapshots:
 
   tslib@2.8.1: {}
 
+  tsx@4.20.6:
+    dependencies:
+      esbuild: 0.25.12
+      get-tsconfig: 4.14.3
+    optionalDependencies:
+      fsevents: 2.3.3
+
   tuf-js@3.1.0(supports-color@7.2.0):
     dependencies:
       '@tufjs/models': 3.0.1
@@ -7598,7 +7642,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite@6.4.2(@types/node@26.6.5)(sass@1.85.0):
+  vite@6.4.2(@types/node@26.6.5)(sass@1.85.0)(tsx@4.20.6):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.4)
@@ -7610,6 +7654,7 @@ snapshots:
       '@types/node': 26.6.5
       fsevents: 2.3.3
       sass: 1.85.0
+      tsx: 4.20.6
 
   watchpack@2.4.2:
     dependencies:
