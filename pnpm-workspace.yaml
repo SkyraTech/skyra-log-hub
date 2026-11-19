@@ -12,6 +12,10 @@ allowBuilds:
   msgpackr-extract: true
   prisma: true
 overrides:
+  # Nest 11.2.11 pins Fastify 5.11.3, while the authoritative advisory is
+  # patched in Fastify >=5.12.2. This scoped override is semver-compatible,
+  # limited to the Nest Fastify adapter dependency, and covered by Q-02A tests.
+  '@nestjs/platform-fastify>fastify': '5.12.8'
   '@skyra-tech-platform/accordion': 'file:artifacts/platform-packages/skyra-tech-platform-accordion-0.1.0.tgz'
   '@skyra-tech-platform/app-shell': 'file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz'
   '@skyra-tech-platform/badge': 'file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz'

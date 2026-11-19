@@ -7,12 +7,19 @@ import type { QueryServiceConfig, AuthMode } from './query-config.types.js';
 export class QueryConfigService {
   private readonly logger = new Logger(QueryConfigService.name);
   private readonly config: QueryServiceConfig;
+  private readonly explicitJwtSecret: boolean;
+  private readonly explicitJwksUri: boolean;
+  private readonly explicitCorsOrigins: boolean;
 
   constructor(@Optional() @Inject('CONFIG_OVERRIDE') envOverride?: Partial<QueryServiceConfig>) {
     const rawEnv = process.env['NODE_ENV'] ?? 'development';
-    const nodeEnv = (['production', 'test', 'development'].includes(rawEnv)
-      ? rawEnv
-      : 'development') as 'development' | 'production' | 'test';
+    if (!['production', 'test', 'development'].includes(rawEnv)) {
+      throw new Error(`Invalid NODE_ENV: '${rawEnv}'. Expected development, test, or production.`);
+    }
+    const nodeEnv = rawEnv as 'development' | 'production' | 'test';
+    this.explicitJwtSecret = process.env['JWT_SECRET_OR_PUBLIC_KEY'] !== undefined || envOverride?.jwtSecretOrPublicKey !== undefined;
+    this.explicitJwksUri = process.env['JWKS_URI'] !== undefined || envOverride?.jwksUri !== undefined;
+    this.explicitCorsOrigins = process.env['CORS_ORIGINS'] !== undefined || envOverride?.corsOrigins !== undefined;
 
     const port = Number.parseInt(process.env['PORT'] ?? '3100', 10);
     const host = process.env['HOST'] ?? '127.0.0.1';
@@ -37,7 +44,8 @@ export class QueryConfigService {
     const duckDbThreads = Number.parseInt(process.env['DUCKDB_THREADS'] ?? '2', 10);
     const maxRowsPerQuery = Number.parseInt(process.env['MAX_ROWS_PER_QUERY'] ?? '500', 10);
     const enableAuditLogging = process.env['ENABLE_AUDIT_LOGGING'] !== 'false';
-    const rawCors = process.env['CORS_ORIGINS'] ?? '*';
+    const corsEnv = process.env['CORS_ORIGINS'];
+    const rawCors = corsEnv ?? '*';
     const corsOrigins = rawCors.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
 
     const cursorSigningSecret =
@@ -78,7 +86,7 @@ export class QueryConfigService {
       duckDbThreads: isNaN(duckDbThreads) ? 2 : duckDbThreads,
       maxRowsPerQuery: isNaN(maxRowsPerQuery) ? 500 : maxRowsPerQuery,
       enableAuditLogging,
-      corsOrigins: corsOrigins.length > 0 ? corsOrigins : ['*'],
+      corsOrigins: nodeEnv === 'production' ? corsOrigins : (corsOrigins.length > 0 ? corsOrigins : ['*']),
       cursorSigningSecret,
       cursorSigningKeyId,
       cursorTtlMs: isNaN(cursorTtlMs) ? 86400000 : cursorTtlMs,
@@ -102,6 +110,28 @@ export class QueryConfigService {
       if (this.config.authMode === 'test') {
         throw new Error('Fatal Configuration Error: QUERY_AUTH_MODE cannot be "test" in production environment.');
       }
+      if (!this.explicitJwtSecret && this.config.authMode === 'jwt') {
+        throw new Error('Fatal Configuration Error: JWT_SECRET_OR_PUBLIC_KEY must be explicitly configured in production.');
+      }
+      if (this.config.authMode === 'jwt' && this.isPlaceholderSecret(this.config.jwtSecretOrPublicKey)) {
+        throw new Error('Fatal Configuration Error: JWT_SECRET_OR_PUBLIC_KEY cannot use a development or placeholder value in production.');
+      }
+      if (this.config.authMode === 'jwks') {
+        if (!this.explicitJwksUri || !this.config.jwksUri) throw new Error('Fatal Configuration Error: JWKS_URI must be explicitly configured in production.');
+        const jwks = new URL(this.config.jwksUri);
+        if (jwks.protocol !== 'https:' || jwks.username || jwks.password || jwks.hash) {
+          throw new Error('Fatal Configuration Error: JWKS_URI must be a credential-free HTTPS URL in production.');
+        }
+      }
+      if (!this.explicitCorsOrigins || this.config.corsOrigins.includes('*')) {
+        throw new Error('Fatal Configuration Error: production Query CORS requires explicit non-wildcard CORS_ORIGINS.');
+      }
+      for (const origin of this.config.corsOrigins) {
+        const parsed = new URL(origin);
+        if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.pathname !== '/' || parsed.search || parsed.hash) {
+          throw new Error('Fatal Configuration Error: production CORS origins must be credential-free HTTPS origins.');
+        }
+      }
       if (!this.config.cursorSigningSecret || this.config.cursorSigningSecret.length < 32) {
         throw new Error('Fatal Configuration Error: CURSOR_SIGNING_SECRET must be set to a high-entropy secret of at least 32 characters in production.');
       }
@@ -109,6 +139,13 @@ export class QueryConfigService {
         this.logger.warn(`Archive root directory does not exist yet at: ${this.config.archiveRoot}. Will be created or expected on mount.`);
       }
     }
+  }
+
+  private isPlaceholderSecret(value: string): boolean {
+    const normalized = value.trim().toLowerCase();
+    return normalized.length < 32 || normalized === 'skyra-dev-query-insecure-secret-key-32chars' ||
+      normalized === 'change-me' || normalized === 'replace-me' || normalized === 'test-secret' ||
+      /^(dev|development|test|example|default|change|replace)[-_ ]/i.test(normalized);
   }
 
   public get nodeEnv(): 'development' | 'production' | 'test' {

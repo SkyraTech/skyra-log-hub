@@ -18,6 +18,9 @@ export class BffConfigService {
 
   constructor() {
     const nodeEnv = process.env['NODE_ENV'] ?? 'development';
+    if (!['development', 'test', 'production'].includes(nodeEnv)) {
+      throw new Error('Invalid NODE_ENV. Expected development, test, or production.');
+    }
     const isProduction = nodeEnv === 'production';
 
     const defaultOrigins = [
@@ -28,7 +31,7 @@ export class BffConfigService {
     ];
     const envOrigins = process.env['BFF_ALLOWED_ORIGINS']
       ? process.env['BFF_ALLOWED_ORIGINS'].split(',').map((o) => o.trim()).filter(Boolean)
-      : defaultOrigins;
+      : (isProduction ? [] : defaultOrigins);
 
     this.config = {
       host: process.env['BFF_HOST'] ?? '127.0.0.1',
@@ -69,6 +72,20 @@ export class BffConfigService {
       adminServiceUrl: process.env['ADMIN_SERVICE_URL'] ?? 'http://127.0.0.1:3300',
       useAuthoritativeMembership: process.env['BFF_USE_AUTHORITATIVE_MEMBERSHIP'] === 'true',
     };
+    if (isProduction) {
+      if (process.env['ENABLE_MOCK_OIDC'] === 'true') {
+        throw new Error('Production configuration cannot enable mock OIDC.');
+      }
+      if (!process.env['BFF_ALLOWED_ORIGINS']?.trim() || this.config.allowedOrigins.length === 0) {
+        throw new Error('Production configuration requires explicit BFF_ALLOWED_ORIGINS.');
+      }
+      for (const key of ['QUERY_SERVICE_JWT_SECRET', 'SESSION_SECRET', 'CSRF_SECRET', 'INTERNAL_JWT_SECRET', 'OIDC_CLIENT_SECRET']) {
+        const value = process.env[key];
+        if (!value || this.isPlaceholderSecret(value)) {
+          throw new Error(`Production configuration requires a strong configured ${key}.`);
+        }
+      }
+    }
     if(!this.config.mockOidcEnabled) {
       for(const key of ['OIDC_ISSUER_URL','OIDC_CLIENT_ID','OIDC_CLIENT_SECRET','OIDC_REDIRECT_URI','OIDC_DISCOVERY_URL','OIDC_TRUSTED_ENDPOINT_ORIGINS']) {
         if(!process.env[key]?.trim())throw new Error(`Real OIDC requires ${key}.`);
@@ -109,6 +126,21 @@ export class BffConfigService {
         throw new Error('Invalid session security configuration.');
       }
     }
+  }
+
+  private isPlaceholderSecret(value: string): boolean {
+    const normalized = value.trim().toLowerCase();
+    return normalized.length < 32 || [
+      'skyra-dev-query-insecure-secret-key-32chars',
+      'skyra-dev-session-secret-must-be-at-least-32-chars-long!',
+      'skyra-dev-csrf-secret-key-at-least-32-chars!',
+      'skyra-internal-admin-shared-secret-key-32chars!',
+      'skyra-oidc-client-secret',
+      'change-me',
+      'replace-me',
+      'secret',
+      'test-secret',
+    ].includes(normalized) || /^(dev|development|test|example|default|change|replace)[-_ ]/i.test(normalized);
   }
 
   get host(): string {

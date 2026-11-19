@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+const root=process.cwd(),source=JSON.parse(fs.readFileSync(path.join(root,'SKYRA_LOGHUB_DEV_018_CURRENT_STATE_MANIFEST.json'))),out=path.join(root,'SKYRA_LOGHUB_DEV_018_CURRENT_STATE_MANIFEST_LOCKDOWN.json');
+if(fs.existsSync(out))throw Error(`Refusing to overwrite lockdown manifest: ${out}`);
+const hash=file=>crypto.createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex');
+const entries=source.entries.map(entry=>fs.existsSync(path.join(root,entry.relativePath))?{...entry,sha256:hash(entry.relativePath),sizeBytes:fs.statSync(path.join(root,entry.relativePath)).size}:entry);
+const known=new Set(entries.map(entry=>entry.relativePath));
+for(const file of ['scripts/lib/evidence-output-policy.mjs','scripts/verify-evidence-recovery-candidate.mjs','tests/preservation/preservation-lockdown.test.mjs','SKYRA_LOGHUB_DEV_018_STRICT_PRESERVATION_STATUS.md','.tmp/dev018-evidence/strict-candidate-check-current.json','.tmp/dev018-evidence/strict-current-hashes-after-tests.json','.tmp/dev018-evidence/preservation-lockdown-tests-final.log'])if(fs.existsSync(path.join(root,file))&&!known.has(file))entries.push({relativePath:file,sha256:hash(file),sizeBytes:fs.statSync(path.join(root,file)).size,evidenceCategory:file.startsWith('tests/')||file.startsWith('scripts/')?'preservation-infrastructure':'preservation-record',originalMilestone:'DEV-018-P1-001',runId:'lockdown',verificationStatus:'available-and-hash-recorded',historicalAuthenticity:'not-historical-evidence'});
+const manifest={...source,schemaVersion:'1.0',manifestType:'supplementary-current-state-lockdown',createdAt:new Date().toISOString(),entries,notes:[...(source.notes??[]),'This lockdown snapshot records the final preservation-policy source and focused-test artifacts without replacing the original DEV-018 baseline or the earlier supplementary manifest.']};fs.writeFileSync(out,JSON.stringify(manifest,null,2),{flag:'wx'});console.log(JSON.stringify({path:out,entries:entries.length},null,2));

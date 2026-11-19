@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { Module } from '@nestjs/common';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { QueryProxyModule } from './modules/query-proxy/query-proxy.module.js';

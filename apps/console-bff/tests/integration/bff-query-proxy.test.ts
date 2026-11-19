@@ -428,3 +428,4 @@ describe('BFF Query Proxy Integration Test Suite (CONSOLE-004)', () => {
     assert.equal(body.code, 'UNAUTHORIZED_PROJECT_ACCESS');
   });
 });
+import 'reflect-metadata';

@@ -15,3 +15,7 @@ test('organization assertion refuses default internal signing key without explic
   const s=createHmac('sha256',config.internalJwtSecret).update(`${h}.${p}`).digest('base64url');
   assert.throws(()=>new TrustedAssertionGuard(config).verifyAssertionToken(`${h}.${p}.${s}`));
 });
+test('production Admin configuration rejects the built-in internal signer',()=>{
+  assert.throws(()=>new AdminConfigService({NODE_ENV:'production'}),/INTERNAL_JWT_SECRET/);
+  assert.doesNotThrow(()=>new AdminConfigService({NODE_ENV:'production',INTERNAL_JWT_SECRET:'synthetic-production-admin-key-32-characters'}));
+});

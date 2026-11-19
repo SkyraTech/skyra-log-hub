@@ -19,15 +19,18 @@ describe('AuthService — BFF Session & RBAC Capability Evaluation', () => {
       assert.equal(service.isAuthenticated(),false);assert.equal(service.isPreviewSession(),false);assert.equal(service.currentUser(),null);
       service.loginPreview({id:'preview-only',email:'preview@test.invalid',fullName:'Preview',roles:['OrgOwner'],tenantId:'untrusted',allowedProjects:['untrusted']});
       assert.equal(service.isAuthenticated(),false);assert.equal(service.currentUser(),null);
-      config.updateConfig({previewMode:true});
+      config.updateConfig({previewMode:true, previewIsolation:true, environment:'development'});
       service.loginPreview({id:'preview-only',email:'preview@test.invalid',fullName:'Preview',roles:['Viewer'],tenantId:'preview',allowedProjects:[]});
       assert.equal(service.isPreviewSession(),true);
     }finally{scoped.destroy();}
   });
 
   beforeEach(() => {
-    injector = createEnvironmentInjector([AppConfigService, AuthService], Injector.NULL as unknown as EnvironmentInjector);
+    const config = new AppConfigService();
+    config.updateConfig({previewMode:true, previewIsolation:true, environment:'development'});
+    injector = createEnvironmentInjector([{provide:AppConfigService,useValue:config}, AuthService], Injector.NULL as unknown as EnvironmentInjector);
     authService = injector.get(AuthService);
+    authService.loginPreview({id:'usr-dev-alex',email:'alex@skyra-tech.com',fullName:'Alex Vance',roles:['OrgAdmin','Developer'],tenantId:'preview-tenant',allowedProjects:['preview-project']});
   });
 
   it('should initialize with dev preview session active', () => {
@@ -55,8 +58,11 @@ describe('AuthService — BFF Session & RBAC Capability Evaluation', () => {
 
   for(const allowed of [true,false])it(`should clear local session before ${allowed?'provider logout navigation':'refusing an unsafe logout URL'}`,async()=>{
     const destination=allowed?'https://identity.test.invalid/logout':'javascript:alert(1)';let navigated=false;
-    const scoped=createEnvironmentInjector([AppConfigService,AuthService,{provide:HttpClient,useValue:{post:()=>({toPromise:async()=>({providerLogoutUrl:destination})})}}],Injector.NULL as unknown as EnvironmentInjector);
+    const config = new AppConfigService();
+    config.updateConfig({previewMode:true, previewIsolation:true, environment:'development'});
+    const scoped=createEnvironmentInjector([{provide:AppConfigService,useValue:config},AuthService,{provide:HttpClient,useValue:{post:()=>({toPromise:async()=>({providerLogoutUrl:destination})})}}],Injector.NULL as unknown as EnvironmentInjector);
     const service=scoped.get(AuthService),previous=Object.getOwnPropertyDescriptor(globalThis,'window');
+    service.loginPreview({id:'preview-user',email:'preview@test.invalid',fullName:'Preview',roles:['Viewer'],tenantId:'preview-tenant',allowedProjects:['preview-project']});
     Object.defineProperty(globalThis,'window',{configurable:true,value:{location:{assign:(url:string)=>{assert.equal(service.isAuthenticated(),false);assert.equal(url,destination);navigated=true;}}}});
     try{await service.logoutFromBff();assert.equal(service.isAuthenticated(),false);assert.equal(navigated,allowed);}
     finally{if(previous)Object.defineProperty(globalThis,'window',previous);else Reflect.deleteProperty(globalThis,'window');scoped.destroy();}

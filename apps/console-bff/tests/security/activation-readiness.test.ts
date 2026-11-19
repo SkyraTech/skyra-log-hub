@@ -12,6 +12,7 @@ const activation = { NODE_ENV:'production', BFF_USE_AUTHORITATIVE_MEMBERSHIP:'tr
   OIDC_ISSUER_URL:'https://issuer.test.invalid/realm', OIDC_CLIENT_ID:'readiness-client', OIDC_REDIRECT_URI:'https://console.test.invalid/bff/auth/callback',
   ADMIN_SERVICE_URL:'https://admin.test.invalid', BFF_ALLOWED_ORIGINS:'https://console.test.invalid',
   OIDC_CLIENT_SECRET:'synthetic-provider-key-for-tests-only-32', INTERNAL_JWT_SECRET:'synthetic-internal-key-for-tests-only-32',
+  QUERY_SERVICE_JWT_SECRET:'synthetic-query-key-for-tests-only-32',
   SESSION_SECRET:'synthetic-session-key-for-tests-only-32', CSRF_SECRET:'synthetic-csrf-key-for-tests-only-32' };
 function environment(values: Record<string,string|undefined>, run:()=>void) {
   const before={...process.env};try { for(const [key,value] of Object.entries(values)) {if(value===undefined)delete process.env[key];else process.env[key]=value;} run(); }
@@ -27,6 +28,9 @@ test('authoritative activation refuses unsafe issuer, endpoint, cookie and sessi
   for(const bad of [{OIDC_ISSUER_URL:'http://issuer.test.invalid'},{OIDC_REDIRECT_URI:'http://console.test.invalid/callback'},{ADMIN_SERVICE_URL:'http://admin.test.invalid'},
     {OIDC_ISSUER_URL:'https://user:pass@issuer.test.invalid'},{COOKIE_SAME_SITE:'none'},{SESSION_IDLE_TIMEOUT_MS:'NaN'},{SESSION_ABSOLUTE_LIFETIME_MS:'1'},
     {NODE_ENV:'development',ENABLE_MOCK_OIDC:'true'}]) environment({...activation,...bad},()=>assert.throws(()=>new BffConfigService()));
+});
+test('production configuration refuses an explicit mock OIDC request',()=>{
+  environment({...activation, ENABLE_MOCK_OIDC:'true'},()=>assert.throws(()=>new BffConfigService(),/mock OIDC/));
 });
 test('signed tokens enforce not-before, finite expiry, authorized party, and reject external key hints',()=>{
   const config=new BffConfigService(), service=new OidcService(config,SessionStoreService.forIsolatedTests());

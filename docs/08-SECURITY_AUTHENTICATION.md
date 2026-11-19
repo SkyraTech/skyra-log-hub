@@ -83,6 +83,13 @@ Revoke compromised credential and sessions, check audits, rotate related secrets
 - Reports and Jarvis-generated definitions must pass the same project authorization, field allowlist, result caps, timeouts, cache isolation and redaction rules. Report publication/change/create is auditable; Jarvis high-risk administrative actions require separate approval.
 - PostgreSQL contains accounts/project membership/tokens/report definitions only (no raw app log-event rows); maintain independent security audit trail.
 
+## Q-02 fail-closed configuration invariants
+
+- The Angular console starts unauthenticated. Preview authentication is available only when runtime configuration explicitly sets `environment: development`, `previewMode: true` and `previewIsolation: true`; preview user/workspace fixtures are supplied by that isolated runtime configuration and are never seeded in the production bundle.
+- Production-classified BFF and Administration Service startup requires explicitly injected, non-placeholder session, CSRF and internal/service assertion secrets. Mock OIDC and development signer values are rejected rather than silently downgraded.
+- Production Query Service startup rejects test authentication, wildcard CORS, missing JWT/JWKS configuration and placeholder cursor/JWT signing values. CORS is an origin policy only and never substitutes for bearer or tenant/project authorization.
+- These invariants are configuration gates; they do not replace server-side membership, tenant/project scope, CSRF, session or credential controls described above.
+
 ## 13. Browser Client Security Boundaries (@skyra/logger-browser, Angular, React)
 - **Zero Server Credentials**: Browser client bundles must NEVER embed ingestion secret tokens, database credentials, server API keys, or private storage credentials.
 - **Pre-Buffering In-Memory Sanitization**: Redaction executes synchronously prior to buffering in memory, ensuring unredacted secrets never exist in transmission queues or heap dumps.
