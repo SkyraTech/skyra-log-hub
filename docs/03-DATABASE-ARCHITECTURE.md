@@ -130,6 +130,7 @@ erDiagram
 - **`ArchiveSegment`:**
   - `id` (UUIDv4 PK), `projectId` (FK), `segmentId` (VarChar), `filePath` (VarChar - local or S3 URI), `format` (`PARQUET`), `eventCount` (Int), `byteSize` (BigInt), `minTimestamp` (DateTime), `maxTimestamp` (DateTime), `partitionDate` (Date), `status` (`ACTIVE`, `COMPACTED`, `ARCHIVED`), `createdAt`.
   - Indexes: `[projectId, partitionDate]`, `[projectId, minTimestamp, maxTimestamp]`.
+  - *Partitioning Model:* PostgreSQL stores metadata with `partitionDate` indexing to route queries to physical Parquet files. Physical log storage is partitioned at the columnar file tier (`/tenant/project/YYYY/MM/DD/`), while native PostgreSQL declarative table partitioning (`PARTITION BY RANGE`) is planned as a future optimization for multi-terabyte metadata volumes.
 - **`DeduplicationReceipt`:**
   - `id` (UUIDv4 PK), `projectId` (FK), `batchId` (VarChar), `eventId` (VarChar), `acceptedAt` (DateTime).
   - Unique Constraint: `@@unique([projectId, eventId])`.

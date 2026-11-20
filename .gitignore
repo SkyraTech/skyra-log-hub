@@ -34,3 +34,6 @@ temp-test-hardening-logs/
 .env*.local
 .env.*
 !.env.example
+
+# Angular generated build cache
+.angular/

@@ -201,7 +201,11 @@ flowchart TD
 - Export limit: Bounded to 50,000 events per CSV/JSON stream to protect memory.
 
 ### Unimplemented / Planned Roadmap Features (Clearly Labeled)
-- *Live Tail Streaming:* Real-time WebSocket log tailing is an architectural roadmap item; current explorer relies on fast near-real-time polling.
-- *Custom Alerting Rules & Webhooks:* Automated threshold alerts (Slack/PagerDuty) are planned for future Phase 5 releases.
+- *Live Tail Streaming:* Real-time WebSocket log tailing is an architectural roadmap item; current explorer relies on fast near-real-time polling against indexed Parquet/DuckDB storage.
+- *Custom Alerting Rules & Webhooks:* Automated threshold alerts (Slack/PagerDuty/webhooks) are planned for future Phase 5 releases. Current system provides live query filters and analytics dashboards without background alerting daemons.
 - *Cold Storage Glacier Tiering:* Automatic archival to cold S3 Glacier beyond 90 days is documented as design-only.
+- *Protobuf & gRPC Ingestion Interfaces:* Ingestion currently utilizes HTTP REST with JSON/NDJSON payloads; gRPC/Protobuf ingestion interfaces are planned for future high-throughput streaming pipelines.
+- *Distributed Trace Waterfall & Collector:* Log records capture and propagate W3C `trace_id` and `span_id` correlation identifiers; dedicated distributed trace collectors (OpenTelemetry) and waterfall span graph visualizations are planned future milestones.
+- *Offline Persistent SDK Spooling:* Client SDKs buffer events in-memory with priority eviction on overflow; offline persistent disk spooling databases (SQLite/LevelDB) are planned for intermittent offline client scenarios.
+- *Production Clustering & Orchestration:* Current release validates single-node containerized deployments; automated Kubernetes operators and multi-region clustering are planned infrastructure milestones.
 

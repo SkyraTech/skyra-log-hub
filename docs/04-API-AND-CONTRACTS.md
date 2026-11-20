@@ -12,9 +12,10 @@
 All network interfaces in Skyra LogHub follow strict contract-first principles:
 1. **URI Versioning:** All endpoints are strictly prefixed with `/api/v1/`. Breaking contract modifications mandate a major version increment.
 2. **Contract Ownership:** Authoritative schemas reside in `packages/shared-contracts` and exported OpenAPI 3.1 YAML/JSON files. Schemas are synchronized across services via `scripts/sync-schemas.mjs`.
-3. **Payload Encodings:**
+3. **Payload Encodings & Protocols:**
    - Client-to-BFF & Ingestion: `application/json` (UTF-8).
    - Log Streaming Exports: `text/csv` (RFC 4180) and `application/x-ndjson`.
+   - Protocol Specifications: Network transport uses HTTP/1.1 and HTTP/2 REST. Binary protocols (gRPC and Protocol Buffers) are planned for high-throughput pipeline iterations and are not exposed in the current v1 release.
 4. **Uniform Error Responses:** Every error condition (4xx and 5xx) produces an RFC 7807 Problem Details object with machine-readable error codes.
 5. **Cursor Security:** List endpoints utilize opaque, HMAC-SHA256 signed pagination cursors. Clients cannot forge offsets, bypass tenant bounds, or enumerate IDs.
 
