@@ -217,7 +217,7 @@ export class WorkspaceContextService implements OnDestroy {
     }
     this._activeTenant.set(fixture.tenant);
     this._availableTenants.set([fixture.tenant]);
-    this._availableProjects.set([fixture.project]);
+    this._availableProjects.set(fixture.projects ?? [fixture.project]);
     this._selectedProjectIds.set([fixture.project.id]);
   }
 

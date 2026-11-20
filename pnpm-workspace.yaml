@@ -16,6 +16,9 @@ overrides:
   # patched in Fastify >=5.12.2. This scoped override is semver-compatible,
   # limited to the Nest Fastify adapter dependency, and covered by Q-02A tests.
   '@nestjs/platform-fastify>fastify': '5.12.8'
+  # Remediate PostCSS and @babel/core development advisories in Next.js test runner
+  'postcss': '^8.5.33'
+  '@babel/core': '^7.29.13'
   '@skyra-tech-platform/accordion': 'file:artifacts/platform-packages/skyra-tech-platform-accordion-0.1.0.tgz'
   '@skyra-tech-platform/app-shell': 'file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz'
   '@skyra-tech-platform/badge': 'file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz'

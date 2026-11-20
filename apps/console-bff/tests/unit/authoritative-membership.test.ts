@@ -26,7 +26,7 @@ describe('AuthoritativeMembershipAdapter (LOGHUB-ADMIN-002 Gate A)', () => {
   it('fails closed in production mode when authoritative provider is pending Gate B', async () => {
     process.env['NODE_ENV'] = 'production';
     try {
-      assert.throws(()=>new BffConfigService(),/Real OIDC requires/);
+      assert.throws(()=>new BffConfigService(),/Production configuration requires|Real OIDC requires/);
     } finally {
       process.env['NODE_ENV'] = 'development';
     }

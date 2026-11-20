@@ -14,7 +14,7 @@ export interface AppConfig {
   previewIsolation: boolean;
   /** Preview fixtures are supplied by an isolated runtime config, never by the production bundle. */
   previewUser?: UserProfile;
-  previewWorkspace?: { tenant: TenantSummary; project: ProjectSummary };
+  previewWorkspace?: { tenant: TenantSummary; project: ProjectSummary; projects?: ProjectSummary[] };
   version: string;
 }
 

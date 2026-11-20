@@ -1,0 +1,910 @@
+{
+  "manifestVersion": "1.0.0",
+  "createdAt": "2026-11-20T09:53:28.782Z",
+  "archiveFile": "q04-legacy-documentation-20261120.tar",
+  "archiveSha256": "bd6637b2f4e8206da3642ce3177d1f2f087c1efd57b01c9383a0a2bfdf27e4f9",
+  "archiveSizeBytes": 1199104,
+  "totalFiles": 111,
+  "sourceRun": "run-20261120145334-36d21098",
+  "preservationStatus": "DURABLY_ARCHIVED_IN_WORKSPACE_UNCOMMITTED",
+  "gitTrackingStatus": {
+    "directory": "artifacts/documentation-history",
+    "gitIgnored": false,
+    "gitCommitted": false,
+    "note": "Directory is in an unignored path. Requires explicit commit and remote push for off-machine durability."
+  },
+  "restorationInstructions": {
+    "command": "tar -xf artifacts/documentation-history/q04-legacy-documentation-20261120.tar -C <destination-dir>",
+    "notes": "Extracts files into <destination-dir>/docs/ preserving original directory structure and byte-identical contents."
+  },
+  "entries": [
+    {
+      "originalPath": "docs/01-PRODUCT_REQUIREMENTS.md",
+      "archiveEntry": "docs/01-PRODUCT_REQUIREMENTS.md",
+      "sha256": "507e8219f979c571ed65017511de981015085a8880202c2460160315ee402b10",
+      "sizeBytes": 10365,
+      "canonicalDestination": "docs/01-FUNCTIONALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/02-SYSTEM_ARCHITECTURE.md",
+      "archiveEntry": "docs/02-SYSTEM_ARCHITECTURE.md",
+      "sha256": "99bbd05fd61678f749fb7ffb0e1b6ae5db0e314f8bf3c95cf58275de226c942a",
+      "sizeBytes": 12274,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/03-DEVELOPMENT_RULES.md",
+      "archiveEntry": "docs/03-DEVELOPMENT_RULES.md",
+      "sha256": "f297320c168c9234c0ea5722b318b8dc53dc80708a58c19c3596205862c43816",
+      "sizeBytes": 9246,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/04-DESIGN_SYSTEM.md",
+      "archiveEntry": "docs/04-DESIGN_SYSTEM.md",
+      "sha256": "964dcbf9cc9eefa1ba810a6535fc0357ef58892449bd65b15dc6ba6a8d6b5327",
+      "sizeBytes": 6439,
+      "canonicalDestination": "docs/07-UI-UX-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/05-PROJECT_TASKS.md",
+      "archiveEntry": "docs/05-PROJECT_TASKS.md",
+      "sha256": "68d1dcdfee6d33ab02f6f65461c0cfa3dfc397fb8330ebb461c06bf71323d276",
+      "sizeBytes": 25006,
+      "canonicalDestination": "docs/01-FUNCTIONALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/06-PROJECT_MEMORY.md",
+      "archiveEntry": "docs/06-PROJECT_MEMORY.md",
+      "sha256": "be4f9b084f052f68b8b446e24aff6d23456b4535b989286d4eafee4d230120cc",
+      "sizeBytes": 140186,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/07-LOGGING_STANDARD.md",
+      "archiveEntry": "docs/07-LOGGING_STANDARD.md",
+      "sha256": "83bac532fd32643136a03baf128e003d744f8e207cbf5dd67c844bc59c67f1a9",
+      "sizeBytes": 22592,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/08-SECURITY_AUTHENTICATION.md",
+      "archiveEntry": "docs/08-SECURITY_AUTHENTICATION.md",
+      "sha256": "f07cbd38add4734771277873b38e7bbc790aff35a15b19907c267b079426f86c",
+      "sizeBytes": 14124,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/09-MCP_SPECIFICATION.md",
+      "archiveEntry": "docs/09-MCP_SPECIFICATION.md",
+      "sha256": "e26229095e85258c27f7c9e3b2da9fc25a1916ba8b757c47127e6449dcde0063",
+      "sizeBytes": 5326,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/10-API_CONTRACTS.md",
+      "archiveEntry": "docs/10-API_CONTRACTS.md",
+      "sha256": "d247263fa958faa4653b3f418f2b5b734143e43b16ec00f467de1747886b2a01",
+      "sizeBytes": 8515,
+      "canonicalDestination": "docs/04-API-AND-CONTRACTS.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/11-TESTING_STRATEGY.md",
+      "archiveEntry": "docs/11-TESTING_STRATEGY.md",
+      "sha256": "6b9b29a506bc1ee14b972c1d9f843ab36b05a44498c625ed0aa3121a91a3a81e",
+      "sizeBytes": 22872,
+      "canonicalDestination": "docs/08-TESTING-AND-QUALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/12-DEPLOYMENT_OPERATIONS.md",
+      "archiveEntry": "docs/12-DEPLOYMENT_OPERATIONS.md",
+      "sha256": "9d3527ff1f6b74ade60ed03357a0f3253efce6a856bcad9308ba1b0af7b18704",
+      "sizeBytes": 11821,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/13-PERFORMANCE_OBSERVABILITY.md",
+      "archiveEntry": "docs/13-PERFORMANCE_OBSERVABILITY.md",
+      "sha256": "c40fda6eeaa6e814a4d47cbc3ca40ad41cc4fbc2884295c37fcd1bd48365f00f",
+      "sizeBytes": 20731,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/14-ARCHITECTURE_DECISIONS.md",
+      "archiveEntry": "docs/14-ARCHITECTURE_DECISIONS.md",
+      "sha256": "eedbcdebf51d613a57008340da2032af4009ebc6d8a9895fe11f80bcce471766",
+      "sizeBytes": 43272,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/01-ADMINISTRATION_ARCHITECTURE.md",
+      "archiveEntry": "docs/admin/01-ADMINISTRATION_ARCHITECTURE.md",
+      "sha256": "2e3592b764973e74bab7313e04abe968dca4b012def23153993ec505451e0f5e",
+      "sizeBytes": 11730,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/02-DOMAIN_AND_DATA_MODEL.md",
+      "archiveEntry": "docs/admin/02-DOMAIN_AND_DATA_MODEL.md",
+      "sha256": "c3aa56fe7fe0ad1b4a77f6ce937a5a93d6c4deefd1af758339e7d4e599f796b6",
+      "sizeBytes": 9179,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/03-RBAC_PERMISSION_MATRIX.md",
+      "archiveEntry": "docs/admin/03-RBAC_PERMISSION_MATRIX.md",
+      "sha256": "17ff677ad399dfda65b239e1a7bd9a4c35b7286b69559957cbc9fd4c2a4e7eed",
+      "sizeBytes": 8522,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/04-IDENTITY_AND_MEMBERSHIP.md",
+      "archiveEntry": "docs/admin/04-IDENTITY_AND_MEMBERSHIP.md",
+      "sha256": "f782a53f2377b4614cda633b4bdc315d0988d0f033be4d3edf55411d8d285f96",
+      "sizeBytes": 8535,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/05-INGESTION_CREDENTIAL_LIFECYCLE.md",
+      "archiveEntry": "docs/admin/05-INGESTION_CREDENTIAL_LIFECYCLE.md",
+      "sha256": "e6dec32cab93650f2a1b3f0ae481d0b674d6edff5f43fd2d86dc7738f2d995ed",
+      "sizeBytes": 7555,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/06-TENANT_PROJECT_LIFECYCLE.md",
+      "archiveEntry": "docs/admin/06-TENANT_PROJECT_LIFECYCLE.md",
+      "sha256": "829be380ce36341380fd43448e69c41b6f90087f50bd8aeac3b792a9aa851672",
+      "sizeBytes": 4957,
+      "canonicalDestination": "docs/01-FUNCTIONALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/07-QUOTAS_AND_RETENTION.md",
+      "archiveEntry": "docs/admin/07-QUOTAS_AND_RETENTION.md",
+      "sha256": "238279acce9e11514cf9e086f2dd6ede7640a9877c25d421fd429185cfa6f4a3",
+      "sizeBytes": 3602,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/08-ADMIN_API_CONTRACTS.md",
+      "archiveEntry": "docs/admin/08-ADMIN_API_CONTRACTS.md",
+      "sha256": "822e27e0da367c0408aa96233d20b6b9e26a6744e0f187cb9aec18b645feca94",
+      "sizeBytes": 6122,
+      "canonicalDestination": "docs/04-API-AND-CONTRACTS.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/09-SECURITY_THREAT_MODEL.md",
+      "archiveEntry": "docs/admin/09-SECURITY_THREAT_MODEL.md",
+      "sha256": "9567f89d80e7138e36252754da55bf803a8c93e00a53b9dba4658363e92a028e",
+      "sizeBytes": 4491,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/10-DATABASE_MIGRATION_PROPOSAL.md",
+      "archiveEntry": "docs/admin/10-DATABASE_MIGRATION_PROPOSAL.md",
+      "sha256": "bc167cb21afb8b852b2a1660c955821ed6b2dcefb541bb59ff9051779fb38e8e",
+      "sizeBytes": 9352,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/11-TESTING_AND_ACCEPTANCE.md",
+      "archiveEntry": "docs/admin/11-TESTING_AND_ACCEPTANCE.md",
+      "sha256": "b825c41ab561c65c9a0f1f10d0ad766f7d940f274e0174888c169b5a2352c752",
+      "sizeBytes": 6165,
+      "canonicalDestination": "docs/08-TESTING-AND-QUALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/12-IMPLEMENTATION_ROADMAP.md",
+      "archiveEntry": "docs/admin/12-IMPLEMENTATION_ROADMAP.md",
+      "sha256": "37657c5b46633e5a4d95a5c2001faa734f8c8359d8838ee31e1028a0b90c05d2",
+      "sizeBytes": 6067,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/ADMIN_002_MIGRATION_EXECUTION_AND_RECOVERY_RUNBOOK.md",
+      "archiveEntry": "docs/admin/ADMIN_002_MIGRATION_EXECUTION_AND_RECOVERY_RUNBOOK.md",
+      "sha256": "3043945fcb32222192e314c82b4abb5bb7455d685bda390f6d148d38ad8ba319",
+      "sizeBytes": 8078,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/ADMIN_002_POST_MIGRATION_VERIFICATION.md",
+      "archiveEntry": "docs/admin/ADMIN_002_POST_MIGRATION_VERIFICATION.md",
+      "sha256": "2a8d94122a7f7a26ceb3464f18a23f11d3b0f66e46d00f3b1cf1d5941c517aaf",
+      "sizeBytes": 8955,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/ADMIN_002_PROTECTED_MIGRATION_APPROVAL_PACKET.md",
+      "archiveEntry": "docs/admin/ADMIN_002_PROTECTED_MIGRATION_APPROVAL_PACKET.md",
+      "sha256": "fd38d35f97797429597fd4b242824820cf9a4c8cd64f3d10075ce3edd23a15f0",
+      "sizeBytes": 10361,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/ADMIN_002_STAGE_2B_EXECUTION_APPROVAL.md",
+      "archiveEntry": "docs/admin/ADMIN_002_STAGE_2B_EXECUTION_APPROVAL.md",
+      "sha256": "c2dba931c39960ecd175a395144006d1af64e0b9226092f6a4a953b7e3185008",
+      "sizeBytes": 7782,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/FEATURE_001_APPROVAL_A_SCHEMA.md",
+      "archiveEntry": "docs/admin/FEATURE_001_APPROVAL_A_SCHEMA.md",
+      "sha256": "2ffdb30021d58c3893cb8b31f105f54d06ac15d3a79707185e5134a456c7cf62",
+      "sizeBytes": 7338,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/FEATURE_001_APPROVAL_B_BOOTSTRAP.md",
+      "archiveEntry": "docs/admin/FEATURE_001_APPROVAL_B_BOOTSTRAP.md",
+      "sha256": "5952c37b042e3e24d669bb6d2301a2fc20389e511e7a423c73e696136ef5e1b0",
+      "sizeBytes": 5304,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/FEATURE_001_APPROVAL_C_ACTIVATION.md",
+      "archiveEntry": "docs/admin/FEATURE_001_APPROVAL_C_ACTIVATION.md",
+      "sha256": "f18e5a54fe6505fcb6f26aaed0d20c474e57942922821d726cfbe662f4c152bf",
+      "sizeBytes": 7206,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/FEATURE_001_DATABASE_APPROVAL.md",
+      "archiveEntry": "docs/admin/FEATURE_001_DATABASE_APPROVAL.md",
+      "sha256": "2d44659d8a17ee052e6cb5138fe726a5ae85b9502c112c21b374cef826df98e8",
+      "sizeBytes": 11193,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/APPROVAL_CHECKLIST.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/APPROVAL_CHECKLIST.md",
+      "sha256": "7f2c1162c1d888be5140f69b34bfd97971a92243437f68e4f82d4b56aa0cbd74",
+      "sizeBytes": 3817,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/COMPATIBILITY_ASSESSMENT.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/COMPATIBILITY_ASSESSMENT.md",
+      "sha256": "84746f246ff3eaf7193fd76c779f7131be4235743be505bb1297503127e59db9",
+      "sizeBytes": 6047,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/CONCURRENCY_AND_AUDIT_TEST_RESULTS.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/CONCURRENCY_AND_AUDIT_TEST_RESULTS.md",
+      "sha256": "8a29a9f631ea977ede3e9905186a00fd714673918ca73692b34f11e1a1cd7d02",
+      "sizeBytes": 9660,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/CONSTRAINT_VERIFICATION.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/CONSTRAINT_VERIFICATION.md",
+      "sha256": "4c44dd46e92686264b9d997ef67a85486269f09b50ffff560935a927e2d62f66",
+      "sizeBytes": 7957,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/GATE_B_APPROVAL_REQUEST.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/GATE_B_APPROVAL_REQUEST.md",
+      "sha256": "ecf3cf90d932591abaabb7ff47657702686f675d42991cd155feec8527b504e9",
+      "sizeBytes": 8456,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/GATE_B_EXECUTION_PLAN.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/GATE_B_EXECUTION_PLAN.md",
+      "sha256": "8e1accd74228c78b43dcc27bcf144892a4e0d1f5ad239ce22b588cc50e6050fc",
+      "sizeBytes": 7582,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/MIGRATION_REVIEW.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/MIGRATION_REVIEW.md",
+      "sha256": "29a946cfd30b97f941d325a8c90c25ece12bcb4764bed8236314d79a8f963ee6",
+      "sizeBytes": 5991,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/PRISMA_SQL_PARITY.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/PRISMA_SQL_PARITY.md",
+      "sha256": "f64bdd55ff1a7f23d48bc5db9cb148852cfcd16596d7d579141ac60edb78e3c7",
+      "sizeBytes": 11993,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/ROLLBACK_AND_RECOVERY_PLAN.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/ROLLBACK_AND_RECOVERY_PLAN.md",
+      "sha256": "84091dc4138207a7bafdab8cd55c0df3e80a9ea5b44d1c0486afbb74df8141fe",
+      "sizeBytes": 6984,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/STAGE_1A_APPROVAL_CHECKLIST.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/STAGE_1A_APPROVAL_CHECKLIST.md",
+      "sha256": "29ae96a6b80ee9c99464dab5717a4b85259cc79b244cf112ddb197bc53a1a833",
+      "sizeBytes": 3627,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/STAGE_1A_BACKUP_VERIFICATION.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/STAGE_1A_BACKUP_VERIFICATION.md",
+      "sha256": "84cfe86b6322daabd8798ba7d6ebfa69e4c9fe5994445ea0a31e36d2dda3ce6a",
+      "sizeBytes": 3230,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/STAGE_1A_DATA_INTEGRITY.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/STAGE_1A_DATA_INTEGRITY.md",
+      "sha256": "1cedef0a398bf52f2dc37d7d9bcb7de932afe8393f0a91571319b618e847ad54",
+      "sizeBytes": 3680,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/STAGE_1A_RESTORE_REHEARSAL.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/STAGE_1A_RESTORE_REHEARSAL.md",
+      "sha256": "70a27a069ac296d70340ae4055f1bcf82a86a8f0f1783473254f897e05667fb2",
+      "sizeBytes": 2970,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/STAGE_1_MIGRATION_RUNBOOK.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/STAGE_1_MIGRATION_RUNBOOK.md",
+      "sha256": "94b178b3818a6984275a341fdb06153b7d415f41987a16af19ec84e281899b8d",
+      "sizeBytes": 6899,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/STAGE_2_AUTHORIZATION_ACTIVATION_RUNBOOK.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/STAGE_2_AUTHORIZATION_ACTIVATION_RUNBOOK.md",
+      "sha256": "3365d017da9420a20c439859d1227522b691dfbb9b746c55302264c30dc3a424",
+      "sizeBytes": 9792,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/admin/migrations/ADMIN-002/TENANT_ISOLATION_TEST_RESULTS.md",
+      "archiveEntry": "docs/admin/migrations/ADMIN-002/TENANT_ISOLATION_TEST_RESULTS.md",
+      "sha256": "f129c36065ddee9a1ca81d629f9ef0a9bd7d4e478e6986238ae9699afdcbf022",
+      "sizeBytes": 6655,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/administration/DEV-017-contract.md",
+      "archiveEntry": "docs/administration/DEV-017-contract.md",
+      "sha256": "cd84f540b6cde0989f79ef3f51ab999939c827942ac0c4931b427edd10f2138e",
+      "sizeBytes": 9441,
+      "canonicalDestination": "docs/04-API-AND-CONTRACTS.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/analytics/DEV-016-contract.md",
+      "archiveEntry": "docs/analytics/DEV-016-contract.md",
+      "sha256": "135b8e7e325e095c755f0d425c4f518c80b4d22e2f8316eb6f0610dfb7aba0e7",
+      "sizeBytes": 12147,
+      "canonicalDestination": "docs/04-API-AND-CONTRACTS.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/architecture/01-ENTERPRISE_ARCHITECTURE_STANDARDS.md",
+      "archiveEntry": "docs/architecture/01-ENTERPRISE_ARCHITECTURE_STANDARDS.md",
+      "sha256": "d243a56afebdcd3bf98e00e2096761aa7d6e03f157ae4c0d8970c7a8a11f17df",
+      "sizeBytes": 7284,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/architecture/02-PROJECT_FOLDER_STRUCTURE.md",
+      "archiveEntry": "docs/architecture/02-PROJECT_FOLDER_STRUCTURE.md",
+      "sha256": "f21c582da6241d179a4544e18cf15664274252308731cccdf809cce2f1b4b61f",
+      "sizeBytes": 11185,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/architecture/03-CLEAN_ARCHITECTURE_AND_SOLID.md",
+      "archiveEntry": "docs/architecture/03-CLEAN_ARCHITECTURE_AND_SOLID.md",
+      "sha256": "c9672cd5e9a9c600918566563b33227c4b223e93bf82385d35c211a7a71af704",
+      "sizeBytes": 7720,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/architecture/04-NESTJS_API_STANDARDS.md",
+      "archiveEntry": "docs/architecture/04-NESTJS_API_STANDARDS.md",
+      "sha256": "15dfd6db269709d0dab002f7a626027fc9ceb3fe90f37357b37b514625c72b87",
+      "sizeBytes": 5862,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/architecture/05-PRISMA_REPOSITORY_STANDARDS.md",
+      "archiveEntry": "docs/architecture/05-PRISMA_REPOSITORY_STANDARDS.md",
+      "sha256": "c965ceace16b6087d64e5077df6b922279d6cbf973229e02383d6663d7a7710f",
+      "sizeBytes": 5451,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/architecture/06-ERROR_HANDLING_AND_VALIDATION.md",
+      "archiveEntry": "docs/architecture/06-ERROR_HANDLING_AND_VALIDATION.md",
+      "sha256": "04e65bd928be23e5473a637768c4ead524144a495fac51fcc7a3232a54967ffc",
+      "sizeBytes": 4916,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/architecture/07-SECURITY_AUDITING_OBSERVABILITY.md",
+      "archiveEntry": "docs/architecture/07-SECURITY_AUDITING_OBSERVABILITY.md",
+      "sha256": "2be9719cc57d9160feed5becf2d04b898ec0de7f32d09c98e9322781ab8a1cf5",
+      "sizeBytes": 5576,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/architecture/08-TESTING_AND_QUALITY_GATES.md",
+      "archiveEntry": "docs/architecture/08-TESTING_AND_QUALITY_GATES.md",
+      "sha256": "602ca09610d8a04148e98dd33e2ca8a77826b5fe3295195662b1dcf472309087",
+      "sizeBytes": 4740,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/architecture/09-CODE_REVIEW_CHECKLIST.md",
+      "archiveEntry": "docs/architecture/09-CODE_REVIEW_CHECKLIST.md",
+      "sha256": "acbeb586b73c89ade48920e0574e053d37b695371677c381fcf8e6555a8c89af",
+      "sizeBytes": 3898,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/architecture/10-ARCHITECTURE_COMPLIANCE_MATRIX.md",
+      "archiveEntry": "docs/architecture/10-ARCHITECTURE_COMPLIANCE_MATRIX.md",
+      "sha256": "9f99d63f7fb669a86994d38b68b3f35c739c498bbc02bc797865685a43179860",
+      "sizeBytes": 8717,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/auth/DEV-013-session-invariants.md",
+      "archiveEntry": "docs/auth/DEV-013-session-invariants.md",
+      "sha256": "0891c6b8e6923a20a269b3702cd1ef33bd8bb45519ef18417d490d13a679f821",
+      "sizeBytes": 2491,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/auth/DEV-013-session-operations.md",
+      "archiveEntry": "docs/auth/DEV-013-session-operations.md",
+      "sha256": "40d8fa1d6fd21397c3ab2eeebfad0b055663d0f50c4fd6dac0ba5adcf054b1d8",
+      "sizeBytes": 4268,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/auth/MICROSOFT_ENTRA_EXTERNAL_ID_SETUP.md",
+      "archiveEntry": "docs/auth/MICROSOFT_ENTRA_EXTERNAL_ID_SETUP.md",
+      "sha256": "ca4831cb9aa09832f7872a091a8ad12f08885964e32fd068f19d150c23c88f83",
+      "sizeBytes": 21419,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/console/01-PHASE4_PRODUCT_VISION.md",
+      "archiveEntry": "docs/console/01-PHASE4_PRODUCT_VISION.md",
+      "sha256": "1f634ae4cce540c96104f6bc245b54b74b9f57ecf511458cae4071f1061014b3",
+      "sizeBytes": 7568,
+      "canonicalDestination": "docs/01-FUNCTIONALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/console/02-CONSOLE_INFORMATION_ARCHITECTURE.md",
+      "archiveEntry": "docs/console/02-CONSOLE_INFORMATION_ARCHITECTURE.md",
+      "sha256": "9c30eb82c92b9742984c29e84b844dd0d24920091bbf3abac4091204a61888dc",
+      "sizeBytes": 9744,
+      "canonicalDestination": "docs/01-FUNCTIONALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/console/03-ANGULAR_APPLICATION_ARCHITECTURE.md",
+      "archiveEntry": "docs/console/03-ANGULAR_APPLICATION_ARCHITECTURE.md",
+      "sha256": "ab676e2da7068f7de51ebca7d6b96333ad7957d1598f1184ef1754165d7f4f42",
+      "sizeBytes": 11713,
+      "canonicalDestination": "docs/07-UI-UX-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/console/04-UI_UX_DESIGN_SYSTEM.md",
+      "archiveEntry": "docs/console/04-UI_UX_DESIGN_SYSTEM.md",
+      "sha256": "c872b6f408015f281b3f065381f07b80b82d6c8fce8bd09ef32e8a5e9934878a",
+      "sizeBytes": 9047,
+      "canonicalDestination": "docs/07-UI-UX-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/console/05-SCREEN_SPECIFICATIONS.md",
+      "archiveEntry": "docs/console/05-SCREEN_SPECIFICATIONS.md",
+      "sha256": "bda96bb022a6c3abb1462eb08d8b88cd002df84848114b7e5018f931252b68bc",
+      "sizeBytes": 20499,
+      "canonicalDestination": "docs/01-FUNCTIONALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/console/06-AUTHENTICATION_AUTHORIZATION.md",
+      "archiveEntry": "docs/console/06-AUTHENTICATION_AUTHORIZATION.md",
+      "sha256": "c19f6c77114362264d585d5182d55fe2ad4e8bf748bad196d6f32914bd2d35d8",
+      "sizeBytes": 7936,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/console/07-API_INTEGRATION_CONTRACTS.md",
+      "archiveEntry": "docs/console/07-API_INTEGRATION_CONTRACTS.md",
+      "sha256": "9d647dcaa7517d63b5cf2af834281f1204dceeab4e7ffde6959b0d0467707cf0",
+      "sizeBytes": 7915,
+      "canonicalDestination": "docs/04-API-AND-CONTRACTS.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/console/08-ADMINISTRATION_BACKEND_GAPS.md",
+      "archiveEntry": "docs/console/08-ADMINISTRATION_BACKEND_GAPS.md",
+      "sha256": "a2943849be7e6d94e70d8ccdfd5be18210da4952a14622a7b9bf88ff9d27ff5e",
+      "sizeBytes": 7158,
+      "canonicalDestination": "docs/04-API-AND-CONTRACTS.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/console/09-FRONTEND_SECURITY_ACCESSIBILITY.md",
+      "archiveEntry": "docs/console/09-FRONTEND_SECURITY_ACCESSIBILITY.md",
+      "sha256": "7fd6764220849fda8945ead8a05ebab808c64f798d29e406ca87a8a808f97d3e",
+      "sizeBytes": 10826,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/console/10-TESTING_STRATEGY.md",
+      "archiveEntry": "docs/console/10-TESTING_STRATEGY.md",
+      "sha256": "14bac6fba000b5f3a5462363d80e2a421dcf9156f92bc5efcbd4dc08c656f7a7",
+      "sizeBytes": 5268,
+      "canonicalDestination": "docs/08-TESTING-AND-QUALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/console/11-PHASE4_IMPLEMENTATION_ROADMAP.md",
+      "archiveEntry": "docs/console/11-PHASE4_IMPLEMENTATION_ROADMAP.md",
+      "sha256": "661ea105dc1554ad57ac01bf8175602a945c6eebfafbc56d1f282a3a9c88be17",
+      "sizeBytes": 7258,
+      "canonicalDestination": "docs/07-UI-UX-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/DEV-015-advanced-explorer.md",
+      "archiveEntry": "docs/DEV-015-advanced-explorer.md",
+      "sha256": "9675cd952b3cf7c0100f3385fca61494ec93868d46b8fcea6655d5328b85865b",
+      "sizeBytes": 8172,
+      "canonicalDestination": "docs/01-FUNCTIONALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/developers/credentials-and-security.md",
+      "archiveEntry": "docs/developers/credentials-and-security.md",
+      "sha256": "2714582ddaec48b0fa378c9032514c1b7bdf6e81f4799ec55e63d89939059ed3",
+      "sizeBytes": 1800,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/developers/errors-and-retries.md",
+      "archiveEntry": "docs/developers/errors-and-retries.md",
+      "sha256": "c1e2590d1fae5e411d18255b70c057e64db489fd593fd97ad8c6cd7afef8768a",
+      "sizeBytes": 6314,
+      "canonicalDestination": "docs/04-API-AND-CONTRACTS.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/developers/examples.md",
+      "archiveEntry": "docs/developers/examples.md",
+      "sha256": "5919642288783fc9dd1f8e3159ceef27580fe7b62f3e25825dad4faceb171ca3",
+      "sizeBytes": 1970,
+      "canonicalDestination": "docs/01-FUNCTIONALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/developers/getting-started.md",
+      "archiveEntry": "docs/developers/getting-started.md",
+      "sha256": "ef5ca72be25a5de68e988b8962d648d5f42a44671b53c66a3a1e284ab11b2328",
+      "sizeBytes": 2826,
+      "canonicalDestination": "docs/01-FUNCTIONALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/developers/ingestion-api.md",
+      "archiveEntry": "docs/developers/ingestion-api.md",
+      "sha256": "553f4ef6b3f031f09408a12bea851202dae153b90de6c85581bd356ed737ae0f",
+      "sizeBytes": 3672,
+      "canonicalDestination": "docs/04-API-AND-CONTRACTS.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/developers/node-sdk.md",
+      "archiveEntry": "docs/developers/node-sdk.md",
+      "sha256": "e78e9427f99906261625ab3669e7165791f24767f61ab1c4f9eee18eb43e9671",
+      "sizeBytes": 5561,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/developers/troubleshooting.md",
+      "archiveEntry": "docs/developers/troubleshooting.md",
+      "sha256": "a0034267f7f07e2264f45a45a0b3908ffcd7d19ed8f965e4ff5bc1814ede452c",
+      "sizeBytes": 3452,
+      "canonicalDestination": "docs/04-API-AND-CONTRACTS.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/development/ISOLATED_POSTGRESQL_SETUP.md",
+      "archiveEntry": "docs/development/ISOLATED_POSTGRESQL_SETUP.md",
+      "sha256": "98f5d9c2660582aa229a3bdbff9a70656fa847d85be452728347ba10ff56b9b2",
+      "sizeBytes": 8302,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/ingestion/01-INGESTION_ARCHITECTURE.md",
+      "archiveEntry": "docs/ingestion/01-INGESTION_ARCHITECTURE.md",
+      "sha256": "644998ce390272c8814dfbbb35a0dbddaebeb03363a1e753791d988ff1fd92e5",
+      "sizeBytes": 13076,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/ingestion/02-AUTHENTICATION_AUTHORIZATION.md",
+      "archiveEntry": "docs/ingestion/02-AUTHENTICATION_AUTHORIZATION.md",
+      "sha256": "43001c27e6eb7a2d3134b634a6625cc709f6d349467e430f9967bf947e1f0f84",
+      "sizeBytes": 7827,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/ingestion/03-DURABILITY_ACKNOWLEDGEMENTS.md",
+      "archiveEntry": "docs/ingestion/03-DURABILITY_ACKNOWLEDGEMENTS.md",
+      "sha256": "8ba50723e55cc66a55fba76f484a72d2b81f15b76597c320b54fe600dcbd650a",
+      "sizeBytes": 10577,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/ingestion/04-IDEMPOTENCY_REPLAY.md",
+      "archiveEntry": "docs/ingestion/04-IDEMPOTENCY_REPLAY.md",
+      "sha256": "b43b98c2fa44afe368e5eddccdf73042d872287efdf41e7b4f5c2850374ae29f",
+      "sizeBytes": 9502,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/ingestion/05-CENTRAL_ARCHIVE_STORAGE.md",
+      "archiveEntry": "docs/ingestion/05-CENTRAL_ARCHIVE_STORAGE.md",
+      "sha256": "86b8c0d8381ed504f1f1dbcd14f23ccf7a2795d01925487e66b5a28ca46df43e",
+      "sizeBytes": 5965,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/ingestion/06-THREAT_MODEL.md",
+      "archiveEntry": "docs/ingestion/06-THREAT_MODEL.md",
+      "sha256": "9141a588b6b4a70943d90927b1adc8dfb479cbbebb5cad3c529be5bdc2155bc0",
+      "sizeBytes": 9730,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/ingestion/07-FAILURE_RECOVERY_MATRIX.md",
+      "archiveEntry": "docs/ingestion/07-FAILURE_RECOVERY_MATRIX.md",
+      "sha256": "961eb8d9acbe2fa1c4c67bd8b0643aba8db1c5350c8e4b25c6de8a63dd8e52df",
+      "sizeBytes": 6723,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/ingestion/08-CAPACITY_COST_MODEL.md",
+      "archiveEntry": "docs/ingestion/08-CAPACITY_COST_MODEL.md",
+      "sha256": "4e2127c6ae0268bbd8e8e465d8dc1360d28fe06412b768f21c53a36355d01d6b",
+      "sizeBytes": 3670,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/ingestion/09-METADATA_MODEL.md",
+      "archiveEntry": "docs/ingestion/09-METADATA_MODEL.md",
+      "sha256": "3a7d5f1bf86ad7110ecb0cd598e3a1b5d42327e9f00ec09221be311c89cfa8b2",
+      "sizeBytes": 7124,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/ingestion/10-IMPLEMENTATION_ROADMAP.md",
+      "archiveEntry": "docs/ingestion/10-IMPLEMENTATION_ROADMAP.md",
+      "sha256": "f7db09e7e84338fa4356da92f84dc0e0bc053f82ccd9eac06f59ac16a005c780",
+      "sizeBytes": 8152,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/ingestion/11-PHASE2_ACCEPTANCE.md",
+      "archiveEntry": "docs/ingestion/11-PHASE2_ACCEPTANCE.md",
+      "sha256": "c6f96c7d7c1ab7ef3d1d41c0fd399cfcf90a64147fc14f2caab1e08e937fc709",
+      "sizeBytes": 11063,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/platform-integration/COMPONENT_ADOPTION_MATRIX.md",
+      "archiveEntry": "docs/platform-integration/COMPONENT_ADOPTION_MATRIX.md",
+      "sha256": "4e8dd920b4b1e32a7d47008ad778c71cbe9e81bebe740c12dc3ff3ade7f3ac81",
+      "sizeBytes": 12423,
+      "canonicalDestination": "docs/07-UI-UX-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/query/01-QUERY_ARCHITECTURE.md",
+      "archiveEntry": "docs/query/01-QUERY_ARCHITECTURE.md",
+      "sha256": "33d1e9ffec1072553516ddf7ca563611ab13883d61f245372b480f05cf605032",
+      "sizeBytes": 9859,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/query/02-SEARCH_API_CONTRACTS.md",
+      "archiveEntry": "docs/query/02-SEARCH_API_CONTRACTS.md",
+      "sha256": "e4e45a0e95da0fe46f86fb5993d4dc812c40cb47eae2c8f2f639fd462edc47aa",
+      "sizeBytes": 10675,
+      "canonicalDestination": "docs/04-API-AND-CONTRACTS.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/query/03-DUCKDB_PARQUET_DESIGN.md",
+      "archiveEntry": "docs/query/03-DUCKDB_PARQUET_DESIGN.md",
+      "sha256": "2edc2b3f9821d5ffd71e6517378e8510af71d86b0ca99bffab2d596b257b14f8",
+      "sizeBytes": 11026,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/query/04-QUERY_SECURITY_MODEL.md",
+      "archiveEntry": "docs/query/04-QUERY_SECURITY_MODEL.md",
+      "sha256": "3d7ac7f94d2af1f2da21bcb9f087b91c90ca55eb132ab732e5d0cb9adc3a621a",
+      "sizeBytes": 15076,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/query/05-CONSISTENCY_PAGINATION.md",
+      "archiveEntry": "docs/query/05-CONSISTENCY_PAGINATION.md",
+      "sha256": "5b77669ed5c7245a3a035bab82a797040a520e2395857a3763ca257c4ccf9d0e",
+      "sizeBytes": 9653,
+      "canonicalDestination": "docs/04-API-AND-CONTRACTS.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/query/06-RESOURCE_GOVERNANCE.md",
+      "archiveEntry": "docs/query/06-RESOURCE_GOVERNANCE.md",
+      "sha256": "22329a752ebd2c1377f375c38ed2c1b391d900f675fedcf89b5a1e4a31db5da1",
+      "sizeBytes": 10633,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/query/07-QUERY_TESTING_STRATEGY.md",
+      "archiveEntry": "docs/query/07-QUERY_TESTING_STRATEGY.md",
+      "sha256": "570481bad91ce4c986881908425a6bb31500d7ddd34802dc21c16be370fb628f",
+      "sizeBytes": 14985,
+      "canonicalDestination": "docs/08-TESTING-AND-QUALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/query/08-IMPLEMENTATION_ROADMAP.md",
+      "archiveEntry": "docs/query/08-IMPLEMENTATION_ROADMAP.md",
+      "sha256": "0f406c9f5fa479954f4af4ca537429b3ae5b8e88aa414d0021aa711743a65b72",
+      "sizeBytes": 14742,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/query/09-QUERY_THREAT_MODEL.md",
+      "archiveEntry": "docs/query/09-QUERY_THREAT_MODEL.md",
+      "sha256": "61b3e59a8d00cf361fbe99e524637189f3a3fc9d05d0f591e396957ee3fc89ea",
+      "sizeBytes": 5463,
+      "canonicalDestination": "docs/05-SECURITY-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/query/10-CANONICAL_FIELD_MAPPING.md",
+      "archiveEntry": "docs/query/10-CANONICAL_FIELD_MAPPING.md",
+      "sha256": "d416b60ab1c73dda121f0fa447868bb45633952036d6dee051f7018dae9a5785",
+      "sizeBytes": 4554,
+      "canonicalDestination": "docs/04-API-AND-CONTRACTS.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/query/11-PHASE3_ACCEPTANCE_MATRIX.md",
+      "archiveEntry": "docs/query/11-PHASE3_ACCEPTANCE_MATRIX.md",
+      "sha256": "0cc26d7e300a20738c7fc7c5a208f99bba682071c3131da82d6177311704cb3d",
+      "sizeBytes": 9981,
+      "canonicalDestination": "docs/08-TESTING-AND-QUALITY.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/query/12-PHASE3_OPERATIONS_GAPS.md",
+      "archiveEntry": "docs/query/12-PHASE3_OPERATIONS_GAPS.md",
+      "sha256": "888231a1c7ecdbffe09c187b3450f9599adea9064f6610273c32de0b3979e3e0",
+      "sizeBytes": 7212,
+      "canonicalDestination": "docs/06-LOGGING-AND-STORAGE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/README.md",
+      "archiveEntry": "docs/README.md",
+      "sha256": "1ba1b96eacbbf3372164142499f4267b46164c6865cb582bc07f8a15c64d8bc5",
+      "sizeBytes": 1457,
+      "canonicalDestination": "docs/02-ARCHITECTURE.md",
+      "verified": true
+    },
+    {
+      "originalPath": "docs/storage/DEV-012-retention-invariants.md",
+      "archiveEntry": "docs/storage/DEV-012-retention-invariants.md",
+      "sha256": "db07a25b338f66204504405deb84cd48b94b71b7f577c5e9725895e1655f1ae2",
+      "sizeBytes": 2570,
+      "canonicalDestination": "docs/03-DATABASE-ARCHITECTURE.md",
+      "verified": true
+    }
+  ]
+}

@@ -285,7 +285,7 @@ describe('Log Shipper Failure Injection, Crash Recovery & Edge Cases (ING-005)',
     });
     assert.equal(check1.eligible, false, 'Active segment currently receiving writes must never be compacted');
 
-    const check2 = gateway.walService.canCompactSegment('journal-old.wal', {
+    const check2 = gateway.walService.canCompactSegment('journal-0001.wal', {
       isArchived: false,
       manifestPersisted: true,
       checkpointPersisted: true,
@@ -293,7 +293,7 @@ describe('Log Shipper Failure Injection, Crash Recovery & Edge Cases (ING-005)',
     });
     assert.equal(check2.eligible, false, 'Segment not yet fully archived must never be compacted');
 
-    const check3 = gateway.walService.canCompactSegment('journal-old.wal', {
+    const check3 = gateway.walService.canCompactSegment('journal-0001.wal', {
       isArchived: true,
       manifestPersisted: false,
       checkpointPersisted: true,
@@ -301,7 +301,7 @@ describe('Log Shipper Failure Injection, Crash Recovery & Edge Cases (ING-005)',
     });
     assert.equal(check3.eligible, false, 'Segment without persisted manifest must never be compacted');
 
-    const check4 = gateway.walService.canCompactSegment('journal-old.wal', {
+    const check4 = gateway.walService.canCompactSegment('journal-0001.wal', {
       isArchived: true,
       manifestPersisted: true,
       checkpointPersisted: false,
@@ -309,7 +309,7 @@ describe('Log Shipper Failure Injection, Crash Recovery & Edge Cases (ING-005)',
     });
     assert.equal(check4.eligible, false, 'Segment with inconsistent checkpoint must never be compacted');
 
-    const check5 = gateway.walService.canCompactSegment('journal-old.wal', {
+    const check5 = gateway.walService.canCompactSegment('journal-0001.wal', {
       isArchived: true,
       manifestPersisted: true,
       checkpointPersisted: true,

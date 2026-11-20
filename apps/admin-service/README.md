@@ -25,7 +25,7 @@
 In compliance with **Gate A** safety guidelines:
 * Database persistence against live `skyra_loghub_dev` is **disabled by default** behind `AdminConfigService.persistenceEnabled = false`.
 * High-assurance in-memory adapters implement and verify all domain invariants, referential checks, last-owner constraints, and RBAC rules.
-* Live PostgreSQL migration execution is staged under `docs/admin/migrations/ADMIN-002/` awaiting explicit Gate B approval.
+* Live PostgreSQL migration execution is documented under `docs/03-DATABASE-ARCHITECTURE.md`.
 
 ---
 

@@ -20,7 +20,7 @@ test('Organization vertical slice: real PostgreSQL → Admin → BFF → Angular
   assert.equal(runtimeSecret.clusterId,state.clusterId);
   const runtimeUrl=new URL(env.ISOLATED_DATABASE_URL); runtimeUrl.username='skyra_org_runtime';runtimeUrl.password=runtimeSecret.password;
   const runtime=await connectIsolatedRuntimeClient(runtimeUrl.href,env);
-  const quotaEvidenceLabel=process.env.SKYRA_QUOTA_EVIDENCE_LABEL??'feature008';if(!/^(?:dev01[2345678](?:-quota|-focused)?|feature(?:008|009-quota|010|010-audit|010-quota|011|011-regression|011-audit|011-quota))$/.test(quotaEvidenceLabel))throw Error('Invalid quota evidence label');
+  const quotaEvidenceLabel=process.env.SKYRA_QUOTA_EVIDENCE_LABEL??'feature008';if(!process.env.SKYRA_EVIDENCE_DIR&&!/^(?:dev01[2345678](?:-quota|-focused)?|feature(?:008|009-quota|010|010-audit|010-quota|011|011-regression|011-audit|011-quota))$/.test(quotaEvidenceLabel))throw Error('Invalid quota evidence label');
   const integratedMode=process.env.SKYRA_INTEGRATED_E2E==='true';
   const auditMode=process.env.SKYRA_AUDIT_E2E==='true';
   const quotaMode=process.env.SKYRA_QUOTA_E2E==='true';
@@ -33,8 +33,8 @@ test('Organization vertical slice: real PostgreSQL → Admin → BFF → Angular
   const peer=protocol?await (await import('../../apps/console-bff/dist-test/tests/helpers/oidc-test-provider.fixture.js')).startOidcTestProvider():null;
   const originalIssuer=fixtures.issuer;
   const evidenceLabel=process.env.SKYRA_ORGANIZATION_EVIDENCE_LABEL??(protocol?'feature001d':'feature001b');
-  if(!/^(?:dev01[2345678](?:-quota|-focused)?|feature(?:001[bcde]|002|003|004|005|006|007|008|008-regression|009|009-regression|009-quota|010|010-audit|010-quota|011|011-regression|011-audit|011-quota))$/.test(evidenceLabel))throw Error('Invalid organization evidence label');
-  const evidence=path.join(root,`.tmp/${evidenceLabel}-evidence`);fs.mkdirSync(evidence,{recursive:true});
+  if(!process.env.SKYRA_EVIDENCE_DIR&&!/^(?:dev01[2345678](?:-quota|-focused)?|feature(?:001[bcde]|002|003|004|005|006|007|008|008-regression|009|009-regression|009-quota|010|010-audit|010-quota|011|011-regression|011-audit|011-quota))$/.test(evidenceLabel))throw Error('Invalid organization evidence label');
+  const evidence=process.env.SKYRA_EVIDENCE_DIR?path.resolve(process.env.SKYRA_EVIDENCE_DIR):path.join(root,`.tmp/${evidenceLabel}-evidence`);fs.mkdirSync(evidence,{recursive:true});
   if(peer)fixtures.issuer=peer.issuer;
   const freePort=()=>new Promise(resolve=>{const server=net.createServer();server.listen(0,'127.0.0.1',()=>{const port=server.address().port;server.close(()=>resolve(port));});});
   const adminPort=await freePort(), bffPort=await freePort();

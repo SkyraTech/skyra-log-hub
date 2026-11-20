@@ -1,0 +1,207 @@
+# Skyra LogHub — Canonical Functionality Specification
+**Document ID:** `DOC-01-FUNC`  
+**Milestone:** Q-04 Canonical Documentation Architecture  
+**Status:** Authoritative / Source-Verified  
+**Repository:** `skyra-log-hub`  
+**Last Verified Baseline:** Node.js v24.14.0 / Angular 20 / NestJS 11 / Fastify 5
+
+---
+
+## 1. Executive Summary & Product Scope
+
+Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingestion, analytics, and audit platform designed for multi-tenant cloud environments. It provides:
+1. **High-Throughput Ingestion:** Write-Ahead Log (WAL) backed ingestion gateway with synchronous `fsync` durability and cryptographic admission receipts.
+2. **Interactive Log Exploration:** Fast search across log streams with field filtering, facet breakdowns, high-density workstation view, and detail drawers.
+3. **Multi-Tenant Administration:** Strict tenant and project isolation with Role-Based Access Control (RBAC), capability projections, and immutable audit trails.
+4. **Credential Lifecycle Management:** Scoped project ingestion keys with cryptographically secure generation, one-time secret revelation, and immediate revocation.
+5. **Observability & Analytics:** Real-time metrics, time-series volume distributions, severity histograms, and customizable dashboard preferences.
+6. **Unified Client SDKs:** Zero-dependency and idiomatic logging packages across Node.js, NestJS, Next.js, Browser, Angular, React, and Python.
+
+---
+
+## 2. User Personas
+
+| Persona | Primary Responsibilities | Default Roles & Capabilities | Core Workflows |
+| :--- | :--- | :--- | :--- |
+| **Platform / Organization Owner** | Organization lifecycle, billing, tenant settings, root governance | `TENANT_OWNER` (`*` capabilities) | Tenant rename, member invitation, role promotion, quota expansion |
+| **Project Administrator** | Project provisioning, team access, API credentials, quota management | `PROJECT_ADMIN` (`project:write`, `credentials:manage`) | Generate ingestion keys, set project quotas, configure saved searches |
+| **DevOps / SRE Engineer** | Application deployment, pipeline integration, infrastructure debugging | `PROJECT_MEMBER` (`logs:read`, `credentials:read`) | Deploy SDKs, investigate incidents via Explorer, export diagnostic bundles |
+| **Security / Compliance Auditor** | Governance review, credential access audits, access tracking | `AUDITOR` (`audit:read`, `logs:read`, `quotas:read`) | Review audit logs, inspect revoked credentials, verify compliance exports |
+| **Read-Only Viewer / Developer** | Application telemetry review, basic querying | `VIEWER` (`logs:read`, `analytics:read`) | Search logs, view analytics dashboards, inspect error traces |
+
+---
+
+## 3. Core Feature Inventory & Specifications
+
+### 3.1 Organization & Tenant Management
+- **Purpose:** Authoritative boundary for all users, projects, quotas, and billing.
+- **User Roles:** `TENANT_OWNER` (write), all members (read).
+- **Supported Operations:**
+  - View organization details (ID, display name, created at, status).
+  - Update display name with optimistic concurrency control (`ETag` / `If-Match`).
+  - View organization member roster and pending invitations.
+- **Input / Output Behavior:**
+  - Input: Name string (1-100 characters).
+  - Output: Tenant model with microsecond timestamps and concurrency version.
+- **Relevant APIs:** `GET /api/v1/organization`, `PATCH /api/v1/organization`.
+- **Relevant UI Modules:** `apps/console-web/src/app/features/organization`.
+- **Backend Authority:** `apps/admin-service` (`TenantModule`, `PrismaTenantRepository`).
+- **Security Considerations:** Strict tenant isolation; cross-tenant updates are physically prohibited at database repository and controller guards.
+- **Known Limits:** Multi-organization switching for single identity is bound to active session state.
+
+### 3.2 Authentication & Membership Lifecycle
+- **Purpose:** Secure identity federation via OpenID Connect (OIDC) with durable, encrypted cookie sessions.
+- **User Roles:** All authenticated identities; `TENANT_OWNER` / `ADMIN` for invitations.
+- **Supported Operations:**
+  - OIDC PKCE login flow (Enterprise SSO / Microsoft Entra ID External ID).
+  - Session verification (`/api/v1/auth/session`).
+  - Switch active tenant / project.
+  - Invite new members by email with role assignment (`OWNER`, `ADMIN`, `MEMBER`, `VIEWER`).
+  - Update member roles with confirmation modal and ETag concurrency.
+  - Revoke membership and cancel invitations.
+  - Explicit logout with server-side session revocation.
+- **Input / Output Behavior:**
+  - Input: Email address, target role enum.
+  - Output: Signed invitation record / updated membership projection.
+- **Relevant APIs:**
+  - `GET /api/v1/auth/login`, `GET /api/v1/auth/callback`, `GET /api/v1/auth/session`, `POST /api/v1/auth/logout`.
+  - `GET /api/v1/members`, `POST /api/v1/members/invite`, `PATCH /api/v1/members/:id/role`, `DELETE /api/v1/members/:id`.
+- **Relevant UI Modules:** `apps/console-web/src/app/features/login`, `apps/console-web/src/app/features/organization`.
+- **Backend Authority:** `apps/console-bff` (Session handling & OIDC) and `apps/admin-service` (IAM & Membership).
+- **Security Considerations:** Sessions stored in PostgreSQL encrypted with AES-256-GCM. Anti-CSRF double-submit cookies enforced on all state-changing endpoints.
+
+### 3.3 Project Lifecycle & Managed Ingestion Credentials
+- **Purpose:** Logical isolation unit for application log streams within a tenant.
+- **User Roles:** `TENANT_OWNER`, `PROJECT_ADMIN`.
+- **Supported Operations:**
+  - Provision project with kebab-case identifier (e.g., `payment-service-prod`).
+  - Update project name, description, and status (`ACTIVE`, `ARCHIVED`).
+  - Generate managed ingestion credentials (`sk_live_...`).
+  - Display raw secret key **exactly once** in a secure modal with copy-to-clipboard.
+  - Revoke active credentials with immediate invalidation at Gateway.
+- **Input / Output Behavior:**
+  - Create: `{ name: string, projectId: string, description?: string }`.
+  - Credential Create Output: `{ id: string, name: string, maskedKey: string, secretKey: string, createdAt: string }`.
+- **Relevant APIs:**
+  - `GET /api/v1/projects`, `POST /api/v1/projects`, `PATCH /api/v1/projects/:id`.
+  - `GET /api/v1/credentials`, `POST /api/v1/credentials`, `DELETE /api/v1/credentials/:id`.
+- **Relevant UI Modules:** `apps/console-web/src/app/features/projects`, `apps/console-web/src/app/features/credentials`.
+- **Backend Authority:** `apps/admin-service` (`ProjectModule`, `CredentialModule`).
+- **Security Considerations:** Secret keys hashed with SHA-256 before persistence; unhashed keys are never written to disk or database.
+
+### 3.4 Ingestion Pipeline & Durable WAL Admission
+- **Purpose:** High-throughput, reliable admission of structured logs from client applications.
+- **User Roles:** Authenticated applications bearing valid project ingestion token.
+- **Supported Operations:**
+  - Batch ingestion of canonical log events (up to 500 events or 2 MB per batch).
+  - Validation against Canonical Log Schema v1.
+  - Atomic Write-Ahead Log (WAL) append with synchronous `fsync` flush.
+  - Return of cryptographic admission receipt containing `batchId`, `walOffset`, and `timestamp`.
+  - Strict deduplication of repeated `eventId` submissions.
+- **Input / Output Behavior:**
+  - Input: HTTP POST with `Authorization: Bearer <sk_live_...>` and JSON batch payload.
+  - Output: `201 Created` with `{ accepted: number, batchId: string, receipt: string }` or RFC 7807 error.
+- **Relevant APIs:** `POST /api/v1/logs/batch` (`apps/ingestion-gateway`).
+- **Relevant UI Modules:** Monitored via Analytics and Quotas views.
+- **Backend Authority:** `apps/ingestion-gateway`.
+- **Security Considerations:** Rate-limited and quota-checked before disk write. Token validation cache avoids database stampede.
+
+### 3.5 Log Explorer, Query Engine & Detail Drawer
+- **Purpose:** Interactive exploration, filtering, and debugging of ingested log events.
+- **User Roles:** All project members with `logs:read` capability.
+- **Supported Operations:**
+  - Text search and structured filter syntax (`service:api AND level:error`).
+  - Time range selector (Presets: 15m, 1h, 24h, 7d; Custom ISO timestamps).
+  - Dynamic severity badges with ECS normalization (`trace`, `debug`, `info`, `warn`, `error`, `fatal`).
+  - Facet distribution sidebar (counts by service, environment, host, severity).
+  - High-density workstation data table with virtual scrolling support.
+  - Slide-out detail drawer displaying full JSON payload, stack trace, and metadata.
+  - Direct export of filtered results to CSV or JSON via `triggerBlobDownload`.
+- **Input / Output Behavior:**
+  - Query: `{ query: string, startTime: string, endTime: string, limit: number, cursor?: string }`.
+  - Response: `{ events: LogEvent[], nextCursor?: string, totalEstimated: number }`.
+- **Relevant APIs:** `POST /api/v1/query/search`, `GET /api/v1/query/facets`, `GET /api/v1/query/events/:id`.
+- **Relevant UI Modules:** `apps/console-web/src/app/features/log-explorer`.
+- **Backend Authority:** `apps/query-service` (DuckDB columnar query engine on Parquet archives).
+- **Security Considerations:** Tenant and project scoping automatically injected by BFF proxy; clients cannot query outside their active context.
+
+### 3.6 Saved Searches & Workspace Preferences
+- **Purpose:** Reusable investigation queries and personalized workspace configuration.
+- **User Roles:** Authenticated project users.
+- **Supported Operations:**
+  - Save current explorer query, filters, and time presets under a memorable name.
+  - Recall saved search from dropdown with instant execution.
+  - Delete obsolete saved searches.
+  - Store dashboard preferences (widget layout, default refresh intervals).
+- **Relevant APIs:** `GET /api/v1/saved-searches`, `POST /api/v1/saved-searches`, `DELETE /api/v1/saved-searches/:id`.
+- **Relevant UI Modules:** `apps/console-web/src/app/features/log-explorer`, `apps/console-web/src/app/features/settings`.
+- **Backend Authority:** `apps/console-bff` / `apps/admin-service`.
+
+### 3.7 Analytics & Workstation Visualizations
+- **Purpose:** Aggregated observability into log volumes, failure spikes, and service health.
+- **User Roles:** All authenticated users.
+- **Supported Operations:**
+  - Summary metric cards (Total Ingested, Error Rate, Active Services, Storage Volume).
+  - Time-series log volume histogram with bucket-click zoom into Explorer.
+  - Severity distribution breakdown chart.
+  - Keyboard accessible data table toggle for all charts.
+- **Relevant APIs:** `GET /api/v1/analytics/overview`, `GET /api/v1/analytics/timeseries`, `GET /api/v1/analytics/severities`.
+- **Relevant UI Modules:** `apps/console-web/src/app/features/analytics`.
+- **Backend Authority:** `apps/query-service`.
+
+### 3.8 Quota Management & Admission Accounting
+- **Purpose:** Prevent resource exhaustion and enforce multi-tenant fair-share ingestion policies.
+- **User Roles:** `TENANT_OWNER`, `PROJECT_ADMIN` (write), all members (read).
+- **Supported Operations:**
+  - View daily and monthly quota utilization meters.
+  - Configure project-level rate limits (events/sec) and daily volume limits (MB/day).
+  - Real-time admission enforcement at Ingestion Gateway (`429 Too Many Requests`).
+- **Relevant APIs:** `GET /api/v1/quotas`, `PATCH /api/v1/quotas`.
+- **Relevant UI Modules:** `apps/console-web/src/app/features/quotas`.
+- **Backend Authority:** `apps/admin-service` (`QuotaModule`) and `apps/ingestion-gateway`.
+
+### 3.9 Audit Trail & Governance Log
+- **Purpose:** Immutable compliance record of all administrative and security-relevant actions.
+- **User Roles:** `TENANT_OWNER`, `AUDITOR`.
+- **Supported Operations:**
+  - Chronological audit event table with microsecond precision.
+  - Filter by actor, target resource, action type, and status.
+  - Inspect structured change delta (before/after states).
+  - Export audit logs to RFC 4180 compliant CSV.
+- **Relevant APIs:** `GET /api/v1/audit`, `GET /api/v1/audit/export`.
+- **Relevant UI Modules:** `apps/console-web/src/app/features/audit`.
+- **Backend Authority:** `apps/admin-service` (`AuditModule`, `PrismaAuditRepository`).
+- **Security Considerations:** Audit records are append-only; update and delete operations are forbidden by schema and database constraints.
+
+---
+
+## 4. End-to-End User Workflows
+
+```mermaid
+flowchart TD
+    A["Developer Provisions Project"] --> B["Generate Ingestion Key (One-time Secret)"]
+    B --> C["Configure Logging SDK in Client App"]
+    C --> D["Client App Flushes Log Batches"]
+    D --> E["Ingestion Gateway Validates & Fsyncs to WAL"]
+    E --> F["Log Shipper Archives JSONL to Parquet"]
+    F --> G["Engineer Queries Logs via Console Web"]
+    G --> H["Investigate Error Spike in Analytics"]
+    H --> I["Export Diagnostic CSV Bundle"]
+    I --> J["Auditor Reviews Ingestion Key Generation in Audit History"]
+```
+
+---
+
+## 5. Known Feature Limitations & Future Scope
+
+### Currently Enforced System Limits
+- Maximum batch size: 500 events or 2.0 MB per HTTP request.
+- Maximum single log message size: 64 KB.
+- Query search window: Default maximum 30 days in interactive Explorer.
+- Export limit: Bounded to 50,000 events per CSV/JSON stream to protect memory.
+
+### Unimplemented / Planned Roadmap Features (Clearly Labeled)
+- *Live Tail Streaming:* Real-time WebSocket log tailing is an architectural roadmap item; current explorer relies on fast near-real-time polling.
+- *Custom Alerting Rules & Webhooks:* Automated threshold alerts (Slack/PagerDuty) are planned for future Phase 5 releases.
+- *Cold Storage Glacier Tiering:* Automatic archival to cold S3 Glacier beyond 90 days is documented as design-only.
+
