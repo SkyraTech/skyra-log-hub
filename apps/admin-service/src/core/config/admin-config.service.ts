@@ -25,6 +25,9 @@ export class AdminConfigService {
     this.quotaUsageEnabled=env['QUOTA_USAGE_ENABLED']==='true';
     this.port = parseInt(env['PORT'] ?? '3300', 10);
     this.nodeEnv = env['NODE_ENV'] ?? 'development';
+    if (!['development', 'test', 'production'].includes(this.nodeEnv)) {
+      throw new Error('Invalid NODE_ENV. Expected development, test, or production.');
+    }
     this.trustedIssuers = (env['TRUSTED_OIDC_ISSUERS'] ?? 'https://accounts.google.com,https://auth.skyra.internal,https://login.microsoftonline.com')
       .split(',')
       .map((s) => s.trim())
@@ -36,6 +39,9 @@ export class AdminConfigService {
     this.persistenceEnabled = env['ADMIN_PERSISTENCE_ENABLED'] === 'true';
     this.databaseUrl = env['DATABASE_URL'];
     this.internalJwtConfigured = (env['INTERNAL_JWT_SECRET']?.length ?? 0) >= 32;
+    if (this.isProduction && (!env['INTERNAL_JWT_SECRET'] || this.isPlaceholderSecret(this.internalJwtSecret))) {
+      throw new Error('Production configuration requires a strong configured INTERNAL_JWT_SECRET.');
+    }
   }
 
   public get isProduction(): boolean {
@@ -44,5 +50,16 @@ export class AdminConfigService {
 
   public isIssuerTrusted(issuer: string): boolean {
     return this.trustedIssuers.includes(issuer);
+  }
+
+  private isPlaceholderSecret(value: string): boolean {
+    const normalized = value.trim().toLowerCase();
+    return normalized.length < 32 || [
+      'skyra-internal-admin-shared-secret-key-32chars!',
+      'change-me',
+      'replace-me',
+      'secret',
+      'test-secret',
+    ].includes(normalized) || /^(dev|development|test|example|default|change|replace)[-_ ]/i.test(normalized);
   }
 }

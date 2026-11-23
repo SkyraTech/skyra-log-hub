@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import {DashboardPreferencesController} from './api/controllers/dashboard-preferences.controller.js';
 import {DashboardPreferencesService} from './modules/dashboard-preferences/dashboard-preferences.service.js';
 import {SavedSearchesService} from './modules/saved-searches/saved-searches.service.js';

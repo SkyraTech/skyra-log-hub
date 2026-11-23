@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, computed, effect } from '@angular/core';
+import { Injectable, inject, signal, computed, effect, OnDestroy } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { QueryApiClientService } from '../../../core/http/query-api-client.service';
 import { WorkspaceContextService } from '../../../core/workspace/workspace-context.service';
@@ -11,7 +11,7 @@ import { FacetsState, INITIAL_FACETS_STATE, FacetCount } from '../domain/log-fil
 import { CanonicalLogEvent, SearchLogsRequest, SearchStatistics, SearchScope } from '../../../core/http/api-client.port';
 
 @Injectable()
-export class LogExplorerFacade {
+export class LogExplorerFacade implements OnDestroy {
   queryClient!: QueryApiClientService;
   workspaceContext!: WorkspaceContextService;
   errorParser!: ErrorParserService;
@@ -331,5 +331,14 @@ export class LogExplorerFacade {
         this.detailLoading.set(false);
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    this.cancelActiveQuery$.next();
+    this.cancelActiveQuery$.complete();
+    this.cancelActiveFacets$.next();
+    this.cancelActiveFacets$.complete();
+    this.cancelDetail$.next();
+    this.cancelDetail$.complete();
   }
 }

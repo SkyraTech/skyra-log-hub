@@ -29,7 +29,7 @@ The original bytes are not present in any accessible local source. Regenerating 
 
 ## 6. Prevention fix
 
-`tests/sessions/evidence-target.mjs` now requires `SKYRA_SESSION_TEST_LABEL` to match the evidence directory and refuses to overwrite an existing DEV-013 `session-admin.log`; the `SKYRA_ALLOW_HISTORICAL_OVERWRITE` variable is no longer honored for that historical target. `identity-stack.mjs` uses this guard before opening the log. Session writers route DEV-017/DEV-018 outputs to their matching run-specific directories.
+`tests/sessions/evidence-target.mjs` now requires `SKYRA_SESSION_TEST_LABEL`, accepts only a matching direct or label-owned run-specific directory, and refuses all direct writes to the historical DEV-013 directory; the `SKYRA_ALLOW_HISTORICAL_OVERWRITE` variable is no longer honored for that target. `identity-stack.mjs` uses this guard before opening the log. Updated session writers route new output to unique run-specific directories.
 
 ## 7. Prevention test evidence
 

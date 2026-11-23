@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -78,7 +79,7 @@ import { ThemeService } from '../../core/theme/theme.service';
             id="btn-mock-login"
             (click)="onDeveloperLogin()"
           >
-            <span>Sign in as Principal Architect (Sandbox)</span>
+            <span>Sign in with isolated preview identity</span>
           </button>
         </div>
 
@@ -278,9 +279,13 @@ export class LoginComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly config = inject(AppConfigService);
   readonly sessionUnavailable=this.authService.sessionUnavailable;
-  readonly previewAllowed=()=>this.config.config().previewMode;
+  readonly previewAllowed=()=>{
+    const config = this.config.config();
+    return config.previewMode === true && config.previewIsolation === true && config.environment === 'development' && config.previewUser !== undefined;
+  };
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -288,7 +293,7 @@ export class LoginComponent implements OnInit {
   private returnUrl = '/overview';
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe((params) => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       if (params['returnUrl']) {
         this.returnUrl = params['returnUrl'];
       }
@@ -309,14 +314,9 @@ export class LoginComponent implements OnInit {
 
   onDeveloperLogin(): void {
     if(!this.previewAllowed())return;
-    this.authService.loginPreview({
-      id: 'usr-arch-dinesh',
-      email: 'lead-architect@skyra.dev',
-      fullName: 'Principal Architect',
-      roles: ['OrgAdmin', 'Developer'],
-      tenantId: 'skyra-internal',
-      allowedProjects: ['skyra-tech', 'auth-service', 'billing-api'],
-    });
+    const previewUser = this.config.config().previewUser;
+    if (!previewUser) return;
+    this.authService.loginPreview(previewUser);
     this.router.navigateByUrl(this.returnUrl);
   }
 }

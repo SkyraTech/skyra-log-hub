@@ -36,11 +36,11 @@ The read-only inventory is `.tmp/dev018-evidence/strict-preservation-inventory.j
 
 ## 5. Overwrite-prevention verification
 
-`tests/sessions/evidence-target.mjs` now requires the evidence directory basename to match `SKYRA_SESSION_TEST_LABEL`. An existing DEV-013 `session-admin.log` is always rejected. `SKYRA_ALLOW_HISTORICAL_OVERWRITE` is no longer honored for this historical target, so setting it cannot bypass the refusal. Current DEV-017/DEV-018 session writers route to matching run-specific directories.
+`tests/sessions/evidence-target.mjs` now requires an explicit label and accepts only the matching direct evidence directory or a label-owned run-specific directory. Direct writes to the historical DEV-013 directory are rejected regardless of whether `session-admin.log` already exists. `SKYRA_ALLOW_HISTORICAL_OVERWRITE` is no longer honored for that target, so setting it cannot bypass the refusal. Updated session writers route new output to unique run-specific directories.
 
 ## 6. Prevention regression
 
-`tests/sessions/evidence-routing.test.mjs` passed 1/1 in `.tmp/dev018-evidence/evidence-routing-strict-final.log`, including the explicit override case. No broad product suite or historical evidence-writing workflow was rerun for this status review.
+`tests/sessions/evidence-routing.test.mjs` passed 1/1 in `.tmp/dev018-evidence/evidence-routing-strict-final.log`, including the explicit override case. The new preservation lockdown suite passed 5/5 in `.tmp/dev018-evidence/preservation-lockdown-tests-final-6.log`, covering path validation, unique output, non-replacement, synthetic hash match/mismatch, and historical-byte stability. No broad product suite or historical evidence-writing workflow was rerun for this status review.
 
 ## 7. Additional recovery sources inspected
 

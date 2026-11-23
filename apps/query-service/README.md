@@ -23,7 +23,7 @@ Built with **NestJS 10** and the high-performance **Fastify** HTTP adapter, it e
 - **Single Event Point-Lookup**: Bounded, scoped event retrieval (`GET /query/v1/logs/:eventId`) requiring authorized `projectId`, supporting optional UTC `date` partition hints, and returning canonical log events.
 - **Query Resource Governance**: Concurrency ceilings (max 4 concurrent queries), queue depth limits (max 16), per-tenant fairness (max 2 active slots per tenant), and execution duration enforcement.
 - **True Interrupt Cancellation**: Timeout or client `AbortSignal` invokes `conn.interrupt()` to immediately halt DuckDB thread execution and release resources.
-- **Structured Filter Compiler**: Validates canonical ECS field allowlists (`docs/query/10-CANONICAL_FIELD_MAPPING.md`), bounds string lengths (<= 512 chars) and array sizes (<= 100 items), and compiles typed ASTs.
+- **Structured Filter Compiler**: Validates canonical ECS field allowlists (`docs/06-LOGGING-AND-STORAGE.md`), bounds string lengths (<= 512 chars) and array sizes (<= 100 items), and compiles typed ASTs.
 - **Safe Parameterized SQL Generation**: Translates query plans to DuckDB SQL where dynamic filter values and trusted filesystem paths are bound using prepared parameters ($1, $2, ...), preventing SQL injection.
 - **JWT & Pluggable Authentication**: Verifies signed JWT tokens (HS256, RS256, EdDSA/Ed25519) and provides a deterministic test token verifier (`test-token:<base64-json>`) in non-production environments.
 - **Read-Only Metadata Repository**: Dual-mode storage adapter using either PostgreSQL via Prisma (`PrismaArchiveSegmentRepository`) or zero-dependency in-memory mock (`InMemoryArchiveSegmentRepository`).

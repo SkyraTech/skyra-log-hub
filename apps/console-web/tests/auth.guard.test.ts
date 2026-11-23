@@ -34,9 +34,11 @@ describe('Auth Guards — Route Protection & RBAC Entitlements', () => {
   };
 
   beforeEach(() => {
+    const config = new AppConfigService();
+    config.updateConfig({previewMode:true, previewIsolation:true, environment:'development'});
     injector = createEnvironmentInjector(
       [
-        AppConfigService,
+        {provide:AppConfigService,useValue:config},
         AuthService,
         { provide: Router, useValue: mockRouter },
       ],

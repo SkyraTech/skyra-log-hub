@@ -27,32 +27,13 @@ export class WorkspaceContextService implements OnDestroy {
   private configService: AppConfigService | null = null;
   private authService: AuthService | null = null;
 
-  private readonly _activeTenant = signal<TenantSummary | null>({
-    id: '00000000-0000-0000-0000-000000000001',
-    code: 'skyra-internal',
-    name: 'Skyra Technologies'
-  });
+  private readonly _activeTenant = signal<TenantSummary | null>(null);
 
-  private readonly _availableTenants = signal<TenantSummary[]>([
-    {
-      id: '00000000-0000-0000-0000-000000000001',
-      code: 'skyra-internal',
-      name: 'Skyra Technologies'
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000002',
-      code: 'partner-demo',
-      name: 'Partner Demonstration Tenant'
-    }
-  ]);
+  private readonly _availableTenants = signal<TenantSummary[]>([]);
 
-  private readonly _availableProjects = signal<ProjectSummary[]>([
-    { id: 'skyra-tech', name: 'Skyra Platform Core', status: 'ACTIVE' },
-    { id: 'auth-service', name: 'Identity & Authentication', status: 'ACTIVE' },
-    { id: 'billing-api', name: 'Billing & Subscriptions', status: 'ACTIVE' }
-  ]);
+  private readonly _availableProjects = signal<ProjectSummary[]>([]);
 
-  private readonly _selectedProjectIds = signal<string[]>(['skyra-tech']);
+  private readonly _selectedProjectIds = signal<string[]>([]);
   private readonly _selectedEnvironment = signal<string>('production');
 
   private readonly _timeRange = signal<TimeRangeBoundary>(
@@ -69,7 +50,8 @@ export class WorkspaceContextService implements OnDestroy {
     } catch {
       // In direct non-DI unit tests
     }
-    if(this.configService && !this.configService.config().previewMode)this.clearAuthorizedWorkspaces();
+    if (this.isIsolatedPreview()) this.initializePreviewWorkspace();
+    else this.clearAuthorizedWorkspaces();
     this.initBroadcastChannel();
   }
 
@@ -104,8 +86,8 @@ export class WorkspaceContextService implements OnDestroy {
 
   readonly hasActiveTenant = computed(() => this._activeTenant() !== null);
   readonly currentContext = computed(() => ({
-    tenantId: this._activeTenant()?.code ?? (this.configService?.config().previewMode!==false?'default-tenant':''),
-    projectId: this._selectedProjectIds()[0] ?? (this.configService?.config().previewMode!==false?'default-project':''),
+    tenantId: this._activeTenant()?.code ?? '',
+    projectId: this._selectedProjectIds()[0] ?? '',
     environment: this._selectedEnvironment(),
   }));
   readonly selectedProjectNames = computed(() => {
@@ -182,7 +164,7 @@ export class WorkspaceContextService implements OnDestroy {
   public async loadWorkspacesFromBff(): Promise<void> {
     const bffUrl = this.configService?.config().adminApiBaseUrl || 'http://127.0.0.1:3200';
     if (!this.http) return;
-    if(this.configService && !this.configService.config().previewMode)this.clearAuthorizedWorkspaces();
+    if (!this.isIsolatedPreview()) this.clearAuthorizedWorkspaces();
 
     try {
       const data = await this.http.get<BffWorkspaceResponse>(`${bffUrl}/bff/workspaces`, {
@@ -216,11 +198,28 @@ export class WorkspaceContextService implements OnDestroy {
         }
       }
     } catch {
-      if(this.configService && !this.configService.config().previewMode)this.clearAuthorizedWorkspaces();
+      if (!this.isIsolatedPreview()) this.clearAuthorizedWorkspaces();
     }
   }
 
   private clearAuthorizedWorkspaces(){this._activeTenant.set(null);this._availableTenants.set([]);this._availableProjects.set([]);this._selectedProjectIds.set([]);}
+
+  private isIsolatedPreview(): boolean {
+    const config = this.configService?.config();
+    return config?.previewMode === true && config.previewIsolation === true && config.environment === 'development';
+  }
+
+  private initializePreviewWorkspace(): void {
+    const fixture = this.configService?.config().previewWorkspace;
+    if (!fixture) {
+      this.clearAuthorizedWorkspaces();
+      return;
+    }
+    this._activeTenant.set(fixture.tenant);
+    this._availableTenants.set([fixture.tenant]);
+    this._availableProjects.set(fixture.projects ?? [fixture.project]);
+    this._selectedProjectIds.set([fixture.project.id]);
+  }
 
   private calculateTimeRange(preset: TimeRangePreset): TimeRangeBoundary {
     const now = new Date();

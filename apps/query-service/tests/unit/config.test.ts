@@ -61,4 +61,15 @@ describe('QueryConfigService Unit Tests (LOGHUB-QUERY-002)', () => {
     assert.equal(config.maxTimeRangeDays, 7);
     assert.deepEqual(config.corsOrigins, ['https://console.skyra.internal']);
   });
+
+  it('should reject production wildcard CORS', () => {
+    assert.throws(() => new QueryConfigService({
+      nodeEnv: 'production',
+      databaseUrl: 'postgresql://user:synthetic@db:5432/skyra',
+      authMode: 'jwt',
+      jwtSecretOrPublicKey: 'synthetic-production-query-key-32-characters',
+      cursorSigningSecret: 'synthetic-cursor-key-32-characters-long',
+      corsOrigins: ['*'],
+    }), /non-wildcard CORS_ORIGINS/);
+  });
 });

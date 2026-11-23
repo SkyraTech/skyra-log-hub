@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import {Test} from '@nestjs/testing';
 import {SessionStoreService} from '../../src/modules/auth/application/session-store.service.js';
 import { describe, it, before, after } from 'node:test';

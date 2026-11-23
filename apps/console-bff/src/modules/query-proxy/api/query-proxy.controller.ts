@@ -198,9 +198,11 @@ export class QueryProxyController {
     const timeout = setTimeout(() => controller.abort(), 15000); // 15-second budget
 
     // Propagate client cancellation
-    req.raw.on('close', () => {
-      controller.abort();
-    });
+    // `close` is also emitted for a normally completed Fastify request in
+    // Fastify 5, which would cancel an otherwise valid upstream response.
+    // Abort only when the client actually terminates the request.
+    const onAborted = () => controller.abort();
+    req.raw.once('aborted', onAborted);
 
     try {
       const upstreamRes = await fetch(upstreamUrl, {
@@ -217,6 +219,7 @@ export class QueryProxyController {
       });
 
       clearTimeout(timeout);
+      req.raw.removeListener('aborted', onAborted);
 
       const contentType = upstreamRes.headers.get('content-type') || 'application/json';
       const responseText = await upstreamRes.text();
@@ -226,6 +229,7 @@ export class QueryProxyController {
       reply.status(upstreamRes.status).header('content-type', contentType).send(responseText);
     } catch (err: unknown) {
       clearTimeout(timeout);
+      req.raw.removeListener('aborted', onAborted);
 
       if (err instanceof Error && err.name === 'AbortError') {
         throw new UpstreamTimeoutException(

@@ -10,6 +10,8 @@
     "sync:schemas": "node scripts/sync-schemas.mjs",
     "check:schema-sync": "node scripts/sync-schemas.mjs --check",
     "governance:check": "node scripts/verify-design-system-governance.cjs",
+    "architecture:check": "node scripts/verify-architecture-integrity.mjs",
+    "docs:check": "node scripts/verify-documentation-governance.mjs",
     "test": "node --experimental-strip-types --test tests/contracts/**/*.test.ts && node --experimental-strip-types --test packages/logger-node/tests/**/*.test.ts && pnpm --filter @skyra/logger-nestjs test && pnpm --filter @skyra/logger-next test && pnpm --filter @skyra/logger-browser test && pnpm --filter @skyra/logger-angular test && pnpm --filter @skyra/logger-react test && pnpm --filter @skyra/ingestion-gateway test && pnpm --filter @skyra/query-service test && pnpm --filter @skyra/admin-service test && pnpm --filter @skyra/console-bff test && pnpm --filter @skyra/console-web test",
     "test:contracts": "node --experimental-strip-types --test tests/contracts/**/*.test.ts",
     "test:node": "node --experimental-strip-types --test packages/logger-node/tests/**/*.test.ts",

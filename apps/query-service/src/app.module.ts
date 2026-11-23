@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { Module, type NestModule, type MiddlewareConsumer } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from './config/config.module.js';

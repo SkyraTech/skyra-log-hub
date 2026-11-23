@@ -1,0 +1,728 @@
+{
+  "schemaVersion": "1.0",
+  "manifestType": "supplementary-current-state-lockdown-final",
+  "createdAt": "2026-11-19T07:43:05.451Z",
+  "officialDev018Verdict": "FAIL — DEV-018 preservation evidence unrecoverable.",
+  "originalManifestPath": ".tmp/dev018-evidence/prior-evidence-hashes.json",
+  "originalManifestUnchanged": true,
+  "entries": [
+    {
+      "relativePath": ".tmp/dev013-evidence/http-security.json",
+      "sha256": "ea9eeedc94b000bb29b55d4495e6fd950ce724a91e0e565015619c597fe6a81f",
+      "sizeBytes": 4971,
+      "evidenceCategory": "historical-evidence",
+      "originalMilestone": "DEV-013",
+      "runId": "historical-run",
+      "verificationStatus": "sha256-mismatch-against-original-DEV-018-manifest",
+      "historicalAuthenticity": "not-established"
+    },
+    {
+      "relativePath": ".tmp/dev013-evidence/outage-recovery.json",
+      "sha256": "29fdf79179f1157b9604abf726980167b3ebc459fbdea28a34b51e498906136d",
+      "sizeBytes": 1109,
+      "evidenceCategory": "historical-evidence",
+      "originalMilestone": "DEV-013",
+      "runId": "historical-run",
+      "verificationStatus": "sha256-mismatch-against-original-DEV-018-manifest",
+      "historicalAuthenticity": "not-established"
+    },
+    {
+      "relativePath": ".tmp/dev013-evidence/persistence.json",
+      "sha256": "fa232441d10bda6f12dbb2d755baa309ca3e7a19ae80c81d86314115b400e596",
+      "sizeBytes": 4040,
+      "evidenceCategory": "historical-evidence",
+      "originalMilestone": "DEV-013",
+      "runId": "historical-run",
+      "verificationStatus": "sha256-mismatch-against-original-DEV-018-manifest",
+      "historicalAuthenticity": "not-established"
+    },
+    {
+      "relativePath": ".tmp/dev013-evidence/session-admin.log",
+      "sha256": "056a20c78aebaae75909b1eef55071227caed617d2089043bb24f98993b7f4a6",
+      "sizeBytes": 7346,
+      "evidenceCategory": "historical-evidence",
+      "originalMilestone": "DEV-013",
+      "runId": "historical-run",
+      "verificationStatus": "sha256-mismatch-against-original-DEV-018-manifest",
+      "historicalAuthenticity": "not-established"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/prior-evidence-hashes.json",
+      "sha256": "e04cac412cb4c9962ba0228778313c331568df2bbe59bb8613d2b0e9f64fd90a",
+      "sizeBytes": 566637,
+      "evidenceCategory": "historical-manifest",
+      "originalMilestone": "DEV-018",
+      "runId": "dev018-baseline",
+      "verificationStatus": "unchanged-authoritative-input",
+      "historicalAuthenticity": "established-for-recorded-hashes"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/integrated-browser-success.log",
+      "sha256": "23969dbb3afc3902077a630646b662f55113fb336d04523f2ff80bf707c59b4b",
+      "sizeBytes": 29085,
+      "evidenceCategory": "current-technical-evidence",
+      "originalMilestone": "DEV-018",
+      "runId": "dev018",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "current-run-evidence-not-historical-DEV-013"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/python-full.json",
+      "sha256": "4adcc7ae84face1e6c79ef3dd5ddfadbdd7b003fb8818b96020abd10b7dbf7f0",
+      "sizeBytes": 227,
+      "evidenceCategory": "current-technical-evidence",
+      "originalMilestone": "DEV-018",
+      "runId": "dev018",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "current-run-evidence-not-historical-DEV-013"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/sdk-results.json",
+      "sha256": "fd3a24353662631658f0ad058689a0242ae52d49c127b1d313ec22fc009d2b55",
+      "sizeBytes": 1921,
+      "evidenceCategory": "current-technical-evidence",
+      "originalMilestone": "DEV-018",
+      "runId": "dev018",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "current-run-evidence-not-historical-DEV-013"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/reconciliation-index.json",
+      "sha256": "4e2605b75a9200de2d8a94d458eccf4f4c7c53745dc4a329deeca64aaf29eaf0",
+      "sizeBytes": 82160,
+      "evidenceCategory": "current-technical-evidence",
+      "originalMilestone": "DEV-018",
+      "runId": "dev018",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "current-run-evidence-not-historical-DEV-013"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/master-storage-ledger.json",
+      "sha256": "5aff22260b16ed130b79b38660ebfe4e41d22041e70aa85b024c161292fad29f",
+      "sizeBytes": 67198,
+      "evidenceCategory": "current-technical-evidence",
+      "originalMilestone": "DEV-018",
+      "runId": "dev018",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "current-run-evidence-not-historical-DEV-013"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/master-retirement.json",
+      "sha256": "44ee7820a3881143023e595b4eb0bab7ebf4576bd6f6d314e3eb28b676c95cb3",
+      "sizeBytes": 17592,
+      "evidenceCategory": "current-technical-evidence",
+      "originalMilestone": "DEV-018",
+      "runId": "dev018",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "current-run-evidence-not-historical-DEV-013"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/query-runtime-after.json",
+      "sha256": "760be65efa3d2cd0167892cbf607768d6f29447aad2e01b57d8ea770837c576e",
+      "sizeBytes": 1924,
+      "evidenceCategory": "current-technical-evidence",
+      "originalMilestone": "DEV-018",
+      "runId": "dev018",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "current-run-evidence-not-historical-DEV-013"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/final-audit-final-remediation.log",
+      "sha256": "e42098ffc58e81c25da305c25188e5156ed531e644fcec4452c475247839f2a0",
+      "sizeBytes": 4586,
+      "evidenceCategory": "current-technical-evidence",
+      "originalMilestone": "DEV-018",
+      "runId": "dev018",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "current-run-evidence-not-historical-DEV-013"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/evidence-routing-strict-final.log",
+      "sha256": "6696efd7ea2ce0ca74bdef042dacd0833b4cbdb81aa480db5b914a11c268c2d0",
+      "sizeBytes": 332,
+      "evidenceCategory": "current-technical-evidence",
+      "originalMilestone": "DEV-018",
+      "runId": "dev018",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "current-run-evidence-not-historical-DEV-013"
+    },
+    {
+      "relativePath": "scripts/lib/evidence-output-policy.mjs",
+      "sha256": "102e3422d902ebf75d82a54bd0e79a96ba32f0cf36bebf1c1353e9e124ff8ab0",
+      "sizeBytes": 4294,
+      "evidenceCategory": "preservation-infrastructure",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "source-present-and-hash-recorded",
+      "historicalAuthenticity": "not-applicable"
+    },
+    {
+      "relativePath": "scripts/verify-evidence-recovery-candidate.mjs",
+      "sha256": "c16a5c57c071c1d6fa0814f2c24f3e6eaf733640480c3f2f38327a090a4a16a4",
+      "sizeBytes": 1760,
+      "evidenceCategory": "preservation-infrastructure",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "source-present-and-hash-recorded",
+      "historicalAuthenticity": "not-applicable"
+    },
+    {
+      "relativePath": "tests/sessions/evidence-target.mjs",
+      "sha256": "1336071f60f86bc22b27759fafc25c01d105e28c8f4fe9b9c2ad4ab6a0b52a89",
+      "sizeBytes": 1525,
+      "evidenceCategory": "preservation-infrastructure",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "source-present-and-hash-recorded",
+      "historicalAuthenticity": "not-applicable"
+    },
+    {
+      "relativePath": "tests/sessions/identity-stack.mjs",
+      "sha256": "c8f45f709584fba3ae9e07703bb38213920e938556800c8a80f13a45ab71ccde",
+      "sizeBytes": 3847,
+      "evidenceCategory": "preservation-infrastructure",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "source-present-and-hash-recorded",
+      "historicalAuthenticity": "not-applicable"
+    },
+    {
+      "relativePath": "tests/sessions/evidence-routing.test.mjs",
+      "sha256": "23bd2e9311f7c5c379a6ca3f36f1a9e0045c82d079eb402953a38e5647be8560",
+      "sizeBytes": 2461,
+      "evidenceCategory": "preservation-infrastructure",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "source-present-and-hash-recorded",
+      "historicalAuthenticity": "not-applicable"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/strict-preservation-inventory.json",
+      "sha256": "9bd9df10a3d5dcae53546fe53fc31575889b3797f1794497b02e2095a5877d71",
+      "sizeBytes": 4548,
+      "evidenceCategory": "preservation-record",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/strict-recovery-sources.json",
+      "sha256": "1cd7d552be5cba6ee7e5a4f4f2af3b665962dfe41656c32819d0b8d9d27115b9",
+      "sizeBytes": 1886,
+      "evidenceCategory": "preservation-record",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/strict-prior-evidence-verification.json",
+      "sha256": "69813ce35bb5825e3cdcba28da4d0bb2b648b01b48484deb21aafe0ab1320d47",
+      "sizeBytes": 995,
+      "evidenceCategory": "preservation-record",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/authentic-copy-search.json",
+      "sha256": "8c697cf0fc03ae8194aafa35a2060def7e7966a65614f6108b95e2a113923f01",
+      "sizeBytes": 164,
+      "evidenceCategory": "preservation-record",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-accordion-0.1.0.tgz",
+      "sha256": "c81fed9cf7ea4a3421555f8081122dac420242040e6dffe0784f736f3e1f5267",
+      "sizeBytes": 8883,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-accordion-0.1.1.tgz",
+      "sha256": "a5b4801bca471631266604cf71571c569d91e5c90702701602e437a1650b95bd",
+      "sizeBytes": 8883,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz",
+      "sha256": "203c58231510e5bb1ea7c5808bfa75552050dbe089e936313611ebd7c038b248",
+      "sizeBytes": 6794,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz",
+      "sha256": "f26cc85e26de71cdd2fca52e60d548bf1188def021fc37f113b4f27af818f703",
+      "sizeBytes": 4474,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-button-0.1.0.tgz",
+      "sha256": "9a3cfc7129b07ae882f186926916d7985125994d4db5b236a755091d16769643",
+      "sizeBytes": 11234,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-button-0.1.1.tgz",
+      "sha256": "976930bd8033c6e74c0baf2a79138abce44a136b808caa9751e95e21abba13cd",
+      "sizeBytes": 11235,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-checkbox-0.1.0.tgz",
+      "sha256": "23e34c346980314ed329cc671697aa969dc7bb7337f617ca2c4ca490b789bb41",
+      "sizeBytes": 10745,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-collapsible-0.1.0.tgz",
+      "sha256": "a97d78f2e76f56b17651d7f45f258724523b9036274c68e9a63fe6a46aa2bd9e",
+      "sizeBytes": 4815,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-collapsible-0.1.1.tgz",
+      "sha256": "26c30612026da32c3303ff20f390a10da0f73c5eae7dc6dd56a1909ddf4a867a",
+      "sizeBytes": 4815,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-command-palette-0.1.0.tgz",
+      "sha256": "89d5c0a91c0253f5b213efa922c6b62e6772421105537e4ed20ee2bb63c8061c",
+      "sizeBytes": 34485,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-context-menu-0.1.0.tgz",
+      "sha256": "26f885e7fca5235d6c98f55cf6b18f0e708729145ab074789386eb56ffe2fd6b",
+      "sizeBytes": 41235,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-data-export-0.1.0.tgz",
+      "sha256": "7a82922a907d1a39e7a4f2731938cea18f0e422d6f53b2ed930e6cebe3ea4b97",
+      "sizeBytes": 9775,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-data-table-0.1.0.tgz",
+      "sha256": "637c5ce856505aaabfce9233836477172e17e28920d6fec2f747cf0bdbb2263a",
+      "sizeBytes": 47238,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-date-time-0.1.0.tgz",
+      "sha256": "985ae1f57f3c20137a0ff258cc8ca382b0411606e4fd4c9b361e52abf31517a8",
+      "sizeBytes": 58852,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.0.tgz",
+      "sha256": "28e500c3393449cab16d774533a3b65a1d790191e68d5f2655f0dc310be00fbd",
+      "sizeBytes": 6674,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz",
+      "sha256": "218bcdf4a88d2a96eead6e6bc34173e5f72b55ce587e3ea955afd6b2ec6b140c",
+      "sizeBytes": 7569,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz",
+      "sha256": "6b860b331e1f6bb5326b6a8b8b125f2c0ea6ec06cfdbabf1e50073b3b970d2fd",
+      "sizeBytes": 7711,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz",
+      "sha256": "0f16713f399929434bc34032ebe8e87c0de44172d27350ffc7be05814b730c25",
+      "sizeBytes": 6883,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz",
+      "sha256": "3139c235175c47e6081fc7cce4333e60ff4a080c65fd3ac97125f2ca7373b988",
+      "sizeBytes": 38989,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-dynamic-form-0.1.0.tgz",
+      "sha256": "4c5ea4c0734a74acd10829dbe01dee9d0bd0344669738966cc725449089cbf4d",
+      "sizeBytes": 53506,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-dynamic-select-0.1.0.tgz",
+      "sha256": "be34a1d85082890d6b827992ff3e9d9515e866bcdcf1bffdca2fc61721ec10f6",
+      "sizeBytes": 57547,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz",
+      "sha256": "30c6012f923abe1515cd9dd4ff8fd019f843f95a888e40f5752464a58b5a7565",
+      "sizeBytes": 4470,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-input-0.1.0.tgz",
+      "sha256": "e5a18391fc229592f14c6b5230019c73d6b25f6f4c0a2e0afa48cb166eef0656",
+      "sizeBytes": 22189,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-loader-0.1.0.tgz",
+      "sha256": "deef5df07dac0ccdf19161da4f8bb0cd91456b877ce22b94a782d9cf431961f8",
+      "sizeBytes": 21648,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-loader-0.1.1.tgz",
+      "sha256": "0e350c3b8ebb1c3fc14b58292c6a2298bc1d37891074b3ffeb8762e5195d939f",
+      "sizeBytes": 21648,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-notification-0.1.0.tgz",
+      "sha256": "86d7a2c9b52dece45a2c33a5956ecbd337660bff733dbe6858247b4653cba3cf",
+      "sizeBytes": 7904,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-pdf-viewer-0.1.0.tgz",
+      "sha256": "2b4a648e20d7e7fd6611b9850109095b862b5d0e8f03b2108add3d8ec110c13b",
+      "sizeBytes": 40985,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz",
+      "sha256": "779c6d0ad7b3de4649d8483bb535c1b4c9ebeacae537718e96e7ba4b4b197096",
+      "sizeBytes": 20557,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-qr-0.1.0.tgz",
+      "sha256": "722f047972e405409f8b79a93885eaa6e4f0f01258230c7b70a8dd51271d58d0",
+      "sizeBytes": 20656,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-radio-0.1.0.tgz",
+      "sha256": "a7d3187ac839b943bfb600a659ef6c03ca4aa646683127f13fdd131fb2ab2cd2",
+      "sizeBytes": 11508,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-switch-0.1.0.tgz",
+      "sha256": "77e0c457d96888ed18a1f863fef3bf3bdb5573b584fb54c1c6cbdb7831da0912",
+      "sizeBytes": 13198,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-tabs-0.1.0.tgz",
+      "sha256": "1a518eef0634604a0aca5f0eecc6cd95094ab42cc71505958e18c2ec9ba5f3cb",
+      "sizeBytes": 9823,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-tabs-0.1.1.tgz",
+      "sha256": "3e058e378ae304959865f8e86f7c6df6b80428b012b437f7515d6bb87159652d",
+      "sizeBytes": 9823,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-textarea-0.1.0.tgz",
+      "sha256": "94c0a1bff4cbe8483abba774d085a9a6d6138e8c2891a04f4814fb8ce066ec32",
+      "sizeBytes": 19467,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-toast-0.1.0.tgz",
+      "sha256": "90cb54037662191118a1b58d5b9d97c2b8fe4d2de845aa08d74e66c6d9746b06",
+      "sizeBytes": 8079,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-utils-0.1.0.tgz",
+      "sha256": "191925ff29c32813bb7081402a8df28643252e9bd5e8c4382a36f16f1e8d9fda",
+      "sizeBytes": 28976,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "artifacts/platform-packages/skyra-tech-platform-validation-0.1.0.tgz",
+      "sha256": "5b564aac60acaa24ba6885c1a5cb10b55a57a2a6091af8f004763f91b38590be",
+      "sizeBytes": 7676,
+      "evidenceCategory": "immutable-platform-package",
+      "originalMilestone": "Skyra Platform",
+      "runId": "platform-release",
+      "verificationStatus": "verified-by-final-audit",
+      "historicalAuthenticity": "established"
+    },
+    {
+      "relativePath": "tests/preservation/preservation-lockdown.test.mjs",
+      "sha256": "f7796f8beb1888cdaa4c50b54c9b3f891f553976d3ad2c3154bfc0fb342a2a0d",
+      "sizeBytes": 2284,
+      "evidenceCategory": "preservation-infrastructure",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": "SKYRA_LOGHUB_DEV_018_STRICT_PRESERVATION_STATUS.md",
+      "sha256": "c19f61ed89932622bcee51f700d12fb9f4471e6f18a5bc70eb371d851eaae9da",
+      "sizeBytes": 5810,
+      "evidenceCategory": "preservation-record",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/strict-candidate-check-current.json",
+      "sha256": "58d9d5fe36cc5f6c2196f5e8d721be658519bd97fa7ce6dc3ee03cd6c7e89b80",
+      "sizeBytes": 3064,
+      "evidenceCategory": "preservation-record",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/strict-current-hashes-after-tests.json",
+      "sha256": "d3e94978f948e4d2a038c105eb8c0a1ad42e082c45814e0fc5a11edfaa48f295",
+      "sizeBytes": 718,
+      "evidenceCategory": "preservation-record",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/preservation-lockdown-tests-final.log",
+      "sha256": "3f20cefbf53a6e2a2767401ca3760d3eda36fd269d3f5696e72802b97029f692",
+      "sizeBytes": 1233,
+      "evidenceCategory": "preservation-record",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": "SKYRA_LOGHUB_DEV_018_EVIDENCE_PRESERVATION_POLICY.md",
+      "sha256": "6d05bcf93a1104660a8c74e6abc0397efe45aa0cf9d7fa92dfe1d911e614f5b2",
+      "sizeBytes": 3621,
+      "evidenceCategory": "preservation-report",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown-final",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": "SKYRA_LOGHUB_DEV_018_RECOVERY_READINESS.md",
+      "sha256": "19bf98cce8cff39997be06c4790423539f2dea923e3a6c7adbd6840474c03216",
+      "sizeBytes": 1729,
+      "evidenceCategory": "preservation-report",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown-final",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": "SKYRA_LOGHUB_DEV_018_PRESERVATION_TESTS.md",
+      "sha256": "ce1c61ab4cd8b570db892bc7e29e752507020f16a7003aebd7001f687b6b9fbd",
+      "sizeBytes": 2288,
+      "evidenceCategory": "preservation-report",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown-final",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": "SKYRA_LOGHUB_DEV_018_LOCKDOWN_STATUS.md",
+      "sha256": "f5c689ee359c1ed24abf3da697b7ab981da53efe111863a2dda1ae90fb7696cb",
+      "sizeBytes": 5443,
+      "evidenceCategory": "preservation-report",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown-final",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/preservation-lockdown-tests-final-2.log",
+      "sha256": "30c5147bead527e683da5ec21da7c4581df4945d321ff35486eac3c56d9c608d",
+      "sizeBytes": 1233,
+      "evidenceCategory": "preservation-report",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown-final",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    },
+    {
+      "relativePath": ".tmp/dev018-evidence/strict-prior-evidence-verification-lockdown-final.json",
+      "sha256": "69813ce35bb5825e3cdcba28da4d0bb2b648b01b48484deb21aafe0ab1320d47",
+      "sizeBytes": 995,
+      "evidenceCategory": "preservation-report",
+      "originalMilestone": "DEV-018-P1-001",
+      "runId": "lockdown-final",
+      "verificationStatus": "available-and-hash-recorded",
+      "historicalAuthenticity": "not-historical-evidence"
+    }
+  ],
+  "notes": [
+    "This manifest supplements and does not replace the original DEV-018 baseline.",
+    "The four DEV-013 entries are explicitly not authenticated originals.",
+    "No restoration was performed.",
+    "Protected PostgreSQL and Platform archives were not modified.",
+    "This lockdown snapshot records the final preservation-policy source and focused-test artifacts without replacing the original DEV-018 baseline or the earlier supplementary manifest.",
+    "This final lockdown snapshot records the final source, report, and focused-test state without replacing the original DEV-018 baseline."
+  ]
+}

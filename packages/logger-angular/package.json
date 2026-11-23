@@ -65,14 +65,14 @@
     "@skyra/logger-core": "workspace:*"
   },
   "devDependencies": {
-    "@angular/common": "^19.0.0",
-    "@angular/compiler": "^19.0.0",
-    "@angular/core": "^19.0.0",
-    "@angular/platform-browser": "^19.0.0",
-    "@angular/router": "^19.0.0",
+    "@angular/common": "^20.3.35",
+    "@angular/compiler": "^20.3.35",
+    "@angular/core": "^20.3.35",
+    "@angular/platform-browser": "^20.3.35",
+    "@angular/router": "^20.3.35",
     "@types/node": "^26.6.5",
     "rxjs": "^7.8.2",
-    "typescript": "^5.6.3",
+    "typescript": "^5.8.3",
     "zone.js": "^0.15.0"
   }
 }

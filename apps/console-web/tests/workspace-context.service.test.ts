@@ -1,11 +1,49 @@
 import '@angular/compiler';
-import { describe, it } from 'node:test';
+import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { createEnvironmentInjector, EnvironmentInjector, Injector } from '@angular/core';
 import { WorkspaceContextService } from '../src/app/core/workspace/workspace-context.service';
+import { AppConfigService } from '../src/app/core/config/app-config.service';
 
 describe('WorkspaceContextService — Multi-tenant Workspace Context & Time Retention', () => {
-  it('should initialize with default Skyra internal tenant context and production environment', () => {
-    const service = new WorkspaceContextService();
+  let injector: EnvironmentInjector;
+  let service: WorkspaceContextService;
+
+  beforeEach(() => {
+    const config = new AppConfigService();
+    config.updateConfig({
+      previewMode: true,
+      previewIsolation: true,
+      environment: 'development',
+      previewWorkspace: {
+        tenant: {
+          id: '00000000-0000-0000-0000-000000000001',
+          code: 'skyra-internal',
+          name: 'Skyra Technologies'
+        },
+        project: { id: 'skyra-tech', name: 'Skyra Platform Core', status: 'ACTIVE' },
+        projects: [
+          { id: 'skyra-tech', name: 'Skyra Platform Core', status: 'ACTIVE' },
+          { id: 'auth-service', name: 'Identity & Authentication', status: 'ACTIVE' },
+          { id: 'billing-api', name: 'Billing & Subscriptions', status: 'ACTIVE' }
+        ]
+      }
+    });
+    injector = createEnvironmentInjector(
+      [{ provide: AppConfigService, useValue: config }, WorkspaceContextService],
+      Injector.NULL as unknown as EnvironmentInjector
+    );
+    service = injector.get(WorkspaceContextService);
+  });
+
+  it('starts unauthenticated without tenant context when unconfigured', () => {
+    const unconfigured = new WorkspaceContextService();
+    assert.equal(unconfigured.hasActiveTenant(), false);
+    assert.equal(unconfigured.activeTenant(), null);
+    assert.deepEqual(unconfigured.selectedProjectIds(), []);
+  });
+
+  it('should initialize with default Skyra internal tenant context and production environment in preview mode', () => {
     assert.equal(service.hasActiveTenant(), true);
     assert.equal(service.activeTenant()?.code, 'skyra-internal');
     assert.equal(service.selectedEnvironment(), 'production');
@@ -18,8 +56,6 @@ describe('WorkspaceContextService — Multi-tenant Workspace Context & Time Rete
   });
 
   it('should calculate accurate time ranges for presets', () => {
-    const service = new WorkspaceContextService();
-
     service.setTimeRangePreset('15m');
     const range15m = service.timeRange();
     assert.equal(range15m.preset, '15m');
@@ -40,7 +76,6 @@ describe('WorkspaceContextService — Multi-tenant Workspace Context & Time Rete
   });
 
   it('should support custom time ranges without exceeding boundaries', () => {
-    const service = new WorkspaceContextService();
     const start = '2026-10-01T00:00:00.000Z';
     const end = '2026-10-02T00:00:00.000Z';
     service.setCustomTimeRange(start, end);
@@ -52,7 +87,6 @@ describe('WorkspaceContextService — Multi-tenant Workspace Context & Time Rete
   });
 
   it('should update active tenant and projects reactively', () => {
-    const service = new WorkspaceContextService();
     service.selectTenant({
       id: 'tenant-999',
       code: 'acme-corp',

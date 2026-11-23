@@ -25,9 +25,9 @@ Built on top of `@skyra/logger-core`, `@skyra/logger-node` generates canonical, 
 
 Node.js 22+ and ESM are the supported onboarding target. Public npm publication is not assumed.
 
-From the LogHub checkout, run `node scripts/package-node-sdk.mjs`, then install both generated tarballs in your application. See the [managed ingestion quick start](../../docs/developers/getting-started.md) for exact local installation commands, environment configuration and the runnable HTTP sample. The file/stdout example below does not submit logs to the Gateway.
+From the LogHub checkout, run `node scripts/package-node-sdk.mjs`, then install both generated tarballs in your application. See the [managed ingestion quick start](../../docs/01-FUNCTIONALITY.md) for exact local installation commands, environment configuration and the runnable HTTP sample. The file/stdout example below does not submit logs to the Gateway.
 
-See also the [public SDK contract](../../docs/developers/node-sdk.md) and [retry/quota behavior](../../docs/developers/errors-and-retries.md).
+See also the [public SDK contract & storage architecture](../../docs/06-LOGGING-AND-STORAGE.md) and [retry/quota behavior](../../docs/04-API-AND-CONTRACTS.md).
 
 ---
 

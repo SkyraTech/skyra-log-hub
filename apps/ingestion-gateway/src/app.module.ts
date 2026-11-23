@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from './config/config.module.js';
 import { MetadataModule } from './metadata/metadata.module.js';

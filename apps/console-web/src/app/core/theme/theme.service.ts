@@ -1,4 +1,4 @@
-import { Injectable, signal, effect, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, signal, effect, PLATFORM_ID, inject, DestroyRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -10,7 +10,9 @@ export type ResolvedTheme = 'light' | 'dark';
 export class ThemeService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private readonly destroyRef = inject(DestroyRef, { optional: true });
   private mediaQuery: MediaQueryList | null = null;
+  private mediaListener: (() => void) | null = null;
 
   private readonly _themeMode = signal<ThemeMode>('dark');
   private readonly _resolvedTheme = signal<ResolvedTheme>('dark');
@@ -21,9 +23,16 @@ export class ThemeService {
   constructor() {
     if (this.isBrowser) {
       this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      this.mediaQuery.addEventListener('change', () => {
+      this.mediaListener = () => {
         if (this._themeMode() === 'system') {
           this.applyTheme('system');
+        }
+      };
+      this.mediaQuery.addEventListener('change', this.mediaListener);
+      this.destroyRef?.onDestroy(() => {
+        if (this.mediaQuery && this.mediaListener) {
+          this.mediaQuery.removeEventListener('change', this.mediaListener);
+          this.mediaListener = null;
         }
       });
 
