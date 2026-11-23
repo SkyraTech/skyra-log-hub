@@ -528,5 +528,60 @@ describe('LOGHUB-PKG-001B: Canonical Logging Schema Contract & Hardening', () =>
     );
   });
 
+  it('14. Correlation contract: validation, optionality, pattern constraints, and backward compatibility', () => {
+    const validBase = {
+      '@timestamp': '2026-10-21T14:32:00.000Z',
+      'ecs.version': '8.11.0',
+      event: { id: 'a5c68e32-8438-4e4b-9725-b827568c0762' },
+      log: { level: 'info' },
+      message: 'Correlation test event',
+      service: { name: 'corr-service', environment: 'production' },
+      skyra: { schema_version: '1.0.0', project_id: 'test-project' },
+    };
+
+    // 14a. Backward compatibility: events without correlation must pass validation
+    const noCorrRes = validateLogEvent(validBase);
+    assert.equal(noCorrRes.valid, true, 'Event without correlation must remain valid');
+
+    // 14b. Valid correlation IDs
+    const validIds = [
+      'simple-id',
+      'goal-1234',
+      'A123-abc_def.xyz/123:456',
+      'task:01.sub/run_1',
+      '0192a46b-task-02',
+      'a'.repeat(128),
+    ];
+    for (const id of validIds) {
+      const res = validateLogEvent({ ...validBase, correlation: { id } });
+      assert.equal(res.valid, true, `Expected valid correlation ID '${id}' to pass`);
+    }
+
+    // 14c. Invalid correlation IDs rejected
+    const invalidIds = [
+      '', // minLength 1
+      '-leading-hyphen', // pattern requires ^[A-Za-z0-9]
+      '_leading-underscore',
+      '.leading-dot',
+      'contains spaces',
+      'special@chars!',
+      'hash#tag',
+      'dollar$sign',
+      'a'.repeat(129), // maxLength 128
+    ];
+    for (const id of invalidIds) {
+      const res = validateLogEvent({ ...validBase, correlation: { id } });
+      assert.equal(res.valid, false, `Expected invalid correlation ID '${id}' to fail`);
+    }
+
+    // 14d. Empty correlation object without required id must fail
+    const emptyCorr = validateLogEvent({ ...validBase, correlation: {} as any });
+    assert.equal(emptyCorr.valid, false, 'Empty correlation object must fail (missing id)');
+
+    // 14e. Additional properties in correlation object must fail
+    const extraCorr = validateLogEvent({ ...validBase, correlation: { id: 'valid-id', extra: 'forbidden' } as any });
+    assert.equal(extraCorr.valid, false, 'Correlation with extra properties must fail');
+  });
+
 });
 

@@ -447,6 +447,63 @@ class TestCanonicalSchemaContract(unittest.TestCase):
         self.assertNotIn(secret_password, all_err_text, "Secret password must not leak in errors")
         self.assertNotIn(secret_key, all_err_text, "Secret key must not leak in errors")
 
+    def test_correlation_contract_validation(self):
+        """14. Correlation contract: validation, optionality, pattern constraints, and backward compatibility."""
+        valid_base = {
+            "@timestamp": "2026-10-21T14:32:00.000Z",
+            "ecs.version": "8.11.0",
+            "event": {"id": "a5c68e32-8438-4e4b-9725-b827568c0762"},
+            "log": {"level": "info"},
+            "message": "Correlation test event",
+            "service": {"name": "corr-service", "environment": "production"},
+            "skyra": {"schema_version": "1.0.0", "project_id": "test-project"},
+        }
+
+        # 14a. Backward compatibility: events without correlation must pass validation
+        valid, errors = validate_log_event(valid_base)
+        self.assertTrue(valid, f"Event without correlation must remain valid: {errors}")
+
+        # 14b. Valid correlation IDs
+        valid_ids = [
+            "simple-id",
+            "goal-1234",
+            "A123-abc_def.xyz/123:456",
+            "task:01.sub/run_1",
+            "0192a46b-task-02",
+            "a" * 128,
+        ]
+        for cid in valid_ids:
+            event = {**valid_base, "correlation": {"id": cid}}
+            v, errs = validate_log_event(event)
+            self.assertTrue(v, f"Expected valid correlation ID '{cid}' to pass: {errs}")
+
+        # 14c. Invalid correlation IDs rejected
+        invalid_ids = [
+            "",  # minLength 1
+            "-leading-hyphen",  # pattern requires ^[A-Za-z0-9]
+            "_leading-underscore",
+            ".leading-dot",
+            "contains spaces",
+            "special@chars!",
+            "hash#tag",
+            "dollar$sign",
+            "a" * 129,  # maxLength 128
+        ]
+        for cid in invalid_ids:
+            event = {**valid_base, "correlation": {"id": cid}}
+            v, errs = validate_log_event(event)
+            self.assertFalse(v, f"Expected invalid correlation ID '{cid}' to fail")
+
+        # 14d. Empty correlation object without required id must fail
+        empty_corr = {**valid_base, "correlation": {}}
+        v, errs = validate_log_event(empty_corr)
+        self.assertFalse(v, "Empty correlation object must fail (missing id)")
+
+        # 14e. Additional properties in correlation object must fail
+        extra_corr = {**valid_base, "correlation": {"id": "valid-id", "extra": "forbidden"}}
+        v, errs = validate_log_event(extra_corr)
+        self.assertFalse(v, "Correlation with extra properties must fail")
+
 
 if __name__ == "__main__":
     unittest.main()
