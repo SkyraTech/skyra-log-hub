@@ -307,64 +307,64 @@ importers:
         specifier: ^20.3.35
         version: 20.3.35(@angular/common@20.3.35(@angular/core@20.3.35(@angular/compiler@20.3.35)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.35(@angular/compiler@20.3.35)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/platform-browser@20.3.35(@angular/animations@20.3.35(@angular/core@20.3.35(@angular/compiler@20.3.35)(rxjs@7.8.2)(zone.js@0.15.1)))(@angular/common@20.3.35(@angular/core@20.3.35(@angular/compiler@20.3.35)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.3.35(@angular/compiler@20.3.35)(rxjs@7.8.2)(zone.js@0.15.1)))(rxjs@7.8.2)
       '@skyra-tech-platform/app-shell':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-app-shell-0.1.0.tgz
       '@skyra-tech-platform/badge':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-badge-0.1.0.tgz
       '@skyra-tech-platform/button':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-button-0.1.1.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-button-0.1.1.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-button-0.1.1.tgz
       '@skyra-tech-platform/checkbox':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-checkbox-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-checkbox-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-checkbox-0.1.0.tgz
       '@skyra-tech-platform/data-export':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-data-export-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-data-export-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-data-export-0.1.0.tgz
       '@skyra-tech-platform/data-table':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-data-table-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-data-table-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-data-table-0.1.0.tgz
       '@skyra-tech-platform/date-time':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-date-time-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-date-time-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-date-time-0.1.0.tgz
       '@skyra-tech-platform/design-tokens':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz
       '@skyra-tech-platform/dialog':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-dialog-0.1.0.tgz
       '@skyra-tech-platform/drawer':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-drawer-0.1.0.tgz
       '@skyra-tech-platform/dropdown-menu':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-dropdown-menu-0.1.0.tgz(@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz)
       '@skyra-tech-platform/empty-state':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-empty-state-0.1.0.tgz
       '@skyra-tech-platform/input':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-input-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-input-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-input-0.1.0.tgz
       '@skyra-tech-platform/loader':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-loader-0.1.1.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.1.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-loader-0.1.1.tgz
       '@skyra-tech-platform/notification':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-notification-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-notification-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-notification-0.1.0.tgz
       '@skyra-tech-platform/popover':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-popover-0.1.0.tgz(@skyra-tech-platform/design-tokens@file:artifacts/platform-packages/skyra-tech-platform-design-tokens-0.1.1.tgz)
       '@skyra-tech-platform/switch':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-switch-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-switch-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-switch-0.1.0.tgz
       '@skyra-tech-platform/tabs':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-tabs-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-tabs-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-tabs-0.1.0.tgz
       '@skyra-tech-platform/toast':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-toast-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-toast-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-toast-0.1.0.tgz
       '@skyra-tech-platform/utils':
-        specifier: file:../../artifacts/platform-packages/skyra-tech-platform-utils-0.1.0.tgz
+        specifier: file:artifacts/platform-packages/skyra-tech-platform-utils-0.1.0.tgz
         version: file:artifacts/platform-packages/skyra-tech-platform-utils-0.1.0.tgz
       rxjs:
         specifier: ^7.8.2
