@@ -155,3 +155,36 @@ The following operational security requirements are documented as **prerequisite
 2. **mTLS Between Internal Services:** Microservice communication currently relies on private VPC networking; production deployment requires mutual TLS via an Istio or Linkerd service mesh.
 3. **Automated WAF Protection:** Edge rate limiting and DDoS mitigation currently occur at the Fastify layer; enterprise deployment requires Cloudflare or AWS WAF at the ingress boundary.
 
+---
+
+## 10. CI/CD Pipeline Security & Supply-Chain Hardening (Milestone Q-05)
+
+The Skyra LogHub continuous integration pipeline implements strict defense-in-depth measures against supply-chain compromise, token exfiltration, and unauthorized repository mutations:
+
+### 10.1 Least-Privilege Workflow Permissions
+All workflow execution defaults to read-only content access:
+```yaml
+permissions:
+  contents: read
+```
+- No write permissions are granted to routine validation or pull request jobs.
+- `pull_request_target` triggers are strictly prohibited to prevent untrusted pull request code from executing with elevated permissions.
+- Concurrency cancellation (`cancel-in-progress: true`) prevents race conditions and redundant execution on superseded pull requests.
+
+### 10.2 Immutable Action Pinning
+Third-party GitHub Actions are pinned to authoritative 40-character commit SHAs to mitigate repository hijacking or tag mutation:
+- `actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2`
+- `actions/setup-node@1d0ff469b62b6d0ad9b0af0fb3b1e40be53ce9b9 # v4.2.0`
+- `actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0`
+- `pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0`
+- `actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3`
+
+### 10.3 Protected Database Target Guards
+- CI database workflows run exclusively against ephemeral GitHub-hosted PostgreSQL 17 container services mapped to non-default port `5433`.
+- The runtime guard `scripts/lib/isolated-target.mjs` validates target parameters before initiating connections, throwing a fatal exception if host != `127.0.0.1`, port == `5432`, or database != `skyra_loghub_disposable_validation`.
+- Connection credentials in CI are ephemeral (`ci_disposable_password_987`) and strictly isolated from development or production environments.
+
+### 10.4 Artifact Exfiltration Prevention
+- Generated test and governance artifacts uploaded to GitHub Actions are bounded to non-sensitive reports (`pnpm-audit-prod.json`, `documentation-governance.json`).
+- Environment configuration files (`.env`), session tokens, encryption keys, and database dumps are excluded from workflow artifact collection.
+- Retention periods are strictly bounded (14 days maximum).

@@ -237,3 +237,55 @@ Every backend service implements explicit `OnModuleDestroy` and process signal h
 4. **WAL Flush:** Ingestion Gateway flushes all pending file descriptors and syncs directory entries.
 5. **Memory Sanitization:** Crypto keys and session buffers are explicitly zeroed out (`buffer.fill(0)`).
 
+---
+
+## 8. Continuous Integration & Quality Enforcement Architecture (Milestone Q-05)
+
+Skyra LogHub enforces automated quality gates prior to merging code into primary branches via GitHub Actions (`.github/workflows/sdk-verification.yml`).
+
+```mermaid
+flowchart TD
+    PR["Pull Request / Push to main"] --> Top["Top-Level Workflow Guard<br/>(permissions: contents: read)"]
+
+    subgraph Phase1["Stage 1: Static Quality & Governance"]
+        StaticGov["Static Quality & Supply-Chain<br/>- Docs Governance (6 Gates)<br/>- Architecture Integrity (6 Gates)<br/>- Design System Governance (6 Gates)<br/>- Schema Parity (v1 Sync)<br/>- Production Audit (0 Vulns)"]
+        TypeComp["Typecheck & Compilation<br/>- Workspace Typecheck<br/>- SDK & Service Compilation<br/>- Angular 20 AOT Build"]
+    end
+
+    subgraph Phase2["Stage 2: Comprehensive Test Verification"]
+        TestMatrix["Unit & Integration Suites<br/>(Node.js 24 Primary & Node.js 22 Compatibility)<br/>- Contracts & SDK Suites<br/>- Service Unit & Isolation Tests"]
+        PyMatrix["Python SDK Matrix<br/>(Python 3.10, 3.11, 3.12<br/>on Ubuntu, Windows, macOS)"]
+    end
+
+    subgraph Phase3["Stage 3: Integration & Runtime Automation"]
+        PGService["PostgreSQL 17 Disposable Integration<br/>- Service Container (:5433)<br/>- Target Guard Verification<br/>- Zero 5432 / Dev Fallback"]
+        BrowserE2E["Browser E2E Automation<br/>- Headless Chromium CDP<br/>- Real Browser Event Validation"]
+        ConsumerIso["Isolated Distribution Check<br/>- Packed Tarball Installation<br/>- Isolated Consumer Execution"]
+    end
+
+    subgraph Phase4["Stage 4: Release Gate"]
+        FinalGate["Final Quality & Release Acceptance Gate<br/>- Aggregate Status Evaluation<br/>- Fail-Closed on Any Skipped/Failed Job"]
+    end
+
+    Top --> StaticGov
+    Top --> TypeComp
+    Top --> TestMatrix
+    Top --> PyMatrix
+    Top --> PGService
+    Top --> BrowserE2E
+    Top --> ConsumerIso
+
+    StaticGov --> FinalGate
+    TypeComp --> FinalGate
+    TestMatrix --> FinalGate
+    PyMatrix --> FinalGate
+    PGService --> FinalGate
+    BrowserE2E --> FinalGate
+    ConsumerIso --> FinalGate
+```
+
+### Architectural Principles of the CI Pipeline
+1. **Zero Secret Exposure & Least Privilege:** Default workflow permissions are locked to `contents: read`. No administrative repository or deployment tokens are permitted.
+2. **Immutable Action Pinning:** Third-party GitHub Actions are pinned to full 40-character commit SHAs with version comments for supply-chain integrity.
+3. **Target Isolation & Database Guarding:** CI database tests run strictly against disposable service containers mapped to port `5433`. The target guard library (`scripts/lib/isolated-target.mjs`) throws an immediate fatal error if port `5432` or database `skyra_loghub_dev` is targeted.
+4. **Aggregate Required-Status Gate:** The `final-quality-gate` job evaluates all upstream jobs using GitHub Actions dependency semantics, preventing silent failures or skipped checks from masking defects.

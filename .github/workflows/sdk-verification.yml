@@ -1,4 +1,4 @@
-name: Skyra LogHub — Cross-SDK Verification & Release Gate
+name: Skyra LogHub — Continuous Integration & Engineering Quality Gate
 
 on:
   push:
@@ -6,25 +6,29 @@ on:
   pull_request:
     branches: [main, master]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  schema-and-contracts:
-    name: Schema Sync & Contract Gates
+  static-quality-and-governance:
+    name: Static Quality Gates & Supply-Chain Security
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup Node.js 22.x
-        uses: actions/setup-node@v4
+      - name: Setup Node.js 24.x
+        uses: actions/setup-node@1d0ff469b62b6d0ad9b0af0fb3b1e40be53ce9b9 # v4.2.0
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
         with:
           version: 12.3.4
           run_install: false
@@ -32,26 +36,58 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify Canonical Schema Synchronization
+      - name: Verify Documentation Governance (DOC-GATE-1 through 6)
+        run: pnpm docs:check
+
+      - name: Verify Architecture & Isolation Integrity (Gates 1 through 6)
+        run: pnpm architecture:check
+
+      - name: Verify Design System Governance (Gates 1 through 6)
+        run: pnpm governance:check
+
+      - name: Verify Canonical Schema Synchronization (v1 Parity)
         run: pnpm check:schema-sync
 
-      - name: Run Schema Contract Tests
-        run: pnpm test:contracts
+      - name: Production Dependency Security Audit
+        run: |
+          pnpm audit --prod --json > pnpm-audit-prod.json
+          node -e "
+            const audit = JSON.parse(require('fs').readFileSync('pnpm-audit-prod.json', 'utf8'));
+            const vulns = audit.metadata?.vulnerabilities || {};
+            const total = (vulns.info || 0) + (vulns.low || 0) + (vulns.moderate || 0) + (vulns.high || 0) + (vulns.critical || 0);
+            console.log('Production vulnerabilities count:', total);
+            if (total > 0) {
+              console.error('CRITICAL: Production vulnerabilities detected:', JSON.stringify(vulns, null, 2));
+              process.exit(1);
+            }
+            console.log('Production supply-chain audit PASSED (0 vulnerabilities).');
+          "
 
-  typescript-sdks:
-    name: TypeScript SDKs (Build, Typecheck, Unit Tests)
+      - name: Upload Quality Governance Artifacts
+        if: always()
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: governance-and-security-evidence
+          path: |
+            pnpm-audit-prod.json
+            .tmp/**/documentation-governance.json
+          retention-days: 14
+
+  typecheck-and-compilation:
+    name: Strict Typecheck & Production Compilation
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup Node.js 22.x
-        uses: actions/setup-node@v4
+      - name: Setup Node.js 24.x
+        uses: actions/setup-node@1d0ff469b62b6d0ad9b0af0fb3b1e40be53ce9b9 # v4.2.0
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
         with:
           version: 12.3.4
           run_install: false
@@ -59,33 +95,70 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Strict TypeScript Compilation
-        run: pnpm build
-
-      - name: Workspace Strict Typecheck
+      - name: Workspace Strict TypeScript Typecheck
         run: pnpm typecheck
 
-      - name: Run Node.js SDK Unit & Reliability Tests
-        run: pnpm test:node
+      - name: Compile All SDKs, Services & Angular Console
+        run: |
+          pnpm build
+          pnpm --filter @skyra/log-shipper build
 
-      - name: Run NestJS SDK Interceptor & Context Tests
-        run: pnpm test:nestjs
+  test-suites:
+    name: Unit & Integration Tests (Node.js ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['24', '22']
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Run Next.js Server & Route Handler Tests
-        run: pnpm test:next
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@1d0ff469b62b6d0ad9b0af0fb3b1e40be53ce9b9 # v4.2.0
+        with:
+          node-version: ${{ matrix.node-version }}
 
-      - name: Run Browser Core SDK Tests
-        run: pnpm test:browser
+      - name: Install pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        with:
+          version: 12.3.4
+          run_install: false
 
-      - name: Run Angular Integration Tests
-        run: pnpm test:angular
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Run React Integration Tests
-        run: pnpm test:react
+      - name: Canonical Schema Contract Tests
+        run: pnpm test:contracts
+
+      - name: TypeScript & Framework SDK Unit Tests
+        run: |
+          pnpm test:node
+          pnpm test:nestjs
+          pnpm test:next
+          pnpm test:browser
+          pnpm test:angular
+          pnpm test:react
+
+      - name: Application Service Unit & Architecture Tests
+        run: |
+          pnpm test:gateway
+          pnpm test:query
+          pnpm test:admin
+          pnpm test:bff
+          pnpm test:console
+
+      - name: Invariant & Target Guard Unit Tests
+        run: |
+          node --test tests/admin/isolated-target.test.mjs
+          node --test tests/preservation/preservation-lockdown.test.mjs
+          node --import tsx --test tests/governance/governance.test.ts
 
   python-sdk-matrix:
     name: Python SDK (${{ matrix.python-version }} on ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -93,10 +166,10 @@ jobs:
         python-version: ['3.10', '3.11', '3.12']
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -111,61 +184,117 @@ jobs:
       - name: Build Wheel & Source Distribution
         run: python -m build packages/logger-python
 
-  browser-e2e:
-    name: Browser E2E Automation (Chromium)
+  postgresql-integration:
+    name: PostgreSQL 17 Disposable Integration & Target Guard Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: skyra_loghub_disposable_validation
+          POSTGRES_USER: skyra_isolated_user
+          POSTGRES_PASSWORD: ci_disposable_password_987
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup Node.js 22.x
-        uses: actions/setup-node@v4
+      - name: Setup Node.js 24.x
+        uses: actions/setup-node@1d0ff469b62b6d0ad9b0af0fb3b1e40be53ce9b9 # v4.2.0
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
         with:
           version: 12.3.4
           run_install: false
 
-      - name: Install Dependencies & Build
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Initialize Disposable Database & Identity Marker
+        env:
+          SKYRA_ISOLATED_TEST_ENV: 'true'
+          ISOLATED_CLUSTER_ID: 'a0000000-0000-0000-0000-000000000001'
+          DATABASE_URL: 'postgresql://skyra_isolated_user:ci_disposable_password_987@127.0.0.1:5433/skyra_loghub_disposable_validation'
+          ISOLATED_DATABASE_URL: 'postgresql://skyra_isolated_user:ci_disposable_password_987@127.0.0.1:5433/skyra_loghub_disposable_validation'
+        run: node scripts/ci-init-disposable-postgres.mjs
+
+      - name: Run Target Guard Isolation Tests Against Live Service
+        env:
+          SKYRA_ISOLATED_TEST_ENV: 'true'
+          ISOLATED_CLUSTER_ID: 'a0000000-0000-0000-0000-000000000001'
+          DATABASE_URL: 'postgresql://skyra_isolated_user:ci_disposable_password_987@127.0.0.1:5433/skyra_loghub_disposable_validation'
+          ISOLATED_DATABASE_URL: 'postgresql://skyra_isolated_user:ci_disposable_password_987@127.0.0.1:5433/skyra_loghub_disposable_validation'
+        run: node --test tests/admin/isolated-target.test.mjs
+
+  browser-e2e:
+    name: Browser E2E Automation (Chromium CDP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js 24.x
+        uses: actions/setup-node@1d0ff469b62b6d0ad9b0af0fb3b1e40be53ce9b9 # v4.2.0
+        with:
+          node-version: 24
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        with:
+          version: 12.3.4
+          run_install: false
+
+      - name: Install Dependencies & Build Packages
         run: |
           pnpm install --frozen-lockfile
           pnpm build
 
-      - name: Install Chrome
+      - name: Install Google Chrome Stable
         run: |
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
 
       - name: Run Real Browser E2E Test Suite
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
         run: node tests/e2e/real-browser.test.mjs
 
   isolated-distribution-check:
     name: Isolated Consumer & Tarball Installation Check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup Node.js 22.x
-        uses: actions/setup-node@v4
+      - name: Setup Node.js 24.x
+        uses: actions/setup-node@1d0ff469b62b6d0ad9b0af0fb3b1e40be53ce9b9 # v4.2.0
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Setup Python 3.12
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
           python-version: '3.12'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
         with:
           version: 12.3.4
           run_install: false
 
-      - name: Install Dependencies & Build
+      - name: Install Dependencies & Build Packages
         run: |
           pnpm install --frozen-lockfile
           pnpm build
@@ -183,3 +312,46 @@ jobs:
 
       - name: Verify Isolated Python Consumer
         run: python scripts/verify_isolated_python_consumer.py
+
+  final-quality-gate:
+    name: Final Quality & Release Acceptance Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - static-quality-and-governance
+      - typecheck-and-compilation
+      - test-suites
+      - python-sdk-matrix
+      - postgresql-integration
+      - browser-e2e
+      - isolated-distribution-check
+    if: always()
+    steps:
+      - name: Evaluate Aggregate CI Results
+        run: |
+          node -e '
+            const results = {
+              "static-quality-and-governance": "${{ needs.static-quality-and-governance.result }}",
+              "typecheck-and-compilation": "${{ needs.typecheck-and-compilation.result }}",
+              "test-suites": "${{ needs.test-suites.result }}",
+              "python-sdk-matrix": "${{ needs.python-sdk-matrix.result }}",
+              "postgresql-integration": "${{ needs.postgresql-integration.result }}",
+              "browser-e2e": "${{ needs.browser-e2e.result }}",
+              "isolated-distribution-check": "${{ needs.isolated-distribution-check.result }}"
+            };
+            console.log("===================================================================");
+            console.log("SKYRA LOGHUB — AGGREGATE CI PIPELINE ACCEPTANCE EVALUATION");
+            console.log("===================================================================");
+            let failed = false;
+            for (const [job, res] of Object.entries(results)) {
+              const pass = res === "success";
+              console.log(\`[\${pass ? "PASS" : "FAIL"}] \${job.padEnd(35)} : \${res}\`);
+              if (!pass) failed = true;
+            }
+            console.log("===================================================================");
+            if (failed) {
+              console.error("OVERALL STATUS: FAILED — One or more mandatory quality gates failed or were skipped.");
+              process.exit(1);
+            }
+            console.log("OVERALL STATUS: PASSED — All mandatory quality and regression gates passed.");
+          '

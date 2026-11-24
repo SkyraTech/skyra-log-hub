@@ -137,10 +137,27 @@ pnpm audit --prod
 | **Q-02C** | Final security closure (Node 24 matrix & Browser E2E) | Full Suite Pass | PASS |
 | **Q-03** | Architecture, reusability & lifecycle hardening | Architecture Pass | PASS |
 | **Q-04** | Canonical documentation consolidation & repository cleanup | Docs Gov Pass | **PASS** |
+| **Q-05** | Continuous Integration & Automated Engineering Quality Enforcement | CI Gates Implemented & Locally Verified | **CONDITIONAL** (Pending hosted GitHub Actions run) |
 
 ### Absolute Evidence Preservation Invariant
 > [!IMPORTANT]
 > The historical acceptance verdict for **DEV-018** remains permanently:
 > **`FAIL — DEV-018 preservation evidence unrecoverable`**
-> Success in subsequent milestones (Q-01 through Q-04) certifies contemporary technical quality, architecture, and security, but does **not** alter, waive, or retroactively resolve the original DEV-018 historical preservation failure. The DEV-018 baseline manifest (`e04cac412...`) and the four historical DEV-013 evidence files remain permanently preserved and byte-identical.
+> Success in subsequent milestones (Q-01 through Q-05) certifies contemporary technical quality, architecture, and security, but does **not** alter, waive, or retroactively resolve the original DEV-018 historical preservation failure. The DEV-018 baseline manifest (`e04cac412...`) and the four historical DEV-013 evidence files remain permanently preserved and byte-identical.
 
+---
+
+## 7. Automated Continuous Integration Quality Gates (Milestone Q-05)
+
+The automated quality pipeline defined in `.github/workflows/sdk-verification.yml` executes on every pull request and push to primary branches:
+
+| Pipeline Job | Key Validation Steps & Commands | Target Runtime / Environment | Success Criteria |
+| :--- | :--- | :--- | :--- |
+| **`static-quality-and-governance`** | `pnpm docs:check`<br/>`pnpm architecture:check`<br/>`pnpm governance:check`<br/>`pnpm check:schema-sync`<br/>`pnpm audit --prod --json` | Node.js 24.x on Ubuntu Latest | 0 governance violations, 0 production vulnerabilities |
+| **`typecheck-and-compilation`** | `pnpm typecheck`<br/>`pnpm build`<br/>`pnpm --filter @skyra/log-shipper build` | Node.js 24.x on Ubuntu Latest | 0 type errors across workspace, clean AOT & NestJS builds |
+| **`test-suites`** | `pnpm test:contracts`<br/>`pnpm test:node`<br/>`pnpm test:nestjs`<br/>`pnpm test:next`<br/>`pnpm test:browser`<br/>`pnpm test:angular`<br/>`pnpm test:react`<br/>`pnpm test:gateway`<br/>`pnpm test:query`<br/>`pnpm test:admin`<br/>`pnpm test:bff`<br/>`pnpm test:console`<br/>Target guard unit tests | Node.js 24.x (Primary)<br/>Node.js 22.x (Compatibility) | 100% pass across all 995 unit/integration tests |
+| **`python-sdk-matrix`** | `python -m unittest discover -s packages/logger-python/tests`<br/>`python -m build packages/logger-python` | Python 3.10, 3.11, 3.12 on Linux, Windows, macOS | All 61 tests passing across 9 matrix combinations |
+| **`postgresql-integration`** | `node scripts/ci-init-disposable-postgres.mjs`<br/>`node --test tests/admin/isolated-target.test.mjs` | PostgreSQL 17 on disposable port 5433 | Zero touch to port 5432; target guards verified against live container |
+| **`browser-e2e`** | `node tests/e2e/real-browser.test.mjs` | Headless Google Chrome Stable via CDP | All browser ingestion, batching, and error assertions passed |
+| **`isolated-distribution-check`** | `pnpm pack` (all packages)<br/>`python -m build`<br/>`verify_isolated_browser_consumer.mjs`<br/>`verify_isolated_python_consumer.py` | Isolated consumer environments | Clean installation & execution from distribution tarballs |
+| **`final-quality-gate`** | Aggregate status evaluation (`needs.*.result`) | Ubuntu Latest | Fails closed if any upstream required job fails or is cancelled |
