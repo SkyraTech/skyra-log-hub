@@ -357,7 +357,8 @@ jobs:
             let failed = false;
             for (const [job, res] of Object.entries(results)) {
               const pass = res === "success";
-              console.log(\`[\${pass ? "PASS" : "FAIL"}] \${job.padEnd(35)} : \${res}\`);
+              const tag = pass ? "[PASS]" : "[FAIL]";
+              console.log(tag + " " + job.padEnd(35) + " : " + res);
               if (!pass) failed = true;
             }
             console.log("===================================================================");
