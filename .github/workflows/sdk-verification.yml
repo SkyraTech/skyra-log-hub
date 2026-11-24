@@ -95,10 +95,10 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate Prisma Client & Build Core SDK
+      - name: Generate Prisma Client & Build All SDKs
         run: |
           pnpm --filter @skyra/query-service prisma:generate
-          pnpm --filter @skyra/logger-core build
+          pnpm --filter '@skyra/logger-*' build
 
       - name: Workspace Strict TypeScript Typecheck
         run: pnpm typecheck
@@ -134,10 +134,10 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate Prisma Client & Build Core SDK
+      - name: Generate Prisma Client & Build All SDKs
         run: |
           pnpm --filter @skyra/query-service prisma:generate
-          pnpm --filter @skyra/logger-core build
+          pnpm --filter '@skyra/logger-*' build
 
       - name: Canonical Schema Contract Tests
         run: pnpm test:contracts
@@ -267,6 +267,7 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm --filter @skyra/query-service prisma:generate
+          pnpm --filter '@skyra/logger-*' build
           pnpm build
 
       - name: Install Google Chrome Stable
@@ -307,6 +308,7 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm --filter @skyra/query-service prisma:generate
+          pnpm --filter '@skyra/logger-*' build
           pnpm build
           python -m pip install --upgrade pip build
 

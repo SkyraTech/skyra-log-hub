@@ -338,6 +338,9 @@ async function runBrowserTest(browserName, executablePath) {
   const cdpPort = browserName === 'Google Chrome' ? 9225 : 9226;
   const browserProc = spawn(executablePath, [
     '--headless=new',
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
     `--remote-debugging-port=${cdpPort}`,
     `--user-data-dir=${tempProfile}`,
     '--disable-extensions',
