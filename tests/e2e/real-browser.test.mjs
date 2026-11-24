@@ -33,8 +33,14 @@ const EDGE_PATHS = [
   'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'
 ].filter(Boolean);
 
-const chromeExe = CHROME_PATHS.find(p => fs.existsSync(p));
-const edgeExe = EDGE_PATHS.find(p => fs.existsSync(p));
+// Target available browser(s). When CHROME_BIN or EDGE_BIN is explicitly specified in CI, target that specific browser.
+const chromeExe = (!process.env.EDGE_BIN || process.env.CHROME_BIN)
+  ? CHROME_PATHS.find(p => fs.existsSync(p))
+  : null;
+
+const edgeExe = (process.env.EDGE_BIN || (!process.env.CHROME_BIN && (!chromeExe || process.platform !== 'linux')))
+  ? EDGE_PATHS.find(p => fs.existsSync(p))
+  : null;
 
 console.log('--- Real Browser E2E Test Suite (LOGHUB-PKG-007) ---');
 console.log('Detected Chrome:', chromeExe || 'NOT FOUND');
