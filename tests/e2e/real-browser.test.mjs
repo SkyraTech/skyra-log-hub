@@ -342,22 +342,27 @@ async function runBrowserTest(browserName, executablePath) {
   const tempProfile = fs.mkdtempSync(path.join(os.tmpdir(), 'skyra_e2e_profile_'));
 
   const cdpPort = browserName === 'Google Chrome' ? 9225 : 9226;
+  const childEnv = { ...process.env };
+  delete childEnv.DBUS_SESSION_BUS_ADDRESS;
+
   const browserProc = spawn(executablePath, [
     '--headless=new',
     '--no-sandbox',
     '--disable-setuid-sandbox',
     '--disable-dev-shm-usage',
     '--disable-gpu',
+    '--disable-software-rasterizer',
     '--no-first-run',
     '--no-default-browser-check',
     '--disable-extensions',
     '--disable-background-networking',
     '--disable-sync',
+    '--disable-features=AudioServiceOutOfProcess,IsolateOrigins,site-per-process',
     `--remote-debugging-port=${cdpPort}`,
     '--remote-debugging-address=0.0.0.0',
     `--user-data-dir=${tempProfile}`,
     `http://127.0.0.1:${serverPort}/index.html`
-  ]);
+  ], { env: childEnv });
 
   let browserOutput = '';
   browserProc.stdout?.on('data', d => { browserOutput += d.toString(); });
@@ -366,9 +371,9 @@ async function runBrowserTest(browserName, executablePath) {
   let ws = null;
 
   try {
-    // Wait for CDP
+    // Wait for CDP (up to 60 seconds)
     let versionInfo = null;
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 120; i++) {
       try {
         const res = await fetch(`http://127.0.0.1:${cdpPort}/json/version`).catch(() => fetch(`http://localhost:${cdpPort}/json/version`));
         if (res && res.ok) {
@@ -378,7 +383,7 @@ async function runBrowserTest(browserName, executablePath) {
       } catch {
         // wait and retry
       }
-      await new Promise(r => setTimeout(r, 250));
+      await new Promise(r => setTimeout(r, 500));
     }
 
     if (!versionInfo) {
