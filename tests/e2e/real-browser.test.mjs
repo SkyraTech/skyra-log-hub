@@ -11,15 +11,27 @@ import * as path from 'node:path';
 const REPO_ROOT = path.resolve('.');
 import { validateLogEvent } from '../../packages/logger-core/dist/validator.js';
 
-// Locate installed browsers
+// Locate installed browsers (cross-platform with Linux CI support)
 const CHROME_PATHS = [
+  process.env.CHROME_BIN,
+  process.env.CHROME_PATH,
+  '/usr/bin/google-chrome',
+  '/usr/bin/google-chrome-stable',
+  '/usr/bin/chromium',
+  '/usr/bin/chromium-browser',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
-];
+].filter(Boolean);
 const EDGE_PATHS = [
+  process.env.EDGE_BIN,
+  process.env.EDGE_PATH,
+  '/usr/bin/microsoft-edge',
+  '/usr/bin/microsoft-edge-stable',
+  '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
   'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
   'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'
-];
+].filter(Boolean);
 
 const chromeExe = CHROME_PATHS.find(p => fs.existsSync(p));
 const edgeExe = EDGE_PATHS.find(p => fs.existsSync(p));
