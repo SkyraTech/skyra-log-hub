@@ -1,0 +1,115 @@
+{
+  "checks": [
+    "Actual durable create stores only a digest and authenticated ciphertext",
+    "Independent clients hydrate trusted identity without authority snapshots",
+    "A changed issuer or client cannot adopt an existing session identity",
+    "Invalid, short, oversized and tampered tokens do not authenticate",
+    "Activity updates never exceed the original absolute expiry",
+    "Optimistic context updates permit one writer and cannot alter identity",
+    "Rotation persistence failure rolls old-token revocation back transactionally",
+    "Atomic rotation invalidates old tokens across clients without extending lifetime",
+    "Concurrent rotations have one winner and no old-token revival",
+    "Revocation wins over stale activity and context updates",
+    "Expired records cannot be revived by stale writes",
+    "OIDC state secrets are encrypted and consumed exactly once concurrently",
+    "Expired OIDC transactions cannot be consumed",
+    "Ciphertext copying between records fails authentication and returns sanitized unavailability",
+    "Bounded concurrent cleanup preserves active sessions and remains idempotent"
+  ],
+  "metrics": [
+    {
+      "name": "Actual durable create stores only a digest and authenticated ciphertext",
+      "ms": 39.42039999999997,
+      "rss": 69914624,
+      "clientSqlStatements": 1
+    },
+    {
+      "name": "Independent clients hydrate trusted identity without authority snapshots",
+      "ms": 3.6559000000002015,
+      "rss": 70180864,
+      "clientSqlStatements": 1
+    },
+    {
+      "name": "A changed issuer or client cannot adopt an existing session identity",
+      "ms": 144.71410000000014,
+      "rss": 70320128,
+      "clientSqlStatements": 0
+    },
+    {
+      "name": "Invalid, short, oversized and tampered tokens do not authenticate",
+      "ms": 1.4628000000000156,
+      "rss": 70340608,
+      "clientSqlStatements": 1
+    },
+    {
+      "name": "Activity updates never exceed the original absolute expiry",
+      "ms": 334.66139999999996,
+      "rss": 70877184,
+      "clientSqlStatements": 18
+    },
+    {
+      "name": "Optimistic context updates permit one writer and cannot alter identity",
+      "ms": 10.264499999999998,
+      "rss": 71217152,
+      "clientSqlStatements": 13
+    },
+    {
+      "name": "Rotation persistence failure rolls old-token revocation back transactionally",
+      "ms": 12.960199999999986,
+      "rss": 71053312,
+      "clientSqlStatements": 11
+    },
+    {
+      "name": "Atomic rotation invalidates old tokens across clients without extending lifetime",
+      "ms": 5.686699999999973,
+      "rss": 71278592,
+      "clientSqlStatements": 8
+    },
+    {
+      "name": "Concurrent rotations have one winner and no old-token revival",
+      "ms": 5.817400000000134,
+      "rss": 71544832,
+      "clientSqlStatements": 9
+    },
+    {
+      "name": "Revocation wins over stale activity and context updates",
+      "ms": 5.419999999999845,
+      "rss": 71639040,
+      "clientSqlStatements": 7
+    },
+    {
+      "name": "Expired records cannot be revived by stale writes",
+      "ms": 6.270500000000084,
+      "rss": 71708672,
+      "clientSqlStatements": 7
+    },
+    {
+      "name": "OIDC state secrets are encrypted and consumed exactly once concurrently",
+      "ms": 10.733799999999974,
+      "rss": 71741440,
+      "clientSqlStatements": 8
+    },
+    {
+      "name": "Expired OIDC transactions cannot be consumed",
+      "ms": 4.209799999999859,
+      "rss": 71745536,
+      "clientSqlStatements": 6
+    },
+    {
+      "name": "Ciphertext copying between records fails authentication and returns sanitized unavailability",
+      "ms": 8.076099999999997,
+      "rss": 71745536,
+      "clientSqlStatements": 5
+    },
+    {
+      "name": "Bounded concurrent cleanup preserves active sessions and remains idempotent",
+      "ms": 12.470900000000029,
+      "rss": 71749632,
+      "clientSqlStatements": 12
+    }
+  ],
+  "clients": 2,
+  "noPlaintextTokens": true,
+  "providerTokensOmitted": true,
+  "authoritySnapshotsOmitted": true
+}

@@ -1,0 +1,52 @@
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [NestFactory] Starting Nest application...
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [InstanceLoader] AppModule dependencies initialized +45ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RoutesResolver] DashboardPreferencesController {/admin/v1/tenants/:tenantId/projects/:projectId/dashboard-preferences}: +19ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/dashboard-preferences, GET} route +24ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/dashboard-preferences, PUT} route +6ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/dashboard-preferences/reset, POST} route +3ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RoutesResolver] SavedSearchesController {/admin/v1/tenants/:tenantId/projects/:projectId/saved-searches}: +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/saved-searches, GET} route +6ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/saved-searches/:id, GET} route +5ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/saved-searches, POST} route +3ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/saved-searches/:id, PUT} route +2ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/saved-searches/:id, DELETE} route +3ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RoutesResolver] AuditHistoryController {/admin/v1/tenants/:tenantId/audit-events}: +0ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/audit-events/access, GET} route +2ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/audit-events, GET} route +2ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/audit-events/:eventId, GET} route +6ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RoutesResolver] QuotasController {/admin/v1/tenants/:tenantId/projects/:projectId}: +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/usage/history, GET} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/usage, GET} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/quota, GET} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/quota, PATCH} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RoutesResolver] MetaController {/}: +0ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/health/liveness, GET} route +2ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/health/readiness, GET} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/meta, GET} route +0ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RoutesResolver] OrganizationController {/admin/v1}: +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/me/memberships, GET} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId, GET} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId, PATCH} route +0ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RoutesResolver] MembersController {/admin/v1/tenants/:tenantId/memberships}: +0ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/memberships, GET} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/memberships/:id, GET} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/memberships/:id, PATCH} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RoutesResolver] ProjectsController {/admin/v1/tenants/:tenantId/projects}: +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects, GET} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:id, GET} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects, POST} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:id, PATCH} route +0ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RoutesResolver] CredentialsController {/admin/v1/tenants/:tenantId/projects/:projectId/credentials}: +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/credentials, GET} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/credentials/:id, GET} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/credentials, POST} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/credentials/:id/rotate, POST} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [RouterExplorer] Mapped {/admin/v1/tenants/:tenantId/projects/:projectId/credentials/:id/revoke, POST} route +1ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [NestApplication] Nest application successfully started +3ms
+[Nest] 2112  - 17/11/2026, 12:27:22 pm     LOG [AdminServiceBootstrap] Skyra Administration Backend active on port 63106 (Env: test, persistence=true)
+[Nest] 2112  - 17/11/2026, 12:27:28 pm   ERROR [Rfc7807ExceptionFilter] Unhandled internal error: Server has closed the connection.
+PrismaClientKnownRequestError: Server has closed the connection.
+    at _r.transaction (C:\Users\VAMSHIKA\source\repos\skyra-tech-projects\skyra-log-hub\node_modules\.pnpm\@prisma+client@5.22.0_prisma@5.22.0\node_modules\@prisma\client\runtime\library.js:111:12319)
+    at async Proxy._transactionWithCallback (C:\Users\VAMSHIKA\source\repos\skyra-tech-projects\skyra-log-hub\node_modules\.pnpm\@prisma+client@5.22.0_prisma@5.22.0\node_modules\@prisma\client\runtime\library.js:130:7924)
+    at async C:\Users\VAMSHIKA\source\repos\skyra-tech-projects\skyra-log-hub\node_modules\.pnpm\@nestjs+core@10.4.22_@nestj_6ba6e50ead3635e1054c92837048b359\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async Object.<anonymous> (C:\Users\VAMSHIKA\source\repos\skyra-tech-projects\skyra-log-hub\node_modules\.pnpm\@nestjs+core@10.4.22_@nestj_6ba6e50ead3635e1054c92837048b359\node_modules\@nestjs\core\router\router-proxy.js:9:17)

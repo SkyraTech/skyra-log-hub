@@ -95,6 +95,11 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma Client & Build Core SDK
+        run: |
+          pnpm --filter @skyra/query-service prisma:generate
+          pnpm --filter @skyra/logger-core build
+
       - name: Workspace Strict TypeScript Typecheck
         run: pnpm typecheck
 
@@ -128,6 +133,11 @@ jobs:
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client & Build Core SDK
+        run: |
+          pnpm --filter @skyra/query-service prisma:generate
+          pnpm --filter @skyra/logger-core build
 
       - name: Canonical Schema Contract Tests
         run: pnpm test:contracts
@@ -188,20 +198,6 @@ jobs:
     name: PostgreSQL 17 Disposable Integration & Target Guard Validation
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_DB: skyra_loghub_disposable_validation
-          POSTGRES_USER: skyra_isolated_user
-          POSTGRES_PASSWORD: ci_disposable_password_987
-        ports:
-          - 5433:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - name: Checkout Repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -219,6 +215,18 @@ jobs:
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Start Disposable PostgreSQL 17 Container on Isolated Port 5433
+        run: |
+          docker run -d --name postgres17 --network host \
+            -e POSTGRES_DB=skyra_loghub_disposable_validation \
+            -e POSTGRES_USER=skyra_isolated_user \
+            -e POSTGRES_PASSWORD=ci_disposable_password_987 \
+            postgres:17 -p 5433
+          until docker exec postgres17 pg_isready -p 5433; do
+            echo "Waiting for postgres on port 5433..."
+            sleep 1
+          done
 
       - name: Initialize Disposable Database & Identity Marker
         env:
@@ -258,6 +266,7 @@ jobs:
       - name: Install Dependencies & Build Packages
         run: |
           pnpm install --frozen-lockfile
+          pnpm --filter @skyra/query-service prisma:generate
           pnpm build
 
       - name: Install Google Chrome Stable
@@ -297,6 +306,7 @@ jobs:
       - name: Install Dependencies & Build Packages
         run: |
           pnpm install --frozen-lockfile
+          pnpm --filter @skyra/query-service prisma:generate
           pnpm build
           python -m pip install --upgrade pip build
 

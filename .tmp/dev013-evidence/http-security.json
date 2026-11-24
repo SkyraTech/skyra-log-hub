@@ -1,0 +1,166 @@
+{
+  "checks": [
+    "Controlled code/PKCE login persists an opaque HttpOnly cookie and authoritative workspace",
+    "The same active cookie survives graceful restart and process crash without expiry extension",
+    "Independent BFF validates the shared cookie and enforces CSRF after restart",
+    "Concurrent cross-process workspace changes preserve authorized scope and reject foreign context",
+    "Atomic rotation invalidates the old token on both processes and changes session-bound CSRF",
+    "Logout persists revocation across the second process and subsequent restart",
+    "Suspended identity is rejected after restart and its observed invalid session stays revoked",
+    "Restart between authorization and callback preserves nonce, state and PKCE",
+    "Concurrent callback consumption succeeds once across actual BFF processes",
+    "Wrong browser state/binding and expired durable login transactions cannot establish a cookie",
+    "Crash after rotation persistence but before cookie delivery cannot revive the old token"
+  ],
+  "metrics": [
+    {
+      "name": "Controlled code/PKCE login persists an opaque HttpOnly cookie and authoritative workspace",
+      "ms": 377.34240000000045
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 96.30159999999887,
+      "status": 200
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 84.61110000000008,
+      "status": 200
+    },
+    {
+      "name": "The same active cookie survives graceful restart and process crash without expiry extension",
+      "ms": 4032.1036000000004
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 91.99170000000049,
+      "status": 200
+    },
+    {
+      "kind": "authenticated-mutation",
+      "operation": "/bff/auth/rotate",
+      "ms": 32.068299999999,
+      "status": 403
+    },
+    {
+      "name": "Independent BFF validates the shared cookie and enforces CSRF after restart",
+      "ms": 167.48890000000029
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 23.068199999999706,
+      "status": 200
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 20.196899999999005,
+      "status": 200
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 18.74829999999929,
+      "status": 200
+    },
+    {
+      "name": "Concurrent cross-process workspace changes preserve authorized scope and reject foreign context",
+      "ms": 266.9921999999988
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 20.771899999999732,
+      "status": 200
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 4.438000000000102,
+      "status": 401
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 4.76589999999851,
+      "status": 401
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 20.33220000000074,
+      "status": 200
+    },
+    {
+      "name": "Atomic rotation invalidates the old token on both processes and changes session-bound CSRF",
+      "ms": 68.6242000000002
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 21.56970000000001,
+      "status": 200
+    },
+    {
+      "kind": "authenticated-mutation",
+      "operation": "/bff/auth/logout",
+      "ms": 30.713599999999133,
+      "status": 200
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 2.825800000000527,
+      "status": 401
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 7.939399999999296,
+      "status": 401
+    },
+    {
+      "name": "Logout persists revocation across the second process and subsequent restart",
+      "ms": 2487.7098000000005
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 94.15010000000257,
+      "status": 401
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 4.226999999998952,
+      "status": 401
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 2.6248000000014144,
+      "status": 401
+    },
+    {
+      "name": "Suspended identity is rejected after restart and its observed invalid session stays revoked",
+      "ms": 2269.0527
+    },
+    {
+      "name": "Restart between authorization and callback preserves nonce, state and PKCE",
+      "ms": 4049.400600000001
+    },
+    {
+      "name": "Concurrent callback consumption succeeds once across actual BFF processes",
+      "ms": 145.97149999999965
+    },
+    {
+      "name": "Wrong browser state/binding and expired durable login transactions cannot establish a cookie",
+      "ms": 170.8685000000005
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 3.058600000000297,
+      "status": 401
+    },
+    {
+      "kind": "authenticated-session-read",
+      "ms": 11.782999999999447,
+      "status": 401
+    },
+    {
+      "name": "Crash after rotation persistence but before cookie delivery cannot revive the old token",
+      "ms": 4649.215499999998
+    }
+  ],
+  "processes": 2,
+  "controlledSignedOidc": true,
+  "rawTokensRecorded": false
+}

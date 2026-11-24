@@ -1,0 +1,29 @@
+{
+  "checks": [
+    "Store outage fails creation, lookup and logout closed without clearing the existing cookie",
+    "Actual PostgreSQL restart restores the same session and CSRF without extending absolute expiry",
+    "An expired session stays invalid after BFF restart and cannot be extended by activity",
+    "Tenant suspension is enforced after restart and does not expose protected data"
+  ],
+  "metrics": [
+    {
+      "name": "Store outage fails creation, lookup and logout closed without clearing the existing cookie",
+      "ms": 831.9970000000003
+    },
+    {
+      "name": "Actual PostgreSQL restart restores the same session and CSRF without extending absolute expiry",
+      "ms": 1635.724799999999
+    },
+    {
+      "name": "An expired session stays invalid after BFF restart and cannot be extended by activity",
+      "ms": 2235.2731000000003
+    },
+    {
+      "name": "Tenant suspension is enforced after restart and does not expose protected data",
+      "ms": 2244.5458
+    }
+  ],
+  "physicalTargetVerified": true,
+  "cookieRetainedDuringOutage": true,
+  "absoluteExpiryUnchanged": true
+}

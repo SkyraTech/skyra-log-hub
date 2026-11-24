@@ -11,3 +11,7 @@ docs/admin/migrations/FEATURE-003-002/runtime-privileges.sql text eol=lf
 
 docs/admin/migrations/FEATURE-004-001/migration.sql text eol=lf
 docs/admin/migrations/FEATURE-004-002/runtime-privileges.sql text eol=lf
+
+# Historical evidence preservation must maintain exact byte identity (no CRLF conversion)
+.tmp/dev018-evidence/** -text
+.tmp/dev013-evidence/** -text
