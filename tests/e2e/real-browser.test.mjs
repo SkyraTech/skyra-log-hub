@@ -341,33 +341,42 @@ async function runBrowserTest(browserName, executablePath) {
     '--no-sandbox',
     '--disable-setuid-sandbox',
     '--disable-dev-shm-usage',
-    `--remote-debugging-port=${cdpPort}`,
-    `--user-data-dir=${tempProfile}`,
-    '--disable-extensions',
+    '--disable-gpu',
     '--no-first-run',
     '--no-default-browser-check',
-    '--disable-gpu',
+    '--disable-extensions',
+    '--disable-background-networking',
+    '--disable-sync',
+    `--remote-debugging-port=${cdpPort}`,
+    '--remote-debugging-address=0.0.0.0',
+    `--user-data-dir=${tempProfile}`,
     `http://127.0.0.1:${serverPort}/index.html`
   ]);
+
+  let browserOutput = '';
+  browserProc.stdout?.on('data', d => { browserOutput += d.toString(); });
+  browserProc.stderr?.on('data', d => { browserOutput += d.toString(); });
 
   let ws = null;
 
   try {
     // Wait for CDP
     let versionInfo = null;
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 50; i++) {
       try {
-        const res = await fetch(`http://127.0.0.1:${cdpPort}/json/version`);
-        if (res.ok) {
+        const res = await fetch(`http://127.0.0.1:${cdpPort}/json/version`).catch(() => fetch(`http://localhost:${cdpPort}/json/version`));
+        if (res && res.ok) {
           versionInfo = await res.json();
           break;
         }
       } catch {
-        await new Promise(r => setTimeout(r, 200));
+        // wait and retry
       }
+      await new Promise(r => setTimeout(r, 250));
     }
 
     if (!versionInfo) {
+      console.error(`[${browserName}] CDP connection failed. Captured browser output:\n${browserOutput}`);
       throw new Error(`Failed to connect to ${browserName} CDP endpoint on port ${cdpPort}`);
     }
 
