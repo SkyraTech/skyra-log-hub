@@ -429,7 +429,7 @@ describe('Search API Integration Tests (LOGHUB-QUERY-004)', () => {
   it('EVENT-1: should successfully look up single log event by UUIDv4', async () => {
     const res = await app.inject({
       method: 'GET',
-      url: `/query/v1/logs/00000000-0000-4000-8000-000000000003?projectId=${projectId}`,
+      url: `/query/v1/logs/00000000-0000-4000-8000-000000000003?projectId=${projectId}&date=2026-10-26`,
       headers: { authorization: validTestToken },
     });
 
