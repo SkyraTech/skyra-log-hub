@@ -100,9 +100,9 @@ Each entry in the `.wal` file is framed:
 ```
 
 ### 3.2 Fsync Durability Guarantee
-1. When a client issues `POST /api/v1/logs/batch`, the Gateway appends each event to the active WAL segment.
+1. When a client issues `POST /ingest/v1/logs`, the Gateway appends each event to the active WAL segment.
 2. The Gateway explicitly executes `fsync(fd)` (synchronizing both data and file metadata to physical disk).
-3. Only after the `fsync` system call returns successfully does the Gateway emit the `201 Created` HTTP response with the admission receipt:
+3. Only after the `fsync` system call returns successfully does the Gateway emit the `200 OK` HTTP response with the admission receipt:
    ```json
    {
      "accepted": 100,

@@ -10,7 +10,7 @@
 ## 1. API Architecture & Protocol Foundations
 
 All network interfaces in Skyra LogHub follow strict contract-first principles:
-1. **URI Versioning:** All endpoints are strictly prefixed with `/api/v1/`. Breaking contract modifications mandate a major version increment.
+1. **URI Versioning:** All endpoints are explicitly versioned. Public Ingestion endpoints use the `/ingest/v1/` prefix, internal microservices use `/admin/v1/` and `/query/v1/`, while Console Web interactions with the backend-for-frontend are rooted at `/bff/`.
 2. **Contract Ownership:** Authoritative schemas reside in `packages/shared-contracts` and exported OpenAPI 3.1 YAML/JSON files. Schemas are synchronized across services via `scripts/sync-schemas.mjs`.
 3. **Payload Encodings & Protocols:**
    - Client-to-BFF & Ingestion: `application/json` (UTF-8).
@@ -25,10 +25,10 @@ All network interfaces in Skyra LogHub follow strict contract-first principles:
 
 | Boundary | Target Path | Auth Mechanism | Authorization Model | Rate Limit |
 | :--- | :--- | :--- | :--- | :--- |
-| **Ingestion API** | `POST /api/v1/logs/batch` | `Authorization: Bearer <sk_live_...>` | Validated against project token hash in cache/DB | Enforced per-project token bucket (e.g. 5,000 req/s) |
-| **Console Web $\leftrightarrow$ BFF** | `/api/v1/*` | `__Host-session` Secure Cookie + `X-XSRF-TOKEN` | RBAC Role & Capability Claims on active session | 120 req/min per IP |
-| **BFF $\leftrightarrow$ Admin Service** | Internal private network | Mutual TLS / Internal JWT assertion | Tenant Scoped Internal System Client | Unlimited / Internal Service Mesh |
-| **BFF $\leftrightarrow$ Query Service** | Internal private network | Internal JWT assertion | Injected tenant & project claims | 30 concurrent queries per tenant |
+| **Ingestion API** | `POST /ingest/v1/logs` | `Authorization: Bearer <skyra_live_<64_hex>>` | Validated against project token hash in cache/DB | Enforced per-project token bucket (e.g. 5,000 req/s) |
+| **Console Web $\leftrightarrow$ BFF** | `/bff/*` | `__Host-session` Secure Cookie + `X-XSRF-TOKEN` | RBAC Role & Capability Claims on active session | 120 req/min per IP |
+| **BFF $\leftrightarrow$ Admin Service** | Internal private network (`/admin/v1/*`) | Mutual TLS / Internal JWT assertion | Tenant Scoped Internal System Client | Unlimited / Internal Service Mesh |
+| **BFF $\leftrightarrow$ Query Service** | Internal private network (`/query/v1/*`) | Internal JWT assertion | Injected tenant & project claims | 30 concurrent queries per tenant |
 
 ---
 
@@ -37,8 +37,8 @@ All network interfaces in Skyra LogHub follow strict contract-first principles:
 ### 3.1 Ingestion Gateway API (`apps/ingestion-gateway`)
 - **Contract Location:** `contracts/ingestion/v1/openapi.yaml`
 - **Batch Log Ingestion:**
-  - `POST /api/v1/logs/batch`
-  - **Headers:** `Authorization: Bearer sk_live_...`, `Content-Type: application/json`
+  - `POST /ingest/v1/logs`
+  - **Headers:** `Authorization: Bearer skyra_live_<64_hex>`, `Content-Type: application/json`
   - **Request Body:**
     ```json
     {
@@ -62,52 +62,77 @@ All network interfaces in Skyra LogHub follow strict contract-first principles:
       ]
     }
     ```
-  - **Response (`201 Created`):**
+  - **Response (`200 OK`):**
     ```json
     {
-      "accepted": 1,
+      "status": "durably_accepted",
       "batch_id": "b8a5e012-3456-4789-abcd-0123456789ab",
-      "receipt": "rcpt_v1_00000001_1763650800_4a9b2c",
-      "committed_at": "2026-11-20T15:00:00.145892Z"
+      "accepted_count": 1,
+      "duplicate": false,
+      "receipt": {
+        "receipt_id": "rcpt_7f9a8b1c2d3e4f50",
+        "journal_segment": "journal-2026-11-20-0001.wal",
+        "journal_offset": 1048576,
+        "committed_at": "2026-11-20T15:00:00.145892Z",
+        "content_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
     }
     ```
 
 ### 3.2 Console BFF API (`apps/console-bff`)
-- **Contract Location:** `apps/console-bff/openapi/console-bff.openapi.json`
-- **Authentication Routes:**
-  - `GET /api/v1/auth/login`: Initiates OIDC authorization flow.
-  - `GET /api/v1/auth/callback`: Exchanges authorization code for session cookie.
-  - `GET /api/v1/auth/session`: Returns current authenticated identity, active tenant, and capabilities.
-  - `POST /api/v1/auth/switch-tenant`: Changes active tenant in encrypted session.
-  - `POST /api/v1/auth/switch-project`: Changes active project context.
-  - `POST /api/v1/auth/logout`: Revokes session in PostgreSQL and clears cookies.
+- **Routing Scope:** Public frontend gateway routes mounted under `/bff/`.
+- **Authentication & Workspace Routes:**
+  - `GET /bff/auth/readiness`: Verifies session store health.
+  - `GET /bff/auth/login`: Initiates OIDC authorization flow.
+  - `GET /bff/auth/callback`: Exchanges authorization code for session cookie.
+  - `POST /bff/auth/logout`: Revokes session in PostgreSQL and clears cookies.
+  - `POST /bff/auth/rotate`: Rotates session token and CSRF token.
+  - `GET /bff/session`: Returns current authenticated identity, active tenant/project, available contexts, and CSRF token.
+  - `GET /bff/workspaces`: Lists available workspaces and tenant memberships.
+  - `POST /bff/workspaces/select`: Changes active workspace context in session.
 - **Organization & Team Management:**
-  - `GET /api/v1/organization`: Retrieves organization details with `ETag`.
-  - `PATCH /api/v1/organization`: Updates display name with `If-Match` header.
-  - `GET /api/v1/members`: Lists organization members with opaque cursor pagination.
-  - `POST /api/v1/members/invite`: Invites user with specified role (`OWNER`, `ADMIN`, `MEMBER`, `VIEWER`).
-  - `PATCH /api/v1/members/:id/role`: Modifies member role with confirmation and concurrency version.
-  - `DELETE /api/v1/members/:id`: Removes member from tenant.
-- **Projects & Credentials:**
-  - `GET /api/v1/projects`: Lists projects within active tenant.
-  - `POST /api/v1/projects`: Provisions new project with kebab-case identifier.
-  - `PATCH /api/v1/projects/:id`: Updates project metadata or status (`ACTIVE`, `ARCHIVED`).
-  - `GET /api/v1/credentials`: Lists active and revoked credentials for active project.
-  - `POST /api/v1/credentials`: Generates new API key; returns one-time secret.
-  - `DELETE /api/v1/credentials/:id`: Immediately revokes credential.
+  - `GET /bff/organization`: Retrieves organization details with `ETag`.
+  - `PATCH /bff/organization`: Updates display name with `If-Match` header.
+  - `GET /bff/organization/members`: Lists organization members with opaque cursor pagination.
+  - `POST /bff/organization/members/invite`: Invites user with specified role (`OWNER`, `ADMIN`, `MEMBER`, `VIEWER`).
+  - `PATCH /bff/organization/members/:userId/role`: Modifies member role with confirmation and concurrency version.
+  - `DELETE /bff/organization/members/:userId`: Removes member from tenant.
+- **Projects & Ingestion Credentials:**
+  - `GET /bff/projects`: Lists projects within active tenant.
+  - `POST /bff/projects`: Provisions new project with kebab-case identifier.
+  - `PATCH /bff/projects/:id`: Updates project metadata or status (`ACTIVE`, `ARCHIVED`).
+  - `GET /bff/projects/:projectId/credentials`: Lists active and revoked credentials for active project.
+  - `POST /bff/projects/:projectId/credentials`: Generates new API key; returns one-time secret (`skyra_live_<64_hex>`).
+  - `POST /bff/projects/:projectId/credentials/:id/rotate`: Rotates existing credential.
+  - `DELETE /bff/projects/:projectId/credentials/:id`: Immediately revokes credential.
+- **Saved Searches & Preferences:**
+  - `GET /bff/projects/:projectId/saved-searches`: Lists saved searches for project.
+  - `POST /bff/projects/:projectId/saved-searches`: Saves query and filter parameters.
+  - `DELETE /bff/projects/:projectId/saved-searches/:id`: Deletes saved search.
+  - `GET /bff/projects/:projectId/dashboard-preferences`: Retrieves dashboard configuration.
+  - `PUT /bff/projects/:projectId/dashboard-preferences`: Updates dashboard configuration.
 - **Query Proxy & Analytics:**
-  - `POST /api/v1/query/search`: Executes search query against Parquet archive.
-  - `GET /api/v1/query/facets`: Retrieves dynamic aggregate counts for services, levels, hosts.
-  - `GET /api/v1/query/events/:id`: Fetches single log event with full JSON payload.
-  - `POST /api/v1/query/export`: Streams filtered logs as CSV or JSON format.
-  - `GET /api/v1/analytics/overview`: High-level metrics (volume, error rate, active projects).
-  - `GET /api/v1/analytics/timeseries`: Histogram bucket intervals for charting.
-  - `GET /api/v1/analytics/severities`: Severity percentage breakdown.
+  - `POST /bff/query/search`: Executes search query against Parquet archive via Query Service.
+  - `GET /bff/query/facets`: Retrieves dynamic aggregate counts for services, levels, hosts.
+  - `GET /bff/query/events/:id`: Fetches single log event with full JSON payload.
+  - `POST /bff/query/export`: Streams filtered logs in CSV or JSON format.
+  - `POST /bff/query/dashboard`: Computes aggregated metrics, time-series distributions, and service trends.
 - **Quotas & Audit:**
-  - `GET /api/v1/quotas`: Retrieves project quota limits and usage meters.
-  - `PATCH /api/v1/quotas`: Updates rate limits or daily volume allocations.
-  - `GET /api/v1/audit`: Lists audit events with actor, target, and change diff.
-  - `GET /api/v1/audit/export`: Exports compliance audit logs as CSV.
+  - `GET /bff/projects/:projectId/quota`: Retrieves project quota limits and usage meters.
+  - `PATCH /bff/projects/:projectId/quota`: Updates rate limits or daily volume allocations.
+  - `GET /bff/projects/:projectId/usage`: Retrieves project usage metrics for a given period.
+  - `GET /bff/projects/:projectId/usage/history`: Retrieves chronological quota usage history.
+  - `GET /bff/organization/audit`: Lists audit events with actor, target, and change diff.
+  - `GET /bff/organization/audit/export`: Exports compliance audit logs as CSV.
+  - `GET /bff/organization/audit/access`: Verifies audit permissions and available action filters.
+
+### 3.3 Internal Backend Service APIs
+- **Admin Service (`apps/admin-service`)**:
+  - Internal contract: `contracts/admin/v1/openapi.yaml`
+  - Routes: `/admin/v1/tenants`, `/admin/v1/tenants/{tenantId}`, `/admin/v1/tenants/{tenantId}/projects`, `/admin/v1/tenants/{tenantId}/projects/{projectId}/credentials`, `/admin/v1/tenants/{tenantId}/projects/{projectId}/quota`, `/admin/v1/tenants/{tenantId}/audit`.
+- **Query Service (`apps/query-service`)**:
+  - Internal contract: `contracts/query/v1/openapi.yaml`
+  - Routes: `/query/v1/logs/search`, `/query/v1/logs/facets`, `/query/v1/logs/events/{id}`, `/query/v1/logs/dashboard`, `/query/v1/logs/aggregate`.
 
 ---
 
@@ -117,7 +142,7 @@ All network interfaces in Skyra LogHub follow strict contract-first principles:
 | :--- | :--- | :--- | :--- |
 | **400 Bad Request** | `SCHEMA_VALIDATION_FAILED` | Batch payload violates Canonical Schema v1 | Do not retry; fix payload format |
 | **401 Unauthorized** | `INVALID_CREDENTIALS` | Bearer token unknown or revoked | Do not retry; check API key |
-| **401 Unauthorized** | `SESSION_EXPIRED` | Cookie session expired or revoked | Redirect to `/api/v1/auth/login` |
+| **401 Unauthorized** | `SESSION_EXPIRED` | Cookie session expired or revoked | Redirect to `/bff/auth/login` |
 | **403 Forbidden** | `PERMISSION_DENIED` | Identity lacks required RBAC capability | Do not retry; request elevated role |
 | **404 Not Found** | `RESOURCE_NOT_FOUND` | Specified project, member, or credential does not exist | Verify resource ID |
 | **409 Conflict** | `CONCURRENCY_CONFLICT` | Stale `If-Match` ETag or duplicate project ID | Refresh resource state and retry |

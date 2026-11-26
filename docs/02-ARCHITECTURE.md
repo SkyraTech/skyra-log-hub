@@ -124,12 +124,12 @@ sequenceDiagram
     participant S3 as Parquet Storage
     participant PG as PostgreSQL
 
-    Client->>GW: POST /api/v1/logs/batch (Bearer sk_live_...)
+    Client->>GW: POST /ingest/v1/logs (Bearer skyra_live_...)
     GW->>Admin: Verify Credential & Quota (Cache hit/miss)
     Admin-->>GW: OK (Tenant/Project Claims)
     GW->>Disk: Atomic write + fsync()
     Disk-->>GW: Offset Committed
-    GW-->>Client: 201 Created (Admission Receipt)
+    GW-->>Client: 200 OK (Admission Receipt)
 
     Note over Disk,Shipper: Asynchronous Batch Shipping
     Shipper->>Disk: Read & Rotate Committed WAL Segments
@@ -220,7 +220,7 @@ All HTTP APIs throughout Skyra LogHub return RFC 7807 Problem Details for all 4x
   "title": "Project Ingestion Quota Exceeded",
   "status": 429,
   "detail": "Project 'payment-prod' has exceeded its daily allocation of 500000 events.",
-  "instance": "/api/v1/logs/batch",
+  "instance": "/ingest/v1/logs",
   "code": "QUOTA_EXCEEDED",
   "timestamp": "2026-11-20T15:00:00.123456Z"
 }

@@ -79,7 +79,7 @@ flowchart TD
 - **Stream Exports:** Filtered search results can be exported as CSV or JSON using the reusable `triggerBlobDownload` transport utility, which automatically revokes memory ObjectURLs upon completion.
 
 ### 4.2 Credential Generation & One-Time Secret Revelation
-- When a project API key is provisioned, the backend returns the plaintext secret key `sk_live_...` exactly once.
+- When a project API key is provisioned, the backend returns the plaintext secret key `skyra_live_...` exactly once.
 - The UI presents a modal dialog with the secret obscured by default, an unmask toggle, an immediate one-click copy button, and an explicit warning that the secret cannot be recovered once the modal is closed.
 
 ### 4.3 Accessible Data Visualizations

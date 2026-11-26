@@ -98,7 +98,7 @@ erDiagram
 
 ### 4.3 Ingestion Credentials & Security Keys
 - **`IngestionCredential`:**
-  - `id` (UUIDv4 PK), `projectId` (FK), `name` (VarChar), `keyHash` (SHA-256 hex string), `maskedKey` (`sk_live_...4a2b`), `scopes` (Text array), `status` (`ACTIVE`, `REVOKED`), `lastUsedAt`, `expiresAt`, `createdAt`, `revokedAt`.
+  - `id` (UUIDv4 PK), `projectId` (FK), `name` (VarChar), `keyHash` (SHA-256 hex string), `maskedKey` (`skyra_live_...4a2b`), `scopes` (Text array), `status` (`ACTIVE`, `REVOKED`), `lastUsedAt`, `expiresAt`, `createdAt`, `revokedAt`.
   - Unique Constraint: `@@unique([keyHash])`.
   - Indexes: `[projectId, status]`.
 

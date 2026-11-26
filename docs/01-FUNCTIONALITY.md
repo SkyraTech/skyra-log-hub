@@ -43,7 +43,9 @@ Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingest
 - **Input / Output Behavior:**
   - Input: Name string (1-100 characters).
   - Output: Tenant model with microsecond timestamps and concurrency version.
-- **Relevant APIs:** `GET /api/v1/organization`, `PATCH /api/v1/organization`.
+- **Relevant APIs:**
+  - BFF: `GET /bff/organization`, `PATCH /bff/organization`.
+  - Admin Service (Internal): `GET /admin/v1/tenants/:tenantId`, `PATCH /admin/v1/tenants/:tenantId`.
 - **Relevant UI Modules:** `apps/console-web/src/app/features/organization`.
 - **Backend Authority:** `apps/admin-service` (`TenantModule`, `PrismaTenantRepository`).
 - **Security Considerations:** Strict tenant isolation; cross-tenant updates are physically prohibited at database repository and controller guards.
@@ -54,7 +56,7 @@ Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingest
 - **User Roles:** All authenticated identities; `TENANT_OWNER` / `ADMIN` for invitations.
 - **Supported Operations:**
   - OIDC PKCE login flow (Enterprise SSO / Microsoft Entra ID External ID).
-  - Session verification (`/api/v1/auth/session`).
+  - Session verification (`/bff/session`).
   - Switch active tenant / project.
   - Invite new members by email with role assignment (`OWNER`, `ADMIN`, `MEMBER`, `VIEWER`).
   - Update member roles with confirmation modal and ETag concurrency.
@@ -64,8 +66,9 @@ Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingest
   - Input: Email address, target role enum.
   - Output: Signed invitation record / updated membership projection.
 - **Relevant APIs:**
-  - `GET /api/v1/auth/login`, `GET /api/v1/auth/callback`, `GET /api/v1/auth/session`, `POST /api/v1/auth/logout`.
-  - `GET /api/v1/members`, `POST /api/v1/members/invite`, `PATCH /api/v1/members/:id/role`, `DELETE /api/v1/members/:id`.
+  - BFF: `GET /bff/auth/login`, `GET /bff/auth/callback`, `GET /bff/session`, `POST /bff/auth/logout`, `GET /bff/workspaces`, `POST /bff/workspaces/select`.
+  - BFF Members: `GET /bff/organization/members`, `POST /bff/organization/members/invite`, `PATCH /bff/organization/members/:userId/role`, `DELETE /bff/organization/members/:userId`.
+  - Admin Service (Internal): `GET /admin/v1/tenants/:tenantId/members`, `POST /admin/v1/tenants/:tenantId/members/invite`, `PATCH /admin/v1/tenants/:tenantId/members/:userId/role`, `DELETE /admin/v1/tenants/:tenantId/members/:userId`.
 - **Relevant UI Modules:** `apps/console-web/src/app/features/login`, `apps/console-web/src/app/features/organization`.
 - **Backend Authority:** `apps/console-bff` (Session handling & OIDC) and `apps/admin-service` (IAM & Membership).
 - **Security Considerations:** Sessions stored in PostgreSQL encrypted with AES-256-GCM. Anti-CSRF double-submit cookies enforced on all state-changing endpoints.
@@ -76,15 +79,17 @@ Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingest
 - **Supported Operations:**
   - Provision project with kebab-case identifier (e.g., `payment-service-prod`).
   - Update project name, description, and status (`ACTIVE`, `ARCHIVED`).
-  - Generate managed ingestion credentials (`sk_live_...`).
+  - Generate managed ingestion credentials (`skyra_live_<64_hex>`).
   - Display raw secret key **exactly once** in a secure modal with copy-to-clipboard.
   - Revoke active credentials with immediate invalidation at Gateway.
 - **Input / Output Behavior:**
   - Create: `{ name: string, projectId: string, description?: string }`.
-  - Credential Create Output: `{ id: string, name: string, maskedKey: string, secretKey: string, createdAt: string }`.
+  - Credential Create Output: `{ id: string, name: string, maskedKey: string, secretKey: string, createdAt: string }` (masked key format: `skyra_live_...e4f2`).
 - **Relevant APIs:**
-  - `GET /api/v1/projects`, `POST /api/v1/projects`, `PATCH /api/v1/projects/:id`.
-  - `GET /api/v1/credentials`, `POST /api/v1/credentials`, `DELETE /api/v1/credentials/:id`.
+  - BFF Projects: `GET /bff/projects`, `POST /bff/projects`, `PATCH /bff/projects/:id`.
+  - BFF Credentials: `GET /bff/projects/:projectId/credentials`, `POST /bff/projects/:projectId/credentials`, `DELETE /bff/projects/:projectId/credentials/:id`.
+  - Admin Service (Internal): `GET /admin/v1/tenants/:tenantId/projects`, `POST /admin/v1/tenants/:tenantId/projects`, `PATCH /admin/v1/tenants/:tenantId/projects/:projectId`.
+  - Admin Service Credentials (Internal): `GET /admin/v1/tenants/:tenantId/projects/:projectId/credentials`, `POST /admin/v1/tenants/:tenantId/projects/:projectId/credentials`, `DELETE /admin/v1/tenants/:tenantId/projects/:projectId/credentials/:credentialId`.
 - **Relevant UI Modules:** `apps/console-web/src/app/features/projects`, `apps/console-web/src/app/features/credentials`.
 - **Backend Authority:** `apps/admin-service` (`ProjectModule`, `CredentialModule`).
 - **Security Considerations:** Secret keys hashed with SHA-256 before persistence; unhashed keys are never written to disk or database.
@@ -99,9 +104,9 @@ Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingest
   - Return of cryptographic admission receipt containing `batchId`, `walOffset`, and `timestamp`.
   - Strict deduplication of repeated `eventId` submissions.
 - **Input / Output Behavior:**
-  - Input: HTTP POST with `Authorization: Bearer <sk_live_...>` and JSON batch payload.
-  - Output: `201 Created` with `{ accepted: number, batchId: string, receipt: string }` or RFC 7807 error.
-- **Relevant APIs:** `POST /api/v1/logs/batch` (`apps/ingestion-gateway`).
+  - Input: HTTP POST with `Authorization: Bearer <skyra_live_<64_hex>>` and JSON batch payload.
+  - Output: `200 OK` with `{ status: "durably_accepted", batch_id: string, accepted_count: number, duplicate: boolean, receipt: { receipt_id, journal_segment, journal_offset, committed_at, content_digest } }` or RFC 7807 error.
+- **Relevant APIs:** `POST /ingest/v1/logs` (`apps/ingestion-gateway`).
 - **Relevant UI Modules:** Monitored via Analytics and Quotas views.
 - **Backend Authority:** `apps/ingestion-gateway`.
 - **Security Considerations:** Rate-limited and quota-checked before disk write. Token validation cache avoids database stampede.
@@ -120,7 +125,9 @@ Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingest
 - **Input / Output Behavior:**
   - Query: `{ query: string, startTime: string, endTime: string, limit: number, cursor?: string }`.
   - Response: `{ events: LogEvent[], nextCursor?: string, totalEstimated: number }`.
-- **Relevant APIs:** `POST /api/v1/query/search`, `GET /api/v1/query/facets`, `GET /api/v1/query/events/:id`.
+- **Relevant APIs:**
+  - BFF: `POST /bff/query/search`, `GET /bff/query/facets`, `GET /bff/query/events/:id`, `POST /bff/query/export`.
+  - Query Service (Internal): `POST /query/v1/logs/search`, `POST /query/v1/logs/facets`, `GET /query/v1/logs/events/:id`.
 - **Relevant UI Modules:** `apps/console-web/src/app/features/log-explorer`.
 - **Backend Authority:** `apps/query-service` (DuckDB columnar query engine on Parquet archives).
 - **Security Considerations:** Tenant and project scoping automatically injected by BFF proxy; clients cannot query outside their active context.
@@ -133,7 +140,8 @@ Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingest
   - Recall saved search from dropdown with instant execution.
   - Delete obsolete saved searches.
   - Store dashboard preferences (widget layout, default refresh intervals).
-- **Relevant APIs:** `GET /api/v1/saved-searches`, `POST /api/v1/saved-searches`, `DELETE /api/v1/saved-searches/:id`.
+- **Relevant APIs:**
+  - BFF: `GET /bff/projects/:projectId/saved-searches`, `POST /bff/projects/:projectId/saved-searches`, `DELETE /bff/projects/:projectId/saved-searches/:id`, `GET /bff/projects/:projectId/dashboard-preferences`, `PUT /bff/projects/:projectId/dashboard-preferences`.
 - **Relevant UI Modules:** `apps/console-web/src/app/features/log-explorer`, `apps/console-web/src/app/features/settings`.
 - **Backend Authority:** `apps/console-bff` / `apps/admin-service`.
 
@@ -145,7 +153,9 @@ Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingest
   - Time-series log volume histogram with bucket-click zoom into Explorer.
   - Severity distribution breakdown chart.
   - Keyboard accessible data table toggle for all charts.
-- **Relevant APIs:** `GET /api/v1/analytics/overview`, `GET /api/v1/analytics/timeseries`, `GET /api/v1/analytics/severities`.
+- **Relevant APIs:**
+  - BFF: `POST /bff/query/dashboard`.
+  - Query Service (Internal): `POST /query/v1/logs/dashboard`, `POST /query/v1/logs/aggregate`.
 - **Relevant UI Modules:** `apps/console-web/src/app/features/analytics`.
 - **Backend Authority:** `apps/query-service`.
 
@@ -156,7 +166,9 @@ Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingest
   - View daily and monthly quota utilization meters.
   - Configure project-level rate limits (events/sec) and daily volume limits (MB/day).
   - Real-time admission enforcement at Ingestion Gateway (`429 Too Many Requests`).
-- **Relevant APIs:** `GET /api/v1/quotas`, `PATCH /api/v1/quotas`.
+- **Relevant APIs:**
+  - BFF: `GET /bff/projects/:projectId/quota`, `PATCH /bff/projects/:projectId/quota`, `GET /bff/projects/:projectId/usage`, `GET /bff/projects/:projectId/usage/history`.
+  - Admin Service (Internal): `GET /admin/v1/tenants/:tenantId/projects/:projectId/quota`, `PATCH /admin/v1/tenants/:tenantId/projects/:projectId/quota`, `GET /admin/v1/tenants/:tenantId/projects/:projectId/usage`.
 - **Relevant UI Modules:** `apps/console-web/src/app/features/quotas`.
 - **Backend Authority:** `apps/admin-service` (`QuotaModule`) and `apps/ingestion-gateway`.
 
@@ -168,7 +180,9 @@ Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingest
   - Filter by actor, target resource, action type, and status.
   - Inspect structured change delta (before/after states).
   - Export audit logs to RFC 4180 compliant CSV.
-- **Relevant APIs:** `GET /api/v1/audit`, `GET /api/v1/audit/export`.
+- **Relevant APIs:**
+  - BFF: `GET /bff/organization/audit`, `GET /bff/organization/audit/export`, `GET /bff/organization/audit/access`.
+  - Admin Service (Internal): `GET /admin/v1/tenants/:tenantId/audit`, `GET /admin/v1/tenants/:tenantId/audit/export`.
 - **Relevant UI Modules:** `apps/console-web/src/app/features/audit`.
 - **Backend Authority:** `apps/admin-service` (`AuditModule`, `PrismaAuditRepository`).
 - **Security Considerations:** Audit records are append-only; update and delete operations are forbidden by schema and database constraints.

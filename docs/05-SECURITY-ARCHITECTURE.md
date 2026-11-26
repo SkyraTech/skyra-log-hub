@@ -35,7 +35,7 @@ flowchart TD
     end
 
     Browser -->|"Boundary 1: HTTPS, __Host-session, Anti-CSRF"| BFF
-    LogShipper -->|"Boundary 2: HTTPS, Bearer Ingestion Key"| GW
+    LogShipper -->|"Boundary 2: HTTPS, Bearer Ingestion Key (skyra_live_...)"| GW
     BFF -->|"Boundary 3: Internal JWT Assertion"| Admin
     BFF -->|"Boundary 3: Internal JWT Assertion"| Query
     BFF -->|"Boundary 4: Dedicated Role (skyra_bff_sessions_runtime)"| PG
@@ -101,9 +101,9 @@ LogHub implements four hierarchical organizational roles:
 
 ## 5. Ingestion Credential & Secret Governance
 
-1. **Format:** Project ingestion tokens adhere to the format `sk_live_<32_random_bytes_hex>`.
+1. **Format:** Project ingestion tokens adhere to the format `skyra_live_<64_hex>` (`skyra_live_` followed by 32 cryptographically secure random bytes encoded as 64 lowercase hexadecimal characters).
 2. **One-Time Secret Revelation:** When an API key is created in the Web Console, the raw plaintext secret is transmitted **once** to the creator's browser inside a secure modal with an explicit copy button.
-3. **Storage Security:** The database stores only the SHA-256 hash (`keyHash`) and a masked display string (`maskedKey`, e.g. `sk_live_...e4f2`). Plaintext keys are never stored on disk or in the database.
+3. **Storage Security:** The database stores only the SHA-256 hash (`keyHash`) and a masked display string (`maskedKey`, e.g. `skyra_live_...e4f2`). Plaintext keys are never stored on disk or in the database.
 4. **Immediate Revocation:** Revoking a credential in the UI marks `status = 'REVOKED'`, which invalidates the Ingestion Gateway's memory cache within 10 seconds.
 
 ---
