@@ -216,6 +216,12 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build Admin Service
+        run: |
+          pnpm --filter @skyra/query-service prisma:generate
+          pnpm --filter '@skyra/logger-*' build
+          pnpm --filter @skyra/admin-service build
+
       - name: Start Disposable PostgreSQL 17 Container on Isolated Port 5433
         run: |
           docker run -d --name postgres17 --network host \
@@ -243,6 +249,14 @@ jobs:
           DATABASE_URL: 'postgresql://skyra_isolated_user:ci_disposable_password_987@127.0.0.1:5433/skyra_loghub_disposable_validation'
           ISOLATED_DATABASE_URL: 'postgresql://skyra_isolated_user:ci_disposable_password_987@127.0.0.1:5433/skyra_loghub_disposable_validation'
         run: node --test tests/admin/isolated-target.test.mjs
+
+      - name: Run Live Retention PostgreSQL Integration & Security Acceptance Suite
+        env:
+          SKYRA_ISOLATED_TEST_ENV: 'true'
+          ISOLATED_CLUSTER_ID: 'a0000000-0000-0000-0000-000000000001'
+          DATABASE_URL: 'postgresql://skyra_isolated_user:ci_disposable_password_987@127.0.0.1:5433/skyra_loghub_disposable_validation'
+          ISOLATED_DATABASE_URL: 'postgresql://skyra_isolated_user:ci_disposable_password_987@127.0.0.1:5433/skyra_loghub_disposable_validation'
+        run: node --test tests/retention/live-retention.test.mjs
 
   browser-e2e:
     name: Browser E2E Automation (Chromium CDP)

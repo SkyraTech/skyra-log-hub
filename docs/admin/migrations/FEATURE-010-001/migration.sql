@@ -15,4 +15,9 @@ CREATE TABLE IF NOT EXISTS project_retention_policies (
   CONSTRAINT project_retention_tenant_project_fkey FOREIGN KEY (tenant_id, project_id) REFERENCES projects(tenant_id, id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS project_retention_tenant_idx ON project_retention_policies(tenant_id);
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'skyra_org_runtime') THEN
+    GRANT SELECT, INSERT, UPDATE ON project_retention_policies TO skyra_org_runtime;
+  END IF;
+END $$;
 COMMIT;
