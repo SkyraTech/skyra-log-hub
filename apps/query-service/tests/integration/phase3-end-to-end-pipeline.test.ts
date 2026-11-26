@@ -292,7 +292,7 @@ describe('LOGHUB-QUERY-008: Complete End-to-End System Pipeline Acceptance', () 
   it('Pipeline 5 (HTTP Event Lookup): Retrieves specific single event by eventId with project authorization', async () => {
     const res = await queryApp.inject({
       method: 'GET',
-      url: `/query/v1/logs/${emittedFirstEventId}?projectId=${projectId}`,
+      url: `/query/v1/logs/${emittedFirstEventId}?projectId=${projectId}&date=${dateStr}`,
       headers: {
         authorization: validAuthHeader,
       },
