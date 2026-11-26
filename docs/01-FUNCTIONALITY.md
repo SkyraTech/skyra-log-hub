@@ -201,6 +201,21 @@ Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingest
 - **Backend Authority:** `apps/admin-service` (`RetentionService`, `RetentionController`).
 - **Security Considerations:** Scoped to authorized tenant; legal hold release requires elevated organization owner authority; all mutations generate immutable `RETENTION_POLICY_CHANGED` audit records.
 
+### 3.11 Automated Background Compaction & Parquet Materialization (BL-06)
+- **Purpose:** Automatically and continuously discover sealed archive JSONL segments and materialize them into columnar Apache Parquet artifacts for optimal query performance, without requiring user queries to initiate conversion.
+- **User Roles:** Autonomous background system worker running within `apps/query-service`.
+- **Supported Operations:**
+  - Continuous segment discovery combining PostgreSQL `ArchiveSegment` catalog lookups with filesystem walk fallback.
+  - Manifest cryptographic verification ensuring companion `.manifest.json` digest, record count, and schema version match prior to materialization.
+  - Dual-layer distributed coordination via atomic filesystem claim files (`.claims/`) and PostgreSQL advisory locks (`pg_try_advisory_lock`).
+  - Safe, atomic Parquet materialization using DuckDB with staging files and instant rename.
+  - Automatic startup crash recovery and stale claim lease reclamation.
+  - Bounded concurrency worker pools with exponential backoff on retryable failures.
+  - Retention policy and legal hold compliance awareness (deferring or preserving segments marked under legal hold).
+- **Zero-Deletion Boundary:** Background compaction is strictly additive and nondestructive. Raw JSONL files, companion manifests, WAL entries, and existing Parquet artifacts are never deleted or truncated by compaction.
+- **Backend Authority:** `apps/query-service` (`BackgroundCompactionService`, `CompactionDiscoveryService`, `CompactionLockCoordinatorService`).
+- **Observability:** Generates structured audit events (`COMPACTION_CYCLE_STARTED`, `COMPACTION_SEGMENT_CLAIMED`, `COMPACTION_SEGMENT_COMPLETED`, `COMPACTION_SEGMENT_FAILED`, `COMPACTION_SEGMENT_RETRY`, `COMPACTION_STALE_CLAIM_RECOVERED`, `COMPACTION_LEGAL_HOLD_PRESERVED`).
+
 ---
 
 ## 4. End-to-End User Workflows

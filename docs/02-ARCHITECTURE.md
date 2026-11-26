@@ -60,8 +60,8 @@ skyra-log-hub/
 | **`console-bff`** | NestJS 11.2, Fastify 5.12, `pg.Pool` | Backend-For-Frontend; OIDC authentication, cookie sessions, CSRF token validation, reverse proxy to backend APIs | PostgreSQL (`bff_sessions`, AES-256-GCM) |
 | **`admin-service`** | NestJS 11.2, Fastify 5.12, Prisma 5.22 | Organization management, project provisioning, member IAM, credential hashing, quota configuration, audit history | PostgreSQL (Authoritative master schema) |
 | **`ingestion-gateway`** | NestJS 11.2, Fastify 5.12 | Ingestion endpoint; bearer credential verification, quota admission, canonical schema validation, WAL `fsync` | Append-only disk WAL (`.wal`) |
-| **`query-service`** | NestJS 11.2, Fastify 5.12, DuckDB 1.1 | Search and aggregate log explorer queries, time-series histogram generation, facet counts, CSV export | DuckDB (in-memory) / Parquet / Read-Only Postgres |
-| **`log-shipper`** | Node.js v24 daemon | Rotates WAL files, batches JSONL log entries, compacts into Parquet format, registers archive segments | Disk WAL $\rightarrow$ Local/S3 Parquet Archives |
+| **`query-service`** | NestJS 11.2, Fastify 5.12, DuckDB 1.1 | Search and aggregate log explorer queries, time-series histogram generation, facet counts, CSV export, automated background Parquet compaction | DuckDB (in-memory) / Parquet / Read-Only Postgres |
+| **`log-shipper`** | Node.js v24 daemon | Rotates WAL files and flushes edge JSONL log entries into sealed archive segments | Disk WAL $\rightarrow$ Local/S3 JSONL Archives |
 | **`shared-contracts`** | TypeScript, AJV, JSON Schema Draft 2020-12 | Canonical event schema, API request/response DTOs, OpenAPI specifications, type definitions | Pure code / schemas |
 
 ---
@@ -208,6 +208,15 @@ graph TD
 - **Admin Service:** Authoritative read/write connection pool using Prisma with the `skyra_admin_runtime` role.
 - **Console BFF:** Zero Prisma dependencies. Direct raw `pg.Pool` connection with the `skyra_bff_sessions_runtime` role, restricted exclusively to `bff_sessions` and `bff_login_transactions`.
 - **Query Service:** Read-only connection pool using the `skyra_query_runtime` role with PostgreSQL enforcing `default_transaction_read_only=on`.
+
+### 5.1 Background Compaction & Distributed Coordination Architecture (BL-06)
+- **Host Subsystem:** Runs autonomously within `apps/query-service` (`BackgroundCompactionService`), leveraging the existing embedded DuckDB engine, `DuckDbParquetConverter`, `FileParquetCatalogService`, and `ArchiveDiscoveryService`.
+- **Dual-Layer Distributed Coordination:**
+  1. *Atomic Filesystem Claims:* Employs `.claims/<segment>.claim` files created via atomic `O_CREAT | O_EXCL` flags with ISO timestamp and worker identity payloads, guaranteeing mutual exclusion across shared storage.
+  2. *PostgreSQL Advisory Locks:* Uses non-blocking session-scoped `SELECT pg_try_advisory_lock(hashtext(:segmentKey))` to serialize concurrent workers across multiple instances without modifying database records or violating Query Service read-only transaction mode.
+- **Fail-Safe Crash Recovery:** Stale claims exceeding lease TTL (default 15 minutes) are safely reclaimed with audit tracking. Orphaned staging files (`.staging-*.parquet`) are pruned during application bootstrap.
+- **Retention & Legal Hold Awareness:** Respects `ProjectRetention` configurations. When legal hold is active (`isLegalHold = true`), segments can be safely compacted into Parquet format for query efficiency while pruning is strictly forbidden; or compaction can honor `compactionDeferLegalHold` configuration.
+- **Strict Non-Destructive Invariant:** Background compaction is strictly additive; source JSONL archives, companion manifests, WAL logs, and existing Parquet artifacts are never removed or truncated.
 
 ---
 

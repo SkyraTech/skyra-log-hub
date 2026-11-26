@@ -7,10 +7,21 @@ import { MaterializeSegmentUseCase } from './application/materialize-segment.use
 import { VerifyParquetUseCase } from './application/verify-parquet.use-case.js';
 import { RecoverMaterializationUseCase } from './application/recover-materialization.use-case.js';
 import { HybridSourcePlannerService } from './application/hybrid-source-planner.service.js';
+import { CompactionLockCoordinatorService } from './application/compaction-lock-coordinator.service.js';
+import { CompactionDiscoveryService } from './application/compaction-discovery.service.js';
+import { BackgroundCompactionService } from './application/background-compaction.service.js';
 import { QueryExecutionModule } from '../query-execution/query-execution.module.js';
+import { ArchiveDiscoveryModule } from '../archive-discovery/archive-discovery.module.js';
+import { MetadataModule } from '../../metadata/metadata.module.js';
+import { AuditModule } from '../audit/audit.module.js';
 
 @Module({
-  imports: [forwardRef(() => QueryExecutionModule)],
+  imports: [
+    forwardRef(() => QueryExecutionModule),
+    forwardRef(() => ArchiveDiscoveryModule),
+    MetadataModule,
+    AuditModule,
+  ],
   providers: [
     ParquetPathSafetyService,
     FileParquetCatalogService,
@@ -23,6 +34,9 @@ import { QueryExecutionModule } from '../query-execution/query-execution.module.
     VerifyParquetUseCase,
     RecoverMaterializationUseCase,
     HybridSourcePlannerService,
+    CompactionLockCoordinatorService,
+    CompactionDiscoveryService,
+    BackgroundCompactionService,
   ],
   exports: [
     PARQUET_CATALOG_PORT,
@@ -33,6 +47,9 @@ import { QueryExecutionModule } from '../query-execution/query-execution.module.
     VerifyParquetUseCase,
     RecoverMaterializationUseCase,
     HybridSourcePlannerService,
+    CompactionLockCoordinatorService,
+    CompactionDiscoveryService,
+    BackgroundCompactionService,
   ],
 })
 export class ParquetCacheModule {}

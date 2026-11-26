@@ -157,4 +157,34 @@ export class PrismaArchiveSegmentRepository implements IArchiveSegmentRepository
       },
     });
   }
+
+  public async findRecentSegments(limit = 100): Promise<ArchiveSegmentRecord[]> {
+    const rawList = await this.prisma.archiveSegment.findMany({
+      orderBy: [
+        { date: 'desc' },
+        { segmentFilename: 'asc' },
+      ],
+      take: limit,
+    });
+
+    return rawList.map((raw: ArchiveSegment) => ({
+      id: raw.id,
+      tenantId: raw.tenantId,
+      projectId: raw.projectId,
+      environment: raw.environment,
+      serviceName: raw.serviceName,
+      date: raw.date,
+      segmentFilename: raw.segmentFilename,
+      recordCount: raw.recordCount,
+      byteSize: raw.byteSize,
+      sha256Checksum: raw.sha256Checksum,
+      firstEventTimestamp: raw.firstEventTimestamp,
+      lastEventTimestamp: raw.lastEventTimestamp,
+      finalizedAt: raw.finalizedAt,
+      writerInstanceId: raw.writerInstanceId,
+      journalSegmentId: raw.journalSegmentId,
+      journalStartOffset: raw.journalStartOffset,
+      journalEndOffset: raw.journalEndOffset,
+    }));
+  }
 }

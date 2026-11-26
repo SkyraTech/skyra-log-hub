@@ -80,6 +80,10 @@ During Milestone Q-04 reconciliation, test execution counts across all 12 monore
 - **Ownership Marker:** Cluster ID `26d25080-7655-4147-b05a-512ad359e14f`.
 - Integration suites execute exclusively against this disposable instance after verifying exact target ownership.
 
+### 3.3 Storage Lifecycle & Background Compaction Verification (Milestone Q-06E)
+- **Unit & Integration Suite (`apps/query-service/tests/integration/background-compaction.test.ts`):** 13 deterministic tests validating normal compaction, idempotency, concurrent claims, stale lease recovery, companion manifest rejection, staging cleanup, exponential retry backoff, legal hold preservation, hybrid query correctness, and nondestructive invariants.
+- **Live Persistence Suite (`tests/storage/live-compaction.test.mjs`):** Disposable PostgreSQL 17 + DuckDB integration verifying target guard validation, PostgreSQL discovery, advisory lock serialization (`pg_try_advisory_lock`), retention policy inspection, Parquet materialization, and zero-deletion safety.
+
 ---
 
 ## 4. Multi-Runtime & Framework Compatibility Matrix
@@ -157,7 +161,7 @@ The automated quality pipeline defined in `.github/workflows/sdk-verification.ym
 | **`typecheck-and-compilation`** | `pnpm typecheck`<br/>`pnpm build`<br/>`pnpm --filter @skyra/log-shipper build` | Node.js 24.x on Ubuntu Latest | 0 type errors across workspace, clean AOT & NestJS builds |
 | **`test-suites`** | `pnpm test:contracts`<br/>`pnpm test:node`<br/>`pnpm test:nestjs`<br/>`pnpm test:next`<br/>`pnpm test:browser`<br/>`pnpm test:angular`<br/>`pnpm test:react`<br/>`pnpm test:gateway`<br/>`pnpm test:query`<br/>`pnpm test:admin`<br/>`pnpm test:bff`<br/>`pnpm test:console`<br/>Target guard unit tests | Node.js 24.x (Primary)<br/>Node.js 22.x (Compatibility) | 100% pass across all 995 unit/integration tests |
 | **`python-sdk-matrix`** | `python -m unittest discover -s packages/logger-python/tests`<br/>`python -m build packages/logger-python` | Python 3.10, 3.11, 3.12 on Linux, Windows, macOS | All 61 tests passing across 9 matrix combinations |
-| **`postgresql-integration`** | `node scripts/ci-init-disposable-postgres.mjs`<br/>`node --test tests/admin/isolated-target.test.mjs` | PostgreSQL 17 on disposable port 5433 | Zero touch to port 5432; target guards verified against live container |
+| **`postgresql-integration`** | `node scripts/ci-init-disposable-postgres.mjs`<br/>`node --test tests/admin/isolated-target.test.mjs`<br/>`pnpm test:compaction:persistence` | PostgreSQL 17 on disposable port 5433 | Zero touch to port 5432; target guards verified against live container; compaction advisory locks, retention inspection & Parquet materialization pass |
 | **`browser-e2e`** | `node tests/e2e/real-browser.test.mjs` | Headless Google Chrome Stable via CDP | All browser ingestion, batching, and error assertions passed |
 | **`isolated-distribution-check`** | `pnpm pack` (all packages)<br/>`python -m build`<br/>`verify_isolated_browser_consumer.mjs`<br/>`verify_isolated_python_consumer.py` | Isolated consumer environments | Clean installation & execution from distribution tarballs |
 | **`final-quality-gate`** | Aggregate status evaluation (`needs.*.result`) | Ubuntu Latest | Fails closed if any upstream required job fails or is cancelled |

@@ -29,4 +29,12 @@ export interface QueryServiceConfig {
   parquetMaxWorkers: number;
   parquetVerifyChecksums: boolean;
   hybridSourceMode: 'hybrid' | 'jsonl_only' | 'parquet_only';
+  compactionEnabled: boolean;
+  compactionIntervalMs: number;
+  compactionBatchSize: number;
+  compactionMaxWorkers: number;
+  compactionLockTtlMs: number;
+  compactionRetryBackoffMs: number;
+  compactionMaxRetries: number;
+  compactionDeferLegalHold: boolean;
 }

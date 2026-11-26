@@ -79,6 +79,10 @@ export class InMemoryArchiveSegmentRepository implements IArchiveSegmentReposito
     }
   }
 
+  public async findRecentSegments(limit = 100): Promise<ArchiveSegmentRecord[]> {
+    return [...this.segments].slice(0, limit);
+  }
+
   public clear(): void {
     this.segments.length = 0;
   }

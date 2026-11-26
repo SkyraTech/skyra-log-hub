@@ -66,8 +66,8 @@ The logging lifecycle progresses through four distinct durability phases:
 flowchart LR
     A["Phase 1: Client SDK Buffering (Volatile Memory)"] -->|"HTTP POST Batch"| B["Phase 2: Ingestion Gateway WAL (Durable fsync)"]
     B -->|"Admission Receipt 201"| C["Receipt Confirmed to Client"]
-    B -->|"Background Rotation"| D["Phase 3: Log Shipper Compaction (JSONL -> Parquet)"]
-    D -->|"Catalog Segment"| E["Phase 4: Parquet Archive & DuckDB Query Engine"]
+    B -->|"Background Rotation"| D["Phase 3: Sealed JSONL Archive & Edge Shipping"]
+    D -->|"Automated Compaction"| E["Phase 4: Parquet Archive & DuckDB Query Engine"]
 ```
 
 ### Durability Phase Definitions & Data-Loss Boundaries
@@ -76,7 +76,7 @@ flowchart LR
 | :--- | :--- | :--- | :--- |
 | **Phase 1: SDK Buffering** | In-memory ring buffer (up to 2,000 events or 5 MB) | **Volatile:** Not guaranteed until accepted by Gateway | Process crash or hard kill (`SIGKILL`) before flush results in buffer loss |
 | **Phase 2: Gateway WAL** | Local disk Write-Ahead Log (`.wal`), synchronous `fsync()` | **Guaranteed:** Cryptographic admission receipt returned | Gateway crash recoverable by replaying committed WAL offsets |
-| **Phase 3: Log Shipper** | JSONL $\rightarrow$ Parquet conversion, file rotation | **Guaranteed:** WAL preserved until Parquet segment verified | Shipper crash restarts from last committed catalog checkpoint |
+| **Phase 3: Sealed Archive** | Sealed JSONL segments, companion `.manifest.json` | **Guaranteed:** WAL preserved until sealed segment and manifest verified | Gateway/Shipper crash restarts from last committed checkpoint |
 | **Phase 4: Parquet Archive** | Compressed columnar Parquet files (`ZSTD` / `SNAPPY`) | **Permanent:** Immutable partitioned object store | High-performance SQL queries via DuckDB with pushdown predicates |
 
 ---
@@ -114,12 +114,14 @@ Each entry in the `.wal` file is framed:
 
 ---
 
-## 4. Log Shipper & Parquet Compaction Engine
+## 4. Log Shipper & Background Storage Compaction Engine
 
-The `log-shipper` daemon runs as an isolated background process:
+Storage lifecycle progression separates edge shipping from server-side compaction:
+
+### 4.1 Edge Log Shipper & WAL Rotation
 1. **WAL Rotation:** When a WAL segment reaches 64 MB or 5 minutes of age, it is sealed and a new active segment is initialized.
-2. **Columnar Compaction:** Sealed WAL JSONL entries are batched, validated, and converted into highly compressed Apache Parquet format (`ZSTD` level 3 compression).
-3. **Partition Hierarchy:** Parquet archives are structured by tenant, project, and UTC date:
+2. **Archive Packaging:** Sealed WAL JSONL entries are formatted into sealed segment files with companion cryptographic `.manifest.json` metadata (SHA-256 digest, record count, timestamp range).
+3. **Partition Hierarchy:** Archives are structured by tenant, project, and UTC date:
    ```text
    /var/loghub/archive/
    └── tenant=skyra-corp/
@@ -127,11 +129,22 @@ The `log-shipper` daemon runs as an isolated background process:
            └── year=2026/
                └── month=11/
                    └── day=20/
-                       ├── segment-001.parquet
-                       └── segment-002.parquet
+                       ├── segment-001.jsonl
+                       ├── segment-001.manifest.json
+                       ├── segment-002.jsonl
+                       └── segment-002.manifest.json
    ```
-4. **Metadata Catalog Registration:** Upon successful Parquet write, the shipper registers the segment in PostgreSQL (`ArchiveSegment`) recording file path, event count, byte size, min timestamp, and max timestamp.
-5. **WAL Retirement:** Once registered and verified in PostgreSQL, the raw WAL segment is safely deleted.
+4. **Metadata Catalog Registration:** The segment is registered in PostgreSQL (`ArchiveSegment`) recording segment file path, event count, byte size, min timestamp, and max timestamp.
+
+### 4.2 Automated Server-Side Background Compaction (BL-06)
+Automated Parquet materialization runs autonomously within `query-service` via `BackgroundCompactionService`:
+1. **Continuous Discovery:** Periodically discovers unmaterialized sealed segments via PostgreSQL `ArchiveSegment` catalog queries or bounded filesystem directory walks.
+2. **Manifest Verification:** Verifies companion `.manifest.json` SHA-256 digests, record counts, and schema conformance via `ManifestVerifierService` before materialization.
+3. **Dual-Layer Distributed Locking:** Prevents duplicate conversion using atomic filesystem claim files (`.claims/<segment>.claim`) and non-blocking PostgreSQL advisory locks (`SELECT pg_try_advisory_lock(...)`).
+4. **Staging & Atomic Rename:** Compaction writes output Parquet to a staging file (`.staging-<id>.parquet`) within the Parquet cache directory, verifies non-empty output and readability, and performs an atomic rename to final destination.
+5. **Crash Recovery & Stale Lease Reclaim:** Stale claims past TTL (default 15 minutes) are evicted automatically. Orphaned staging files are purged upon service startup.
+6. **Retention & Legal Hold Compliance:** Inspects `ProjectRetention` settings. Segments under active legal hold are safely materialized without risking data loss.
+7. **Strict Non-Destructive Invariant:** Background compaction is strictly additive; source JSONL archive files and manifests are never deleted or modified during compaction.
 
 ---
 

@@ -67,6 +67,15 @@ export class QueryConfigService {
     const hybridSourceMode: 'hybrid' | 'jsonl_only' | 'parquet_only' =
       rawSourceMode === 'jsonl_only' || rawSourceMode === 'parquet_only' ? rawSourceMode : 'hybrid';
 
+    const compactionEnabled = process.env['COMPACTION_ENABLED'] === 'true';
+    const compactionIntervalMs = Number.parseInt(process.env['COMPACTION_INTERVAL_MS'] ?? '30000', 10);
+    const compactionBatchSize = Number.parseInt(process.env['COMPACTION_BATCH_SIZE'] ?? '10', 10);
+    const compactionMaxWorkers = Number.parseInt(process.env['COMPACTION_MAX_WORKERS'] ?? '2', 10);
+    const compactionLockTtlMs = Number.parseInt(process.env['COMPACTION_LOCK_TTL_MS'] ?? '300000', 10);
+    const compactionRetryBackoffMs = Number.parseInt(process.env['COMPACTION_RETRY_BACKOFF_MS'] ?? '5000', 10);
+    const compactionMaxRetries = Number.parseInt(process.env['COMPACTION_MAX_RETRIES'] ?? '3', 10);
+    const compactionDeferLegalHold = process.env['COMPACTION_DEFER_LEGAL_HOLD'] === 'true';
+
     this.config = {
       nodeEnv,
       port: isNaN(port) ? 3100 : port,
@@ -96,6 +105,14 @@ export class QueryConfigService {
       parquetMaxWorkers: isNaN(parquetMaxWorkers) ? 2 : parquetMaxWorkers,
       parquetVerifyChecksums,
       hybridSourceMode,
+      compactionEnabled,
+      compactionIntervalMs: isNaN(compactionIntervalMs) ? 30000 : compactionIntervalMs,
+      compactionBatchSize: isNaN(compactionBatchSize) ? 10 : compactionBatchSize,
+      compactionMaxWorkers: isNaN(compactionMaxWorkers) ? 2 : compactionMaxWorkers,
+      compactionLockTtlMs: isNaN(compactionLockTtlMs) ? 300000 : compactionLockTtlMs,
+      compactionRetryBackoffMs: isNaN(compactionRetryBackoffMs) ? 5000 : compactionRetryBackoffMs,
+      compactionMaxRetries: isNaN(compactionMaxRetries) ? 3 : compactionMaxRetries,
+      compactionDeferLegalHold,
       ...envOverride,
     };
 
@@ -258,6 +275,38 @@ export class QueryConfigService {
 
   public get hybridSourceMode(): 'hybrid' | 'jsonl_only' | 'parquet_only' {
     return this.config.hybridSourceMode;
+  }
+
+  public get compactionEnabled(): boolean {
+    return this.config.compactionEnabled;
+  }
+
+  public get compactionIntervalMs(): number {
+    return this.config.compactionIntervalMs;
+  }
+
+  public get compactionBatchSize(): number {
+    return this.config.compactionBatchSize;
+  }
+
+  public get compactionMaxWorkers(): number {
+    return this.config.compactionMaxWorkers;
+  }
+
+  public get compactionLockTtlMs(): number {
+    return this.config.compactionLockTtlMs;
+  }
+
+  public get compactionRetryBackoffMs(): number {
+    return this.config.compactionRetryBackoffMs;
+  }
+
+  public get compactionMaxRetries(): number {
+    return this.config.compactionMaxRetries;
+  }
+
+  public get compactionDeferLegalHold(): boolean {
+    return this.config.compactionDeferLegalHold;
   }
 
   public isProduction(): boolean {

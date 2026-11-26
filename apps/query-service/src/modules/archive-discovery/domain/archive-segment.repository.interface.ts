@@ -43,4 +43,5 @@ export interface IArchiveSegmentRepository {
     segmentFilename: string,
   ): Promise<ArchiveSegmentRecord | null>;
   saveSegment(segment: ArchiveSegmentRecord): Promise<void>;
+  findRecentSegments?(limit?: number): Promise<ArchiveSegmentRecord[]>;
 }

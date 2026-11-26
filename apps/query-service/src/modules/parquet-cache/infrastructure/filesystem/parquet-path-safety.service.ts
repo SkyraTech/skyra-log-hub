@@ -26,6 +26,17 @@ export class ParquetPathSafetyService {
     return path.resolve(this.config.parquetCacheRoot);
   }
 
+  public getClaimsDirectory(): string {
+    const root = this.getCacheRoot();
+    const claimsDir = path.resolve(root, '.claims');
+    const rootWithSep = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
+    if (!claimsDir.startsWith(rootWithSep) && claimsDir !== root) {
+      throw new PathTraversalException(`Path traversal detected: claims directory escapes cache root.`);
+    }
+    this.ensureDirectoryExists(claimsDir);
+    return claimsDir;
+  }
+
   public resolveSegmentPaths(
     tenantId: string,
     projectId: string,

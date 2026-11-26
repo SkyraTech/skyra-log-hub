@@ -25,6 +25,7 @@
     "test:admin": "pnpm --filter @skyra/admin-service test",
     "test:admin:postgres": "node scripts/run-isolated-pg-tests.mjs",
     "test:retention:persistence": "node --test tests/retention/live-retention.test.mjs",
+    "test:compaction:persistence": "node --test tests/storage/live-compaction.test.mjs",
     "test:organization:persistence": "node --test tests/organization/persistence.test.mjs",
     "test:organization:e2e": "node --test tests/organization/organization.e2e.mjs",
     "db:isolated:credentials": "node scripts/prepare-credential-tests.mjs",
