@@ -25,6 +25,7 @@ export class ProjectsComponent implements AfterViewInit,AfterViewChecked {
   apply(){this.cursor.set('');this.history.set([]);this.load();}next(){const c=this.page()?.nextCursor;if(c){this.history.update(h=>[...h,this.cursor()]);this.cursor.set(c);this.load();}}previous(){const h=[...this.history()];this.cursor.set(h.pop()??'');this.history.set(h);this.load();}
   usage(){void this.router.navigate(['/projects',this.id,'usage']);}
   credentials(){void this.router.navigate(['/projects',this.id,'credentials']);}
+  retention(){void this.router.navigate(['/projects',this.id,'retention']);}
   open(id:string){void this.router.navigate(['/projects',id]);}createRoute(){void this.router.navigateByUrl('/projects/new');}edit(){void this.router.navigate(['/projects',this.id,'settings']);}back(){void this.router.navigateByUrl('/projects');}
   save(){if(this.saving()||this.conflict()||!this.validName()||this.creating&&!this.validCode()||!this.creating&&(!this.project()?.actions.update||!this.dirty()))return;this.saving.set(true);this.error.set('');this.success.set('');
     const request=this.creating?this.api.create({id:this.code(),name:this.name()}):this.api.update(this.id!,{name:this.name()},this.project()!.version);

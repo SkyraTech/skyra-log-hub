@@ -73,6 +73,14 @@ export class ProjectsService {
     const project=await tx.project.findFirst({where:{tenantId,id:projectId}});if(!project)throw new NotFoundException('Project not found.');
     return {actor,project,caps};
   }
+  async retentionAccess(tx:Prisma.TransactionClient,p:TrustedPrincipal,tenantId:string,projectId:string,write:boolean){
+    const actor=await this.actor(tx,p,tenantId,false,write?'retention.manage':'retention.read');
+    const caps=this.caps(actor,tenantId,projectId);if(!caps.has('projects.read'))throw new NotFoundException('Project not found.');
+    this.resolver.assertHasCapability(caps as any,write?'retention.manage':'retention.read');
+    await tx.$queryRaw`SELECT id FROM projects WHERE tenant_id=${tenantId}::uuid AND id=${projectId} FOR SHARE`;
+    const project=await tx.project.findFirst({where:{tenantId,id:projectId}});if(!project)throw new NotFoundException('Project not found.');
+    return {actor,project,caps};
+  }
   async credentialAccess(tx:Prisma.TransactionClient,p:TrustedPrincipal,tenantId:string,projectId:string,operation:'read'|'create'|'rotate'|'revoke',active=false){
     const actor=await this.actor(tx,p,tenantId,false,'credentials.'+operation);
     const caps=this.caps(actor,tenantId,projectId);if(!caps.has('projects.read'))throw new NotFoundException('Project not found.');

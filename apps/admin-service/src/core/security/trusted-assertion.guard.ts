@@ -113,7 +113,7 @@ export class TrustedAssertionGuard implements CanActivate {
     const capabilities = Array.isArray(payload['capabilities']) ? (payload['capabilities'] as string[]) : undefined;
 
     const scope = typeof payload['scope'] === 'string' ? payload['scope'] : undefined;
-    if ((scope === 'organization' || scope === 'memberships.resolve' || scope === 'members.read' || scope === 'members.manage' || scope === 'projects.read' || scope === 'projects.manage' || ['analytics.preferences','saved-searches','audit.read','quotas.read','quotas.manage','credentials.read','credentials.create','credentials.rotate','credentials.revoke'].includes(scope??'')) &&
+    if ((scope === 'organization' || scope === 'memberships.resolve' || scope === 'members.read' || scope === 'members.manage' || scope === 'projects.read' || scope === 'projects.manage' || ['analytics.preferences','saved-searches','audit.read','quotas.read','quotas.manage','retention.read','retention.manage','credentials.read','credentials.create','credentials.rotate','credentials.revoke'].includes(scope??'')) &&
         (!this.config.internalJwtConfigured || exp > nowSec + 62 || typeof payload['iat'] !== 'number' ||
          payload['iat'] > nowSec + 2 || exp - payload['iat'] > 60)) {
       throw new InvalidIdentityAssertionException('Invalid organization assertion lifetime or signing configuration.');

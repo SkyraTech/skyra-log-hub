@@ -33,9 +33,11 @@ import { OrganizationService } from './modules/organization/organization.service
 import { AdminDatabaseLifecycle } from './core/database/admin-prisma.js';
 import { MembersManagementService } from './modules/membership/members-management.service.js';
 import { MembersController } from './api/controllers/members.controller.js';
+import { RetentionController } from './api/controllers/retention.controller.js';
+import { RetentionService } from './modules/projects/retention.service.js';
 
 @Module({
-  controllers: [DashboardPreferencesController,SavedSearchesController, AuditHistoryController, QuotasController, MetaController, OrganizationController, MembersController, ProjectsController, CredentialsController],
+  controllers: [DashboardPreferencesController,SavedSearchesController, AuditHistoryController, QuotasController, MetaController, OrganizationController, MembersController, ProjectsController, CredentialsController, RetentionController],
   providers: [
     SavedSearchesService,DashboardPreferencesService,
     AdminConfigService,
@@ -45,6 +47,7 @@ import { MembersController } from './api/controllers/members.controller.js';
     MembersManagementService,
     ProjectsService,
     QuotasService,
+    RetentionService,
     AuditHistoryService,
     CredentialsService,
     AdminDatabaseLifecycle,

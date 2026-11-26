@@ -94,7 +94,7 @@ LogHub implements four hierarchical organizational roles:
 4. **`VIEWER`:** Strictly read-only access to log streams and dashboards; cannot view credentials or audit logs.
 
 ### 4.2 Row-Level Tenant Isolation
-- Every database query for tenant-scoped resources (`Project`, `User`, `ProjectQuota`, `AdminAuditEvent`) filters explicitly on `tenant_id`.
+- Every database query for tenant-scoped resources (`Project`, `User`, `ProjectQuota`, `ProjectRetention`, `AdminAuditEvent`) filters explicitly on `tenant_id`.
 - The BFF Query Proxy injects verified `tenant_id` and `project_id` claims into query payloads before forwarding to the Query Service. DuckDB queries on Parquet files filter on partition keys `tenant_id` and `project_id`, preventing cross-tenant data leaks.
 
 ---

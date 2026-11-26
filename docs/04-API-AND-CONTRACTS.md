@@ -122,6 +122,8 @@ All network interfaces in Skyra LogHub follow strict contract-first principles:
   - `PATCH /bff/projects/:projectId/quota`: Updates rate limits or daily volume allocations.
   - `GET /bff/projects/:projectId/usage`: Retrieves project usage metrics for a given period.
   - `GET /bff/projects/:projectId/usage/history`: Retrieves chronological quota usage history.
+  - `GET /bff/projects/:projectId/retention`: Reads current archive retention policy and legal hold status.
+  - `PATCH /bff/projects/:projectId/retention`: Modifies retention duration (1–365 days), Parquet purge preference, and legal hold state.
   - `GET /bff/organization/audit`: Lists audit events with actor, target, and change diff.
   - `GET /bff/organization/audit/export`: Exports compliance audit logs as CSV.
   - `GET /bff/organization/audit/access`: Verifies audit permissions and available action filters.
@@ -129,7 +131,7 @@ All network interfaces in Skyra LogHub follow strict contract-first principles:
 ### 3.3 Internal Backend Service APIs
 - **Admin Service (`apps/admin-service`)**:
   - Internal contract: `contracts/admin/v1/openapi.yaml`
-  - Routes: `/admin/v1/tenants`, `/admin/v1/tenants/{tenantId}`, `/admin/v1/tenants/{tenantId}/projects`, `/admin/v1/tenants/{tenantId}/projects/{projectId}/credentials`, `/admin/v1/tenants/{tenantId}/projects/{projectId}/quota`, `/admin/v1/tenants/{tenantId}/audit`.
+  - Routes: `/admin/v1/tenants`, `/admin/v1/tenants/{tenantId}`, `/admin/v1/tenants/{tenantId}/projects`, `/admin/v1/projects/{projectId}/retention`, `/admin/v1/tenants/{tenantId}/projects/{projectId}/credentials`, `/admin/v1/tenants/{tenantId}/projects/{projectId}/quota`, `/admin/v1/tenants/{tenantId}/audit`.
 - **Query Service (`apps/query-service`)**:
   - Internal contract: `contracts/query/v1/openapi.yaml`
   - Routes: `/query/v1/logs/search`, `/query/v1/logs/facets`, `/query/v1/logs/events/{id}`, `/query/v1/logs/dashboard`, `/query/v1/logs/aggregate`.

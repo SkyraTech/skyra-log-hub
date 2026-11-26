@@ -78,6 +78,9 @@ erDiagram
 - **`Project`:**
   - `id` (VarChar PK, kebab-case, e.g. `auth-api-prod`), `tenantId` (FK $\rightarrow$ `Tenant.id`), `name` (VarChar), `description` (Text), `status` (`ACTIVE`, `ARCHIVED`), `retentionDays` (Int, default 30), `createdAt`, `updatedAt`.
   - Indexes: `[tenantId, status]`, `[tenantId, name]`.
+- **`ProjectRetention` (`project_retention_policies`):**
+  - `id` (UUIDv4 PK), `tenantId` (FK $\rightarrow$ `Tenant.id`), `projectId` (FK $\rightarrow$ `Project.id`), `retentionDays` (Int 1–365, default 30), `enableParquetPurge` (Boolean, default true), `isLegalHold` (Boolean, default false), `createdAt`, `updatedAt`.
+  - Unique Constraint: `@@unique([tenantId, projectId])`.
 
 ### 4.2 IAM, RBAC & Membership
 - **`User`:**

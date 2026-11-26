@@ -35,6 +35,7 @@ model Tenant {
   projects    Project[]
   credentials IngestionCredential[]
   quotas      ProjectQuota[]
+  retentions  ProjectRetention[]
 
   memberships        TenantMembership[]
   projectMemberships ProjectMembership[]
@@ -60,6 +61,7 @@ model Project {
   savedSearches SavedSearch[]
   dashboardPreferences DashboardPreference[]
   quotas ProjectQuota[]
+  retentions ProjectRetention[]
 
   memberships       ProjectMembership[]
   roleAssignments   RoleAssignment[]
@@ -130,6 +132,25 @@ model ProjectQuota {
   @@unique([tenantId, projectId])
   @@map("project_quotas")
 }
+
+/// Project archive retention policies
+model ProjectRetention {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tenantId           String   @map("tenant_id") @db.Uuid
+  projectId          String   @map("project_id") @db.VarChar(64)
+  retentionDays      Int      @default(30) @map("retention_days")
+  enableParquetPurge Boolean  @default(true) @map("enable_parquet_purge")
+  isLegalHold        Boolean  @default(false) @map("is_legal_hold")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [tenantId, projectId], references: [tenantId, id], onDelete: Cascade, map: "project_retention_tenant_project_fkey")
+
+  @@unique([tenantId, projectId], map: "project_retention_tenant_project_key")
+  @@map("project_retention_policies")
+}
+
 
 /// Catalog of finalized immutable archive segments (Source of truth in .manifest.json)
 model ArchiveSegment {

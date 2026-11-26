@@ -6,6 +6,7 @@ import {AuditHistoryController} from './api/audit-history.controller.js';
 import {QuotasController} from './api/quotas.controller.js';
 import { CredentialsController } from './api/credentials.controller.js';
 import { ProjectsController } from './api/projects.controller.js';
+import { RetentionController } from './api/retention.controller.js';
 import { Module } from '@nestjs/common';
 import { AuthController } from './api/auth.controller.js';
 import { SessionStoreService } from './application/session-store.service.js';
@@ -22,7 +23,7 @@ import { OrganizationController } from './api/organization.controller.js';
 import { MembersController } from './api/members.controller.js';
 
 @Module({
-  controllers: [AuditExportController,UsageHistoryController,SavedSearchesController,DashboardPreferencesController, AuditHistoryController, QuotasController, AuthController, OrganizationController, MembersController, ProjectsController, CredentialsController],
+  controllers: [AuditExportController,UsageHistoryController,SavedSearchesController,DashboardPreferencesController, AuditHistoryController, QuotasController, AuthController, OrganizationController, MembersController, ProjectsController, CredentialsController, RetentionController],
   providers: [
     BffConfigService,
     AdminClientService,

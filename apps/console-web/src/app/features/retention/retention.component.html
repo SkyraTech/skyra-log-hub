@@ -1,0 +1,154 @@
+<section class="retention-page" aria-labelledby="retention-title">
+  <div>
+    <p class="eyebrow">Project archive lifecycle</p>
+    <h1 id="retention-title">Archive Retention Policy</h1>
+    <p>Configure raw JSONL and derived Parquet retention windows for project log archives.</p>
+  </div>
+
+  @if(!loading() && !denied() && project()) {
+    <skyra-audit-link resourceType="retention" [resourceId]="projectId"></skyra-audit-link>
+  }
+
+  @if(loading()) {
+    <div class="panel" aria-busy="true">
+      <skyra-spinner label="Loading retention policy" show-label></skyra-spinner>
+    </div>
+  }
+
+  @if(error()) {
+    <div class="feedback">
+      <skyra-notification-bar type="error" duration="0">{{error()}}</skyra-notification-bar>
+    </div>
+    @if(!denied()) {
+      <skyra-tech-button variant="outline" (click)="reload()">Retry</skyra-tech-button>
+    }
+  }
+
+  @if(success()) {
+    <div role="status" class="feedback">
+      <skyra-notification-bar type="success" duration="0">{{success()}}</skyra-notification-bar>
+    </div>
+  }
+
+  @if(!loading() && !denied() && project(); as p) {
+    <!-- Project Context -->
+    <div class="panel">
+      <h2>{{p.name}}</h2>
+      <skyra-tech-badge>{{p.status}}</skyra-tech-badge>
+      <dl>
+        <div>
+          <dt>Project ID</dt>
+          <dd>{{p.id}}</dd>
+        </div>
+        <div>
+          <dt>Organization</dt>
+          <dd>{{p.tenantId}}</dd>
+        </div>
+        <div>
+          <dt>Last Policy Update</dt>
+          <dd>{{policy()?.updatedAt | date:'medium'}}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- Legal Hold Banner -->
+    @if(policy()?.isLegalHold) {
+      <div class="legal-hold-banner" role="alert">
+        <skyra-tech-badge>LEGAL HOLD ACTIVE</skyra-tech-badge>
+        <p>All automated archive deletions and retention purges are suspended for this project under legal hold governance.</p>
+      </div>
+    }
+
+    <!-- Configuration Form -->
+    <form class="panel" aria-label="Retention policy form" (submit)="$event.preventDefault(); requestSave()">
+      <div class="form-group">
+        <skyra-tech-input
+          label="Retention duration (days)"
+          helper-text="Duration in days (1–365) to retain raw JSONL log archives before deletion"
+          [value]="daysText()"
+          [disabled]="saving() || p.status === 'ARCHIVED'"
+          (input)="onDaysInput($any($event.target).value)"
+        ></skyra-tech-input>
+        @if(!validDays()) {
+          <p class="validation" role="status">Retention window must be an integer between 1 and 365 days.</p>
+        }
+      </div>
+
+      <div class="checkbox-group">
+        <input
+          type="checkbox"
+          id="enableParquetPurge"
+          [checked]="enableParquetPurge()"
+          [disabled]="saving() || p.status === 'ARCHIVED'"
+          (change)="enableParquetPurge.set($any($event.target).checked)"
+        />
+        <label for="enableParquetPurge">
+          Enable Parquet cache purging (purge derived columnar indexes alongside raw archive segments)
+        </label>
+      </div>
+
+      <div class="checkbox-group">
+        <input
+          type="checkbox"
+          id="isLegalHold"
+          [checked]="isLegalHold()"
+          [disabled]="saving() || p.status === 'ARCHIVED'"
+          (change)="onLegalHoldToggle($any($event.target).checked)"
+        />
+        <label for="isLegalHold">
+          Place project on Legal Hold (suspends all scheduled log purges until released)
+        </label>
+      </div>
+
+      @if(p.status === 'ARCHIVED') {
+        <p role="status">Archived project retention settings are permanently read-only.</p>
+      }
+
+      <div class="actions">
+        <skyra-tech-button
+          type="button"
+          (click)="requestSave()"
+          [disabled]="saving() || !dirty() || !validDays() || p.status === 'ARCHIVED'"
+        >
+          {{saving() ? 'Saving…' : 'Save retention policy'}}
+        </skyra-tech-button>
+        <skyra-tech-button
+          variant="outline"
+          type="button"
+          (click)="reset()"
+          [disabled]="saving() || !dirty()"
+        >
+          Reset changes
+        </skyra-tech-button>
+        <skyra-tech-button
+          variant="outline"
+          type="button"
+          (click)="back()"
+        >
+          Back to project
+        </skyra-tech-button>
+      </div>
+    </form>
+  }
+
+  <!-- Legal Hold Confirmation Dialog -->
+  <skyra-tech-dialog
+    #legalHoldDialog
+    [open]="confirmingLegalHold()"
+    size="sm"
+    (skyra-close)="cancelLegalHoldConfirmation()"
+  >
+    <span slot="title">Confirm Legal Hold Modification</span>
+    <p>
+      @if(isLegalHold()) {
+        Are you sure you want to <strong>ACTIVATE</strong> legal hold? This will suspend all automated archive deletions and retention purges for this project.
+      } @else {
+        Are you sure you want to <strong>RELEASE</strong> legal hold? Automated retention cleanup will resume. Releasing a legal hold requires organization owner authority.
+      }
+    </p>
+    <div slot="footer" class="actions">
+      <skyra-tech-button variant="outline" (click)="cancelLegalHoldConfirmation()">Cancel</skyra-tech-button>
+      <skyra-tech-button (click)="confirmLegalHoldChange()">Confirm</skyra-tech-button>
+    </div>
+  </skyra-tech-dialog>
+</section>

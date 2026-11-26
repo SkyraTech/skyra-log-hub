@@ -1,0 +1,136 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.retention-page {
+  max-width: 1200px;
+  margin: auto;
+  padding: var(--space-6);
+  color: var(--skyra-text);
+}
+
+h1 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin: var(--space-3) 0;
+}
+
+h2, p, dd {
+  overflow-wrap: anywhere;
+}
+
+.eyebrow {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: var(--skyra-text-subtle, var(--skyra-text));
+}
+
+.panel {
+  background: var(--skyra-surface);
+  border: 1px solid var(--skyra-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin: var(--space-5) 0;
+  min-width: 0;
+}
+
+.legal-hold-banner {
+  background: var(--skyra-surface-warning, var(--skyra-surface));
+  border: 2px solid var(--skyra-border-warning, var(--skyra-border));
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin: var(--space-4) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.legal-hold-banner p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.form-group {
+  margin: var(--space-4) 0;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+.form-group .helper-text {
+  font-size: 0.875rem;
+  color: var(--skyra-text-subtle, var(--skyra-text));
+  margin-top: var(--space-1);
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.checkbox-group label {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.actions, .feedback {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+  margin: var(--space-4) 0;
+}
+
+dl {
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+dd {
+  margin: var(--space-2) 0;
+}
+
+dt {
+  font-weight: 600;
+}
+
+p {
+  line-height: 1.6;
+}
+
+.validation {
+  color: var(--skyra-danger, #ef4444);
+  font-size: 0.875rem;
+  margin-top: var(--space-1);
+}
+
+skyra-tech-badge {
+  --skyra-text-muted: var(--skyra-text);
+  --skyra-bg: var(--skyra-surface);
+}
+
+skyra-tech-button[variant="outline"] {
+  --skyra-primary: var(--skyra-text);
+  --skyra-primary-light: var(--skyra-surface);
+}
+
+@media (max-width: 600px) {
+  .retention-page {
+    padding: var(--space-3);
+  }
+  .panel {
+    padding: var(--space-4);
+  }
+  dl {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+}

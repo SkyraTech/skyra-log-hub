@@ -187,6 +187,20 @@ Skyra LogHub is a high-performance, enterprise-grade distributed logging, ingest
 - **Backend Authority:** `apps/admin-service` (`AuditModule`, `PrismaAuditRepository`).
 - **Security Considerations:** Audit records are append-only; update and delete operations are forbidden by schema and database constraints.
 
+### 3.10 Project Retention Policy Management
+- **Purpose:** Configure raw JSONL archive and derived Parquet cache retention duration and manage compliance legal holds.
+- **User Roles:** `TENANT_OWNER` (`retention.manage`), all project members (`retention.read`). Releasing legal hold requires `TENANT_OWNER` authority.
+- **Supported Operations:**
+  - View current archive retention period (`retentionDays` 1–365), Parquet purge preference (`enableParquetPurge`), and legal hold status (`isLegalHold`).
+  - Update retention period and purge preference via `PATCH`.
+  - Activate or release legal hold with explicit confirmation. When active, all automated archive deletions are suspended.
+- **Relevant APIs:**
+  - BFF: `GET /bff/projects/:projectId/retention`, `PATCH /bff/projects/:projectId/retention`.
+  - Admin Service (Internal): `GET /admin/v1/projects/:projectId/retention`, `PATCH /admin/v1/projects/:projectId/retention`.
+- **Relevant UI Modules:** `apps/console-web/src/app/features/retention`.
+- **Backend Authority:** `apps/admin-service` (`RetentionService`, `RetentionController`).
+- **Security Considerations:** Scoped to authorized tenant; legal hold release requires elevated organization owner authority; all mutations generate immutable `RETENTION_POLICY_CHANGED` audit records.
+
 ---
 
 ## 4. End-to-End User Workflows
