@@ -2,18 +2,24 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as crypto from 'node:crypto';
 import { Injectable, Logger, Optional } from '@nestjs/common';
+import pg from 'pg';
 import { ParquetPathSafetyService } from '../infrastructure/filesystem/parquet-path-safety.service.js';
 import { QueryConfigService } from '../../../config/query-config.service.js';
 import { QueryAuditService } from '../../audit/query-audit.service.js';
 import { PrismaService } from '../../../metadata/prisma.service.js';
 import type { TrustedArchiveSegmentDescriptor } from '../../archive-discovery/domain/archive-segment-descriptor.model.js';
-import type { CompactionClaim } from '../domain/compaction.types.js';
+import type { CompactionClaim, LockHandle } from '../domain/compaction.types.js';
 
-export interface LockHandle {
-  readonly claimId: string;
-  readonly segmentKey: string;
-  readonly claimFilePath: string;
-  readonly hashInt64?: bigint;
+const { Client } = pg;
+
+export function readOnlyDatabaseUrl(databaseUrl: string): string {
+  try {
+    const url = new URL(databaseUrl);
+    url.searchParams.set('options', '-c default_transaction_read_only=on');
+    return url.href;
+  } catch {
+    return databaseUrl;
+  }
 }
 
 @Injectable()
@@ -34,6 +40,19 @@ export class CompactionLockCoordinatorService {
     return this.workerId;
   }
 
+  public isDatabaseCoordinated(): boolean {
+    const url = this.config.databaseUrl;
+    if (!url || url.includes('REPLACE_ME')) return false;
+    if (
+      this.config.nodeEnv === 'test' &&
+      process.env.SKYRA_ISOLATED_TEST_ENV !== 'true' &&
+      !this.prisma
+    ) {
+      return false;
+    }
+    return url.startsWith('postgresql://') || url.startsWith('postgres://');
+  }
+
   public buildSegmentKey(descriptor: TrustedArchiveSegmentDescriptor): string {
     return `${descriptor.tenantId}:${descriptor.projectId}:${descriptor.environment}:${descriptor.serviceName}:${descriptor.date}:${descriptor.segmentFilename}`;
   }
@@ -43,8 +62,11 @@ export class CompactionLockCoordinatorService {
   }
 
   /**
-   * Attempts to claim a segment for compaction.
-   * Returns a LockHandle if claimed successfully, or null if already claimed by another worker.
+   * Attempts to claim a segment for compaction with dual-layer coordination:
+   * 1. Atomic local/shared filesystem lease with fencing generation.
+   * 2. Dedicated-session PostgreSQL advisory lock (mandatory fail-closed in distributed mode).
+   *
+   * Returns a LockHandle if claimed successfully, or null if contention or coordination error occurs.
    */
   public async claimSegment(
     descriptor: TrustedArchiveSegmentDescriptor,
@@ -53,15 +75,24 @@ export class CompactionLockCoordinatorService {
     const segmentKey = this.buildSegmentKey(descriptor);
     const keyHash = this.buildKeyHash(segmentKey);
     const claimsDir = this.pathSafety.getClaimsDirectory();
+    this.pathSafety.ensureDirectoryExists(claimsDir);
     const claimFilePath = path.join(claimsDir, `${keyHash}.claim.json`);
     const ttlMs = this.config.compactionLockTtlMs;
 
     const claimId = crypto.randomUUID();
     const now = new Date();
     const expiresAt = new Date(now.getTime() + ttlMs);
+    const topology = this.isDatabaseCoordinated()
+      ? 'DISTRIBUTED_POSTGRES_COORDINATED'
+      : 'STANDALONE_FILESYSTEM';
 
-    const claimData: CompactionClaim = {
+    let generation = 1;
+    let acquiredFile = false;
+
+    // 1. Try atomic file claim via 'wx' flag (O_CREAT | O_EXCL)
+    const initialClaimData: CompactionClaim = {
       claimId,
+      generation,
       workerId: this.workerId,
       tenantId: descriptor.tenantId,
       projectId: descriptor.projectId,
@@ -71,15 +102,17 @@ export class CompactionLockCoordinatorService {
       segmentFilename: descriptor.segmentFilename,
       sha256Checksum: descriptor.sha256Checksum,
       claimedAt: now.toISOString(),
+      lastHeartbeatAt: now.toISOString(),
       expiresAt: expiresAt.toISOString(),
+      leaseTtlMs: ttlMs,
+      status: 'ACTIVE',
+      topology,
     };
 
-    // 1. Try atomic file claim via 'wx' flag (O_CREAT | O_EXCL)
-    let acquiredFile = false;
     try {
       const fd = fs.openSync(claimFilePath, 'wx', 0o640);
       try {
-        fs.writeFileSync(fd, JSON.stringify(claimData, null, 2), 'utf8');
+        fs.writeFileSync(fd, JSON.stringify(initialClaimData, null, 2), 'utf8');
         fs.fsyncSync(fd);
       } finally {
         fs.closeSync(fd);
@@ -88,12 +121,18 @@ export class CompactionLockCoordinatorService {
     } catch (err: unknown) {
       const code = (err as NodeJS.ErrnoException).code;
       if (code === 'EEXIST') {
-        // Claim file already exists. Check if it's expired.
-        const recovered = this.tryRecoverExpiredClaim(claimFilePath, claimData, segmentKey, correlationId);
-        if (recovered) {
+        // Claim file already exists. Inspect if it is genuinely expired.
+        const takeover = this.tryRecoverExpiredClaim(
+          claimFilePath,
+          initialClaimData,
+          segmentKey,
+          correlationId,
+        );
+        if (takeover.acquired) {
           acquiredFile = true;
+          generation = takeover.generation;
         } else {
-          return null; // Active claim held by another worker
+          return null; // Active claim held by another live worker
         }
       } else {
         const msg = err instanceof Error ? err.message : String(err);
@@ -104,24 +143,57 @@ export class CompactionLockCoordinatorService {
 
     if (!acquiredFile) return null;
 
-    // 2. If PostgreSQL is connected and healthy, also attempt pg_try_advisory_lock
+    // 2. Dedicated-session PostgreSQL advisory lock
+    let dbClient: pg.Client | undefined;
     let hashInt64: bigint | undefined;
-    if (this.prisma && !this.config.databaseUrl.includes('REPLACE_ME')) {
+
+    if (this.isDatabaseCoordinated()) {
+      hashInt64 = BigInt('0x' + keyHash.slice(0, 15));
+      const client = new Client({
+        connectionString: readOnlyDatabaseUrl(this.config.databaseUrl),
+        connectionTimeoutMillis: 5000,
+      });
+
       try {
-        // Derive signed 64-bit BigInt from top 15 hex chars
-        hashInt64 = BigInt('0x' + keyHash.slice(0, 15));
-        const res = await this.prisma.$queryRaw<Array<{ acquired: boolean }>>`
-          SELECT pg_try_advisory_lock(${hashInt64}) AS acquired
-        `;
-        const acquiredDb = res[0]?.acquired === true;
+        await client.connect();
+        const res = await client.query<{ acquired: boolean }>(
+          'SELECT pg_try_advisory_lock($1) AS acquired',
+          [hashInt64.toString()],
+        );
+        const acquiredDb = res.rows[0]?.acquired === true;
+
         if (!acquiredDb) {
-          // Release file claim since DB lock failed
-          this.safeUnlink(claimFilePath);
+          // Lock contention in PostgreSQL: another node holds the lock.
+          // Clean up own claim file and fail closed.
+          try {
+            await client.end();
+          } catch {
+            // ignore
+          }
+          this.safeReleaseOwnClaimFile(claimFilePath, claimId, generation);
           return null;
         }
+
+        dbClient = client;
       } catch (dbErr: unknown) {
-        // If DB lock query fails or DB is not reachable, file claim still provides local/shared filesystem protection
-        this.logger.debug(`PostgreSQL advisory lock skipped: ${String(dbErr)}`);
+        // MANDATORY FAIL-CLOSED: If DB coordination is configured and fails,
+        // we must never fall back to unsafe multi-instance filesystem claims.
+        try {
+          await client.end();
+        } catch {
+          // ignore
+        }
+        this.safeReleaseOwnClaimFile(claimFilePath, claimId, generation);
+        const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+        this.logger.error(`PostgreSQL advisory lock coordination failed (failing closed): ${msg}`);
+        this.audit.recordSecurityEvent({
+          eventType: 'COMPACTION_LOCK_COORDINATION_FAILED',
+          tenantId: descriptor.tenantId,
+          projects: [descriptor.projectId],
+          correlationId,
+          detail: `Database coordination failed for ${descriptor.segmentFilename}: ${msg}`,
+        });
+        return null;
       }
     }
 
@@ -130,31 +202,134 @@ export class CompactionLockCoordinatorService {
       tenantId: descriptor.tenantId,
       projects: [descriptor.projectId],
       correlationId,
-      detail: `Segment ${descriptor.segmentFilename} claimed by worker ${this.workerId} (claimId: ${claimId})`,
-      metadata: { claimId, workerId: this.workerId, segmentFilename: descriptor.segmentFilename },
+      detail: `Segment ${descriptor.segmentFilename} claimed by worker ${this.workerId} (claimId: ${claimId}, gen: ${generation}, topology: ${topology})`,
+      metadata: {
+        claimId,
+        generation,
+        workerId: this.workerId,
+        segmentFilename: descriptor.segmentFilename,
+        topology,
+      },
     });
 
     return {
       claimId,
+      generation,
       segmentKey,
       claimFilePath,
+      leaseTtlMs: ttlMs,
       hashInt64,
+      dbClient,
     };
   }
 
   /**
-   * Releases a claim handle.
+   * Heartbeat renewal: extends the lease for an active worker.
+   * Fails closed (returns false) if ownership has been superseded or DB session lost.
+   */
+  public async renewLease(handle: LockHandle, extensionMs?: number): Promise<boolean> {
+    if (handle.released) return false;
+    if (!fs.existsSync(handle.claimFilePath)) return false;
+
+    try {
+      const raw = fs.readFileSync(handle.claimFilePath, 'utf8');
+      const claim = JSON.parse(raw) as CompactionClaim;
+
+      // Ownership fencing check
+      if (claim.claimId !== handle.claimId || claim.generation !== handle.generation) {
+        this.logger.warn(
+          `Heartbeat rejected for ${handle.segmentKey}: claim owned by generation ${claim.generation} (expected ${handle.generation})`,
+        );
+        return false;
+      }
+
+      // Verify DB connection liveness if coordinated
+      if (handle.dbClient) {
+        try {
+          await handle.dbClient.query('SELECT 1');
+        } catch {
+          this.logger.error(`Database session connection lost during lease renewal for ${handle.segmentKey}`);
+          return false;
+        }
+      }
+
+      const ext = extensionMs ?? handle.leaseTtlMs;
+      const now = Date.now();
+      const updatedClaim: CompactionClaim = {
+        ...claim,
+        lastHeartbeatAt: new Date(now).toISOString(),
+        expiresAt: new Date(now + ext).toISOString(),
+      };
+
+      const tmpPath = `${handle.claimFilePath}.renew-${handle.claimId}.tmp`;
+      fs.writeFileSync(tmpPath, JSON.stringify(updatedClaim, null, 2), 'utf8');
+      fs.renameSync(tmpPath, handle.claimFilePath);
+      return true;
+    } catch (err: unknown) {
+      this.logger.warn(`Failed to renew lease for ${handle.segmentKey}: ${String(err)}`);
+      return false;
+    }
+  }
+
+  /**
+   * Pre-publication fencing verification: confirms this handle still strictly owns the lease.
+   */
+  public async verifyOwnership(handle: LockHandle): Promise<boolean> {
+    if (handle.released) return false;
+    if (!fs.existsSync(handle.claimFilePath)) return false;
+
+    try {
+      const raw = fs.readFileSync(handle.claimFilePath, 'utf8');
+      const claim = JSON.parse(raw) as CompactionClaim;
+
+      // 1. Fencing token & ID match
+      if (claim.claimId !== handle.claimId || claim.generation !== handle.generation) {
+        return false;
+      }
+
+      // 2. Lease expiry check
+      if (new Date(claim.expiresAt).getTime() <= Date.now()) {
+        return false;
+      }
+
+      // 3. PostgreSQL session check if attached
+      if (handle.dbClient) {
+        try {
+          await handle.dbClient.query('SELECT 1');
+        } catch {
+          return false;
+        }
+      }
+
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Safely releases a claim handle.
+   * Guarantees that a stale worker cannot delete a newer worker's replacement claim file.
    */
   public async releaseClaim(handle: LockHandle): Promise<void> {
-    // 1. Release file claim
-    this.safeUnlink(handle.claimFilePath);
+    handle.released = true;
 
-    // 2. Release DB advisory lock if acquired
-    if (handle.hashInt64 !== undefined && this.prisma && !this.config.databaseUrl.includes('REPLACE_ME')) {
+    // 1. Release file claim safely verifying ownership
+    this.safeReleaseOwnClaimFile(handle.claimFilePath, handle.claimId, handle.generation);
+
+    // 2. Release dedicated PostgreSQL session advisory lock & close client
+    if (handle.dbClient && handle.hashInt64 !== undefined) {
       try {
-        await this.prisma.$queryRaw`SELECT pg_advisory_unlock(${handle.hashInt64})`;
+        await handle.dbClient.query('SELECT pg_advisory_unlock($1)', [handle.hashInt64.toString()]);
       } catch (err: unknown) {
         this.logger.debug(`Failed to release pg advisory lock: ${String(err)}`);
+      } finally {
+        try {
+          await handle.dbClient.end();
+        } catch {
+          // ignore
+        }
+        handle.dbClient = undefined;
       }
     }
   }
@@ -182,11 +357,11 @@ export class CompactionLockCoordinatorService {
               eventType: 'COMPACTION_STALE_CLAIM_RECOVERED',
               tenantId: data.tenantId,
               projects: [data.projectId],
-              detail: `Recovered expired claim for ${data.segmentFilename} from worker ${data.workerId}`,
+              detail: `Recovered expired claim for ${data.segmentFilename} from worker ${data.workerId} (gen: ${data.generation})`,
             });
           }
         } catch {
-          // If claim file is corrupted, remove it
+          // Corrupted claim file
           this.safeUnlink(fullPath);
           recoveredCount++;
         }
@@ -202,35 +377,74 @@ export class CompactionLockCoordinatorService {
     newClaim: CompactionClaim,
     segmentKey: string,
     correlationId?: string,
-  ): boolean {
+  ): { acquired: boolean; generation: number } {
     try {
       const raw = fs.readFileSync(claimFilePath, 'utf8');
       const existing = JSON.parse(raw) as CompactionClaim;
       const now = Date.now();
+
       if (existing.expiresAt && now > new Date(existing.expiresAt).getTime()) {
-        // Expired claim: atomically overwrite via temp file and rename
-        const tmpPath = `${claimFilePath}.recov-${Date.now()}`;
-        fs.writeFileSync(tmpPath, JSON.stringify(newClaim, null, 2), 'utf8');
+        const nextGen = (existing.generation ?? 1) + 1;
+        const claimWithGen: CompactionClaim = {
+          ...newClaim,
+          generation: nextGen,
+        };
+
+        const tmpPath = `${claimFilePath}.recov-${Date.now()}-${claimWithGen.claimId}.tmp`;
+        fs.writeFileSync(tmpPath, JSON.stringify(claimWithGen, null, 2), 'utf8');
         fs.renameSync(tmpPath, claimFilePath);
+
         this.audit.recordSecurityEvent({
           eventType: 'COMPACTION_STALE_CLAIM_RECOVERED',
           tenantId: existing.tenantId,
           projects: [existing.projectId],
           correlationId,
-          detail: `Recovered expired claim for ${segmentKey} previously held by ${existing.workerId}`,
+          detail: `Recovered expired claim for ${segmentKey} previously held by ${existing.workerId} (gen: ${nextGen})`,
         });
-        return true;
+        return { acquired: true, generation: nextGen };
       }
     } catch {
-      // If parsing fails, try overwriting
+      // If parsing failed (corrupt claim), attempt safe atomic overwrite
       try {
-        fs.writeFileSync(claimFilePath, JSON.stringify(newClaim, null, 2), 'utf8');
-        return true;
+        const nextGen = 1;
+        const claimWithGen: CompactionClaim = { ...newClaim, generation: nextGen };
+        const tmpPath = `${claimFilePath}.recov-corrupt-${Date.now()}.tmp`;
+        fs.writeFileSync(tmpPath, JSON.stringify(claimWithGen, null, 2), 'utf8');
+        fs.renameSync(tmpPath, claimFilePath);
+        return { acquired: true, generation: nextGen };
       } catch {
-        return false;
+        return { acquired: false, generation: 0 };
       }
     }
-    return false;
+    return { acquired: false, generation: 0 };
+  }
+
+  private safeReleaseOwnClaimFile(
+    claimFilePath: string,
+    expectedClaimId: string,
+    expectedGeneration: number,
+  ): void {
+    try {
+      if (!fs.existsSync(claimFilePath)) return;
+      const raw = fs.readFileSync(claimFilePath, 'utf8');
+      const parsed = JSON.parse(raw) as CompactionClaim;
+
+      if (parsed.claimId === expectedClaimId && parsed.generation === expectedGeneration) {
+        fs.unlinkSync(claimFilePath);
+      } else {
+        this.logger.warn(
+          `Stale release skipped for ${claimFilePath}: owned by claim ${parsed.claimId} (gen ${parsed.generation}), expected ${expectedClaimId} (gen ${expectedGeneration})`,
+        );
+        this.audit.recordSecurityEvent({
+          eventType: 'COMPACTION_STALE_RELEASE_IGNORED',
+          tenantId: parsed.tenantId,
+          projects: [parsed.projectId],
+          detail: `Ignored stale release attempt by worker for claim ${expectedClaimId}`,
+        });
+      }
+    } catch {
+      // ignore
+    }
   }
 
   private safeUnlink(filePath: string): void {
@@ -239,7 +453,7 @@ export class CompactionLockCoordinatorService {
         fs.unlinkSync(filePath);
       }
     } catch {
-      // Ignore cleanup error
+      // ignore
     }
   }
 }

@@ -136,15 +136,18 @@ Storage lifecycle progression separates edge shipping from server-side compactio
    ```
 4. **Metadata Catalog Registration:** The segment is registered in PostgreSQL (`ArchiveSegment`) recording segment file path, event count, byte size, min timestamp, and max timestamp.
 
-### 4.2 Automated Server-Side Background Compaction (BL-06)
+### 4.2 Automated Server-Side Background Compaction (BL-06 / Q-06F Hardened)
 Automated Parquet materialization runs autonomously within `query-service` via `BackgroundCompactionService`:
 1. **Continuous Discovery:** Periodically discovers unmaterialized sealed segments via PostgreSQL `ArchiveSegment` catalog queries or bounded filesystem directory walks.
 2. **Manifest Verification:** Verifies companion `.manifest.json` SHA-256 digests, record counts, and schema conformance via `ManifestVerifierService` before materialization.
-3. **Dual-Layer Distributed Locking:** Prevents duplicate conversion using atomic filesystem claim files (`.claims/<segment>.claim`) and non-blocking PostgreSQL advisory locks (`SELECT pg_try_advisory_lock(...)`).
-4. **Staging & Atomic Rename:** Compaction writes output Parquet to a staging file (`.staging-<id>.parquet`) within the Parquet cache directory, verifies non-empty output and readability, and performs an atomic rename to final destination.
-5. **Crash Recovery & Stale Lease Reclaim:** Stale claims past TTL (default 15 minutes) are evicted automatically. Orphaned staging files are purged upon service startup.
-6. **Retention & Legal Hold Compliance:** Inspects `ProjectRetention` settings. Segments under active legal hold are safely materialized without risking data loss.
-7. **Strict Non-Destructive Invariant:** Background compaction is strictly additive; source JSONL archive files and manifests are never deleted or modified during compaction.
+3. **Hardened Dual-Layer Distributed Locking:** Prevents duplicate conversion using atomic filesystem claim files (`.claims/<segment>.claim.json`) with generational fencing and dedicated-session PostgreSQL advisory locks (`SELECT pg_try_advisory_lock(...)`) bound to explicit `pg.Client` connections with fail-closed enforcement.
+4. **Active Heartbeat & Pre-Publication Fencing:** Workers actively extend leases during conversion via heartbeats and verify lease ownership immediately before atomic publication. Stale workers are fenced out with staging files safely removed.
+5. **Safe Claim Release:** Claim release verifies unforgeable claim ID and generation, preventing stale workers from deleting newer replacement claims.
+6. **Durable Failure Tracking:** Failure records and exponential backoff states are persisted in `.state/compaction-failures.json`, surviving process restarts and capping retries.
+7. **Staging & Atomic Rename:** Compaction writes output Parquet to a staging file (`.staging-<id>.parquet`) within the Parquet cache directory, verifies non-empty output and readability, and performs an atomic rename to final destination.
+8. **Crash Recovery & Stale Lease Reclaim:** Stale claims past TTL (default 15 minutes) are evicted automatically with monotonic generation increments. Orphaned staging files are purged upon service startup.
+9. **Retention & Legal Hold Compliance:** Inspects `ProjectRetention` settings. Segments under active legal hold are safely materialized without risking data loss.
+10. **Strict Non-Destructive Invariant:** Background compaction is strictly additive; source JSONL archive files and manifests are never deleted or modified during compaction.
 
 ---
 

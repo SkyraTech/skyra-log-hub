@@ -24,6 +24,7 @@ export class DuckDbParquetConverter {
   public async convertSegment(
     canonicalDescriptor: TrustedArchiveSegmentDescriptor,
     jobId?: string,
+    options?: { verifyOwnership?: () => Promise<boolean> | boolean },
   ): Promise<MaterializationResult> {
     const startTimeNs = process.hrtime.bigint();
     const effectiveJobId = jobId ?? crypto.randomUUID();
@@ -119,6 +120,16 @@ export class DuckDbParquetConverter {
 
       const dataFd=fs.openSync(paths.stagingParquetPath,'r+');try{fs.fsyncSync(dataFd);}finally{fs.closeSync(dataFd);}
       const metadataFd=fs.openSync(paths.stagingMetadataPath,'wx',0o600);try{fs.writeFileSync(metadataFd,JSON.stringify(metadata,null,2));fs.fsyncSync(metadataFd);}finally{fs.closeSync(metadataFd);}
+
+      // 4.5 Pre-publication fencing check
+      if (options?.verifyOwnership) {
+        const isOwner = await options.verifyOwnership();
+        if (!isOwner) {
+          throw new Error(
+            `Publication fenced: lease ownership lost for segment ${canonicalDescriptor.segmentFilename}`,
+          );
+        }
+      }
 
       // 5. Atomic Publication
       this.atomicPublish(paths.stagingParquetPath, paths.parquetPath);

@@ -32,6 +32,7 @@ export interface CompactionJobResult {
 
 export interface CompactionClaim {
   readonly claimId: string;
+  readonly generation: number;
   readonly workerId: string;
   readonly tenantId: string;
   readonly projectId: string;
@@ -41,7 +42,22 @@ export interface CompactionClaim {
   readonly segmentFilename: string;
   readonly sha256Checksum: string;
   readonly claimedAt: string;
+  readonly lastHeartbeatAt: string;
   readonly expiresAt: string;
+  readonly leaseTtlMs: number;
+  readonly status: 'ACTIVE' | 'CONVERTING' | 'PUBLISHING' | 'RELEASED';
+  readonly topology: 'STANDALONE_FILESYSTEM' | 'DISTRIBUTED_POSTGRES_COORDINATED';
+}
+
+export interface LockHandle {
+  readonly claimId: string;
+  readonly generation: number;
+  readonly segmentKey: string;
+  readonly claimFilePath: string;
+  readonly leaseTtlMs: number;
+  readonly hashInt64?: bigint;
+  dbClient?: any;
+  released?: boolean;
 }
 
 export interface EligibleCompactionSegment {
@@ -55,4 +71,19 @@ export interface CompactionCycleOptions {
   readonly batchSize?: number;
   readonly maxWorkers?: number;
   readonly correlationId?: string;
+}
+
+export interface PersistentFailureRecord {
+  readonly segmentKey: string;
+  readonly failureCount: number;
+  readonly firstFailureTime: number;
+  readonly lastFailureTime: number;
+  readonly lastError: string;
+  readonly terminal: boolean;
+}
+
+export interface PersistentFailureState {
+  readonly version: '1.0';
+  readonly updatedAt: string;
+  readonly failures: Record<string, PersistentFailureRecord>;
 }

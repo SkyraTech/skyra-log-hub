@@ -233,6 +233,7 @@ describe('Background Storage Compaction & Parquet Materialization (Q-06E / BL-06
       recoverUseCase,
       lockCoordinator,
       discoveryService,
+      parquetPathSafety,
     );
 
     hybridPlanner = new HybridSourcePlannerService(catalog, config, audit);
@@ -767,6 +768,310 @@ describe('Background Storage Compaction & Parquet Materialization (Q-06E / BL-06
       assert.equal(afterManifestSha, beforeManifestSha, 'Canonical manifest checksum must never change');
       assert.ok(fs.existsSync(fixture.fullPath), 'JSONL file must not be deleted');
       assert.ok(fs.existsSync(fixture.manifestPath), 'Manifest file must not be deleted');
+    });
+  });
+
+  describe('7. Q-06F Distributed Locking, Lease Ownership & Fencing Hardening', () => {
+    it('heartbeat lease renewal extends expiration and protects active long-running workers from claim theft', async () => {
+      const fixture = createSealedSegmentFixture(tenantId, projectId, environment, serviceName, partitionDate, 'segment-heartbeat.jsonl', 5);
+      const descriptor = {
+        id: fixture.segmentRecord.id,
+        tenantId,
+        projectId,
+        environment,
+        serviceName,
+        date: partitionDate,
+        segmentFilename: 'segment-heartbeat.jsonl',
+        resolvedPath: fixture.fullPath,
+        byteSize: Number(fixture.segmentRecord.byteSize),
+        recordCount: 5,
+        sha256Checksum: fixture.sha256,
+        firstEventTimestamp: fixture.segmentRecord.firstEventTimestamp.toISOString(),
+        lastEventTimestamp: fixture.segmentRecord.lastEventTimestamp.toISOString(),
+        finalizedAt: fixture.segmentRecord.finalizedAt.toISOString(),
+        verifiedAt: new Date().toISOString(),
+        integrityStatus: 'VERIFIED' as const,
+      };
+
+      // Worker 1 claims segment
+      const handle1 = await lockCoordinator.claimSegment(descriptor);
+      assert.ok(handle1, 'Worker 1 should acquire claim');
+      assert.equal(handle1.generation, 1, 'Initial claim must have generation 1');
+
+      // Heartbeat renewal extends lease expiration
+      const renewed = await lockCoordinator.renewLease(handle1, 5000);
+      assert.equal(renewed, true, 'Heartbeat renewal must succeed for active owner');
+
+      // Worker 2 attempts takeover while Worker 1 is still active
+      const handle2 = await lockCoordinator.claimSegment(descriptor);
+      assert.equal(handle2, null, 'Worker 2 must be rejected while Worker 1 actively holds and renews lease');
+
+      // Release Worker 1
+      await lockCoordinator.releaseClaim(handle1);
+    });
+
+    it('stale takeover increments fencing generation and rejects stale worker release', async () => {
+      const fixture = createSealedSegmentFixture(tenantId, projectId, environment, serviceName, partitionDate, 'segment-fencing-takeover.jsonl', 5);
+      const descriptor = {
+        id: fixture.segmentRecord.id,
+        tenantId,
+        projectId,
+        environment,
+        serviceName,
+        date: partitionDate,
+        segmentFilename: 'segment-fencing-takeover.jsonl',
+        resolvedPath: fixture.fullPath,
+        byteSize: Number(fixture.segmentRecord.byteSize),
+        recordCount: 5,
+        sha256Checksum: fixture.sha256,
+        firstEventTimestamp: fixture.segmentRecord.firstEventTimestamp.toISOString(),
+        lastEventTimestamp: fixture.segmentRecord.lastEventTimestamp.toISOString(),
+        finalizedAt: fixture.segmentRecord.finalizedAt.toISOString(),
+        verifiedAt: new Date().toISOString(),
+        integrityStatus: 'VERIFIED' as const,
+      };
+
+      // Worker 1 claims segment
+      const handle1 = await lockCoordinator.claimSegment(descriptor);
+      assert.ok(handle1);
+      assert.equal(handle1.generation, 1);
+
+      // Artificially expire Worker 1's claim file to simulate worker crash or long partition
+      const raw = fs.readFileSync(handle1.claimFilePath, 'utf8');
+      const claimData = JSON.parse(raw);
+      claimData.expiresAt = new Date(Date.now() - 5000).toISOString();
+      fs.writeFileSync(handle1.claimFilePath, JSON.stringify(claimData, null, 2), 'utf8');
+
+      // Worker 2 takes over the expired claim
+      const handle2 = await lockCoordinator.claimSegment(descriptor);
+      assert.ok(handle2, 'Worker 2 should take over genuinely expired claim');
+      assert.equal(handle2.generation, 2, 'Worker 2 must receive incremented generation 2');
+      assert.notEqual(handle2.claimId, handle1.claimId, 'Worker 2 must have distinct claimId');
+
+      // Now stale Worker 1 attempts to release its old claim
+      await lockCoordinator.releaseClaim(handle1);
+
+      // Verify Worker 2's claim file was NOT deleted by stale Worker 1
+      assert.ok(fs.existsSync(handle2.claimFilePath), 'Worker 2 claim file must NOT be deleted by stale Worker 1');
+      const preservedRaw = fs.readFileSync(handle2.claimFilePath, 'utf8');
+      const preservedData = JSON.parse(preservedRaw);
+      assert.equal(preservedData.claimId, handle2.claimId, 'Claim file must still belong to Worker 2');
+      assert.equal(preservedData.generation, 2);
+
+      // Worker 2 releases cleanly
+      await lockCoordinator.releaseClaim(handle2);
+      assert.equal(fs.existsSync(handle2.claimFilePath), false, 'Claim file removed after valid owner release');
+    });
+
+    it('pre-publication fencing prevents superseded worker from publishing Parquet', async () => {
+      const fixture = createSealedSegmentFixture(tenantId, projectId, environment, serviceName, partitionDate, 'segment-fenced-pub.jsonl', 5);
+      const descriptor = {
+        id: fixture.segmentRecord.id,
+        tenantId,
+        projectId,
+        environment,
+        serviceName,
+        date: partitionDate,
+        segmentFilename: 'segment-fenced-pub.jsonl',
+        resolvedPath: fixture.fullPath,
+        byteSize: Number(fixture.segmentRecord.byteSize),
+        recordCount: 5,
+        sha256Checksum: fixture.sha256,
+        firstEventTimestamp: fixture.segmentRecord.firstEventTimestamp.toISOString(),
+        lastEventTimestamp: fixture.segmentRecord.lastEventTimestamp.toISOString(),
+        finalizedAt: fixture.segmentRecord.finalizedAt.toISOString(),
+        verifiedAt: new Date().toISOString(),
+        integrityStatus: 'VERIFIED' as const,
+      };
+
+      // Worker 1 acquires claim
+      const handle1 = await lockCoordinator.claimSegment(descriptor);
+      assert.ok(handle1);
+
+      // Simulate lease takeover by Worker 2
+      const raw = fs.readFileSync(handle1.claimFilePath, 'utf8');
+      const claimData = JSON.parse(raw);
+      claimData.expiresAt = new Date(Date.now() - 5000).toISOString();
+      fs.writeFileSync(handle1.claimFilePath, JSON.stringify(claimData, null, 2), 'utf8');
+
+      const handle2 = await lockCoordinator.claimSegment(descriptor);
+      assert.ok(handle2);
+
+      // Worker 1 attempts to publish with verifyOwnership callback
+      const result = await materializeUseCase.execute(descriptor, undefined, {
+        verifyOwnership: async () => lockCoordinator.verifyOwnership(handle1),
+      });
+
+      // Materialization must fail due to fencing
+      assert.equal(result.success, false);
+      assert.match(result.error ?? '', /Publication fenced|lease ownership lost/i);
+
+      // Verify no Parquet artifact was published for Worker 1
+      const paths = parquetPathSafety.resolveSegmentPaths(tenantId, projectId, environment, partitionDate, 'segment-fenced-pub.jsonl');
+      assert.equal(fs.existsSync(paths.parquetPath), false, 'Authoritative Parquet must not be published by fenced worker');
+      assert.equal(fs.existsSync(paths.stagingParquetPath), false, 'Staging file must be cleaned up');
+
+      await lockCoordinator.releaseClaim(handle2);
+    });
+
+    it('fails closed when database coordination is configured but unavailable', async () => {
+      const fixture = createSealedSegmentFixture(tenantId, projectId, environment, serviceName, partitionDate, 'segment-fail-closed.jsonl', 5);
+      const descriptor = {
+        id: fixture.segmentRecord.id,
+        tenantId,
+        projectId,
+        environment,
+        serviceName,
+        date: partitionDate,
+        segmentFilename: 'segment-fail-closed.jsonl',
+        resolvedPath: fixture.fullPath,
+        byteSize: Number(fixture.segmentRecord.byteSize),
+        recordCount: 5,
+        sha256Checksum: fixture.sha256,
+        firstEventTimestamp: fixture.segmentRecord.firstEventTimestamp.toISOString(),
+        lastEventTimestamp: fixture.segmentRecord.lastEventTimestamp.toISOString(),
+        finalizedAt: fixture.segmentRecord.finalizedAt.toISOString(),
+        verifiedAt: new Date().toISOString(),
+        integrityStatus: 'VERIFIED' as const,
+      };
+
+      const prevEnv = process.env.SKYRA_ISOLATED_TEST_ENV;
+      process.env.SKYRA_ISOLATED_TEST_ENV = 'true';
+      try {
+        // Create a coordinator configured with an unreachable database port to simulate network failure
+        const brokenConfig = new QueryConfigService({
+          nodeEnv: 'test',
+          archiveRoot: tempArchiveRoot,
+          parquetCacheRoot: tempCacheRoot,
+          databaseUrl: 'postgresql://invalid_user:invalid_pass@127.0.0.1:5439/nonexistent_db',
+          compactionEnabled: true,
+          compactionLockTtlMs: 2000,
+        });
+
+        const failingCoordinator = new CompactionLockCoordinatorService(parquetPathSafety, brokenConfig, audit);
+        assert.equal(failingCoordinator.isDatabaseCoordinated(), true);
+
+        // Must fail closed (return null, never silently degrade to file-only claim in distributed mode)
+        const handle = await failingCoordinator.claimSegment(descriptor);
+        assert.equal(handle, null, 'Must fail closed when mandatory database coordination fails');
+
+        // Verify file claim was not left behind
+        const keyHash = failingCoordinator.buildKeyHash(failingCoordinator.buildSegmentKey(descriptor));
+        const claimFile = path.join(parquetPathSafety.getClaimsDirectory(), `${keyHash}.claim.json`);
+        assert.equal(fs.existsSync(claimFile), false, 'Claim file must be unlinked when failing closed');
+      } finally {
+        if (prevEnv !== undefined) {
+          process.env.SKYRA_ISOLATED_TEST_ENV = prevEnv;
+        } else {
+          delete process.env.SKYRA_ISOLATED_TEST_ENV;
+        }
+      }
+    });
+
+    it('persists compaction failure state across simulated service restarts (Risk E)', async () => {
+      compactor.resetFailureTrackers();
+
+      const persistProjectId = 'proj-persist-test';
+      const dir = path.join(tempArchiveRoot, tenantId, persistProjectId, environment, serviceName, partitionDate);
+      const filename = 'segment-persistent-fail.jsonl';
+      fs.mkdirSync(dir, { recursive: true });
+      const fullPath = path.join(dir, filename);
+      fs.writeFileSync(fullPath, 'MALFORMED_ROW_FOR_PERSISTENCE\n', 'utf8');
+      const stat = fs.statSync(fullPath);
+      const sha = crypto.createHash('sha256').update(fs.readFileSync(fullPath)).digest('hex');
+      fs.writeFileSync(path.join(dir, 'segment-persistent-fail.manifest.json'), JSON.stringify({
+        manifest_version: '1.0',
+        tenant_id: tenantId,
+        project_id: persistProjectId,
+        environment,
+        service_name: serviceName,
+        date: partitionDate,
+        segment_filename: filename,
+        record_count: 1,
+        byte_size: stat.size,
+        sha256_checksum: sha,
+      }), 'utf8');
+
+      const rec: ArchiveSegmentRecord = {
+        id: crypto.randomUUID(),
+        tenantId,
+        projectId: persistProjectId,
+        environment,
+        serviceName,
+        date: partitionDate,
+        segmentFilename: filename,
+        recordCount: 1,
+        byteSize: stat.size,
+        sha256Checksum: sha,
+        firstEventTimestamp: new Date(),
+        lastEventTimestamp: new Date(),
+        finalizedAt: new Date(),
+        writerInstanceId: 'w1',
+        journalSegmentId: 'wal-persist',
+        journalStartOffset: 0,
+        journalEndOffset: stat.size,
+      };
+      await inMemoryRepo.saveSegment(rec);
+
+      // Run compaction once: fails and persists state to disk
+      const p1 = await compactor.compactOnce();
+      assert.ok(p1.totalFailed >= 1);
+
+      // Verify persistent failure file exists on disk
+      const failureFile = path.join(parquetPathSafety.getCacheRoot(), '.state', 'compaction-failures.json');
+      assert.ok(fs.existsSync(failureFile), 'Failure state must be persisted to disk');
+
+      const persistedRaw = fs.readFileSync(failureFile, 'utf8');
+      const persistedState = JSON.parse(persistedRaw);
+      assert.ok(persistedState.failures);
+      const segmentKey = lockCoordinator.buildSegmentKey({
+        id: rec.id,
+        tenantId,
+        projectId: persistProjectId,
+        environment,
+        serviceName,
+        date: partitionDate,
+        segmentFilename: filename,
+        resolvedPath: fullPath,
+        byteSize: stat.size,
+        recordCount: 1,
+        sha256Checksum: sha,
+        firstEventTimestamp: rec.firstEventTimestamp.toISOString(),
+        lastEventTimestamp: rec.lastEventTimestamp.toISOString(),
+        finalizedAt: rec.finalizedAt.toISOString(),
+        verifiedAt: new Date().toISOString(),
+        integrityStatus: 'VERIFIED',
+      });
+      assert.ok(persistedState.failures[segmentKey], 'Segment failure must be recorded in persistent state');
+      assert.equal(persistedState.failures[segmentKey].failureCount, 1);
+
+      // Simulate service restart by constructing a new BackgroundCompactionService instance
+      const restartedCompactor = new BackgroundCompactionService(
+        config,
+        audit,
+        materializeUseCase,
+        recoverUseCase,
+        lockCoordinator,
+        discoveryService,
+        parquetPathSafety,
+      );
+
+      // The new instance must have loaded the persisted failure state
+      const restoredTrackers = restartedCompactor.getFailureTrackers();
+      const restored = restoredTrackers.get(segmentKey);
+      assert.ok(restored, 'Restarted service must restore failure tracker from disk');
+      assert.equal(restored?.failureCount, 1);
+
+      // Immediate compaction run on restarted service must skip segment due to backoff
+      const pRestart = await restartedCompactor.compactOnce();
+      assert.equal(pRestart.totalSkipped >= 1, true, 'Restarted service must respect persisted backoff');
+
+      // Operator recovery path: clear failure
+      restartedCompactor.clearFailure(segmentKey);
+      assert.equal(restartedCompactor.getFailureTrackers().get(segmentKey), undefined);
+
+      restartedCompactor.resetFailureTrackers();
+      assert.equal(fs.existsSync(failureFile), false, 'Resetting trackers must remove persistent state file');
     });
   });
 });

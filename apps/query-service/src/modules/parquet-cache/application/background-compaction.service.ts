@@ -1,3 +1,5 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import {
   Injectable,
   Logger,
@@ -10,16 +12,21 @@ import { MaterializeSegmentUseCase } from './materialize-segment.use-case.js';
 import { RecoverMaterializationUseCase } from './recover-materialization.use-case.js';
 import { CompactionLockCoordinatorService } from './compaction-lock-coordinator.service.js';
 import { CompactionDiscoveryService } from './compaction-discovery.service.js';
+import { ParquetPathSafetyService } from '../infrastructure/filesystem/parquet-path-safety.service.js';
 import type {
   CompactionProgress,
   CompactionJobResult,
   CompactionCycleOptions,
+  PersistentFailureRecord,
+  PersistentFailureState,
 } from '../domain/compaction.types.js';
 
 export interface FailureTracker {
   failureCount: number;
+  firstFailureTime: number;
   lastFailureTime: number;
   lastError: string;
+  terminal: boolean;
 }
 
 @Injectable()
@@ -29,6 +36,7 @@ export class BackgroundCompactionService implements OnApplicationBootstrap, OnMo
   private isProcessing = false;
   private stopped = false;
   private inFlightWork?: Promise<CompactionProgress | null>;
+  private readonly failureStatePath: string;
 
   // Bounded retry tracking: maps segmentKey to failure count & timestamp
   private readonly failureTrackers = new Map<string, FailureTracker>();
@@ -40,7 +48,15 @@ export class BackgroundCompactionService implements OnApplicationBootstrap, OnMo
     private readonly recoverUseCase: RecoverMaterializationUseCase,
     private readonly lockCoordinator: CompactionLockCoordinatorService,
     private readonly discoveryService: CompactionDiscoveryService,
-  ) {}
+    private readonly pathSafety: ParquetPathSafetyService,
+  ) {
+    this.failureStatePath = path.join(
+      this.pathSafety.getCacheRoot(),
+      '.state',
+      'compaction-failures.json',
+    );
+    this.loadPersistentFailures();
+  }
 
   public async onApplicationBootstrap(): Promise<void> {
     if (!this.config.compactionEnabled) {
@@ -143,15 +159,15 @@ export class BackgroundCompactionService implements OnApplicationBootstrap, OnMo
     let totalRecordsCompacted = 0;
     const jobResults: CompactionJobResult[] = [];
 
-    // 3. Filter out segments in backoff
+    // 3. Filter out segments in backoff or exhausted retries
     const now = Date.now();
     const actionableSegments = eligibleSegments.filter((item) => {
       const segmentKey = this.lockCoordinator.buildSegmentKey(item.descriptor);
       const tracker = this.failureTrackers.get(segmentKey);
       if (!tracker) return true;
 
-      // Exhausted retries
-      if (tracker.failureCount >= this.config.compactionMaxRetries) {
+      // Exhausted retries (terminal failure)
+      if (tracker.terminal || tracker.failureCount >= this.config.compactionMaxRetries) {
         totalSkipped++;
         return false;
       }
@@ -183,18 +199,38 @@ export class BackgroundCompactionService implements OnApplicationBootstrap, OnMo
         const handle = await this.lockCoordinator.claimSegment(descriptor, correlationId);
         if (!handle) {
           totalSkipped++;
-          return null; // Claimed by another worker or actively locked
+          return null; // Claimed by another worker, active lock, or coordination failure (fail closed)
         }
 
         totalClaimed++;
 
+        // B. Set up active heartbeat renewal
+        let leaseRevoked = false;
+        const heartbeatInterval = Math.max(200, Math.floor(handle.leaseTtlMs / 3));
+        const heartbeatTimer = setInterval(async () => {
+          if (leaseRevoked || this.stopped) return;
+          const renewed = await this.lockCoordinator.renewLease(handle);
+          if (!renewed) {
+            leaseRevoked = true;
+            this.logger.warn(`Heartbeat renewal failed for ${descriptor.segmentFilename}; worker lost lease ownership.`);
+          }
+        }, heartbeatInterval);
+        heartbeatTimer.unref();
+
         try {
-          // B. Materialize to Parquet reusing DuckDB converter
-          const result = await this.materializeUseCase.execute(descriptor, correlationId);
+          // C. Materialize to Parquet reusing DuckDB converter with pre-publication fencing
+          const result = await this.materializeUseCase.execute(descriptor, correlationId, {
+            verifyOwnership: async () => {
+              if (leaseRevoked) return false;
+              return this.lockCoordinator.verifyOwnership(handle);
+            },
+          });
 
           if (result.success) {
-            // Success: clear failure tracker
+            // Success: clear failure tracker and persist state
             this.failureTrackers.delete(segmentKey);
+            this.savePersistentFailures();
+
             totalConverted++;
             if (result.jobId === 'reused') totalReused++;
             inputBytesProcessed += result.inputBytes;
@@ -235,17 +271,22 @@ export class BackgroundCompactionService implements OnApplicationBootstrap, OnMo
 
             return jobResult;
           } else {
-            // Failure: track retry backoff
+            // Failure: update failure tracker with bounded retry limit
             totalFailed++;
             const currentTracker = this.failureTrackers.get(segmentKey) ?? {
               failureCount: 0,
+              firstFailureTime: Date.now(),
               lastFailureTime: 0,
               lastError: '',
+              terminal: false,
             };
             currentTracker.failureCount++;
             currentTracker.lastFailureTime = Date.now();
             currentTracker.lastError = result.error ?? 'Unknown conversion error';
+            currentTracker.terminal = currentTracker.failureCount >= this.config.compactionMaxRetries;
+
             this.failureTrackers.set(segmentKey, currentTracker);
+            this.savePersistentFailures();
 
             const jobResult: CompactionJobResult = {
               segmentId: descriptor.segmentFilename,
@@ -262,10 +303,9 @@ export class BackgroundCompactionService implements OnApplicationBootstrap, OnMo
             jobResults.push(jobResult);
 
             this.audit.recordSecurityEvent({
-              eventType:
-                currentTracker.failureCount >= this.config.compactionMaxRetries
-                  ? 'COMPACTION_SEGMENT_FAILED'
-                  : 'COMPACTION_SEGMENT_RETRY',
+              eventType: currentTracker.terminal
+                ? 'COMPACTION_SEGMENT_FAILED'
+                : 'COMPACTION_SEGMENT_RETRY',
               tenantId: descriptor.tenantId,
               projects: [descriptor.projectId],
               correlationId,
@@ -275,7 +315,8 @@ export class BackgroundCompactionService implements OnApplicationBootstrap, OnMo
             return jobResult;
           }
         } finally {
-          // Release distributed claim
+          clearInterval(heartbeatTimer);
+          // Release distributed claim verifying generation
           await this.lockCoordinator.releaseClaim(handle);
         }
       });
@@ -329,9 +370,84 @@ export class BackgroundCompactionService implements OnApplicationBootstrap, OnMo
   }
 
   /**
-   * Resets failure trackers (for test fixtures).
+   * Clears a specific segment failure tracker (explicit operator recovery path).
+   */
+  public clearFailure(segmentKey: string): void {
+    this.failureTrackers.delete(segmentKey);
+    this.savePersistentFailures();
+  }
+
+  /**
+   * Resets all failure trackers (operator recovery & test fixtures).
    */
   public resetFailureTrackers(): void {
     this.failureTrackers.clear();
+    try {
+      if (fs.existsSync(this.failureStatePath)) {
+        fs.unlinkSync(this.failureStatePath);
+      }
+    } catch {
+      // safe cleanup
+    }
+  }
+
+  /**
+   * Loads persisted failure records from disk across service restarts.
+   */
+  private loadPersistentFailures(): void {
+    try {
+      if (!fs.existsSync(this.failureStatePath)) return;
+      const raw = fs.readFileSync(this.failureStatePath, 'utf8');
+      const state = JSON.parse(raw) as PersistentFailureState;
+      if (state && state.failures) {
+        for (const [key, record] of Object.entries(state.failures)) {
+          this.failureTrackers.set(key, {
+            failureCount: record.failureCount,
+            firstFailureTime: record.firstFailureTime,
+            lastFailureTime: record.lastFailureTime,
+            lastError: record.lastError,
+            terminal: record.terminal,
+          });
+        }
+      }
+    } catch (err: unknown) {
+      this.logger.warn(`Failed reading persistent compaction failure state: ${String(err)}`);
+    }
+  }
+
+  /**
+   * Atomically persists bounded failure records to disk.
+   */
+  private savePersistentFailures(): void {
+    try {
+      const stateDir = path.dirname(this.failureStatePath);
+      this.pathSafety.ensureDirectoryExists(stateDir);
+
+      // Bound to most recent 1,000 entries
+      const entries = Array.from(this.failureTrackers.entries()).slice(-1000);
+      const failures: Record<string, PersistentFailureRecord> = {};
+      for (const [key, val] of entries) {
+        failures[key] = {
+          segmentKey: key,
+          failureCount: val.failureCount,
+          firstFailureTime: val.firstFailureTime,
+          lastFailureTime: val.lastFailureTime,
+          lastError: val.lastError,
+          terminal: val.terminal,
+        };
+      }
+
+      const state: PersistentFailureState = {
+        version: '1.0',
+        updatedAt: new Date().toISOString(),
+        failures,
+      };
+
+      const tmpPath = `${this.failureStatePath}.tmp-${Date.now()}`;
+      fs.writeFileSync(tmpPath, JSON.stringify(state, null, 2), 'utf8');
+      fs.renameSync(tmpPath, this.failureStatePath);
+    } catch (err: unknown) {
+      this.logger.warn(`Failed persisting compaction failure state: ${String(err)}`);
+    }
   }
 }

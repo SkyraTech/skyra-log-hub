@@ -209,11 +209,15 @@ graph TD
 - **Console BFF:** Zero Prisma dependencies. Direct raw `pg.Pool` connection with the `skyra_bff_sessions_runtime` role, restricted exclusively to `bff_sessions` and `bff_login_transactions`.
 - **Query Service:** Read-only connection pool using the `skyra_query_runtime` role with PostgreSQL enforcing `default_transaction_read_only=on`.
 
-### 5.1 Background Compaction & Distributed Coordination Architecture (BL-06)
+### 5.1 Background Compaction & Distributed Coordination Architecture (BL-06 / Q-06F Hardened)
 - **Host Subsystem:** Runs autonomously within `apps/query-service` (`BackgroundCompactionService`), leveraging the existing embedded DuckDB engine, `DuckDbParquetConverter`, `FileParquetCatalogService`, and `ArchiveDiscoveryService`.
-- **Dual-Layer Distributed Coordination:**
-  1. *Atomic Filesystem Claims:* Employs `.claims/<segment>.claim` files created via atomic `O_CREAT | O_EXCL` flags with ISO timestamp and worker identity payloads, guaranteeing mutual exclusion across shared storage.
-  2. *PostgreSQL Advisory Locks:* Uses non-blocking session-scoped `SELECT pg_try_advisory_lock(hashtext(:segmentKey))` to serialize concurrent workers across multiple instances without modifying database records or violating Query Service read-only transaction mode.
+- **Dual-Layer Distributed Coordination & Fencing Protocol:**
+  1. *Atomic Filesystem Claims & Generational Fencing:* Employs `.claims/<segment>.claim.json` files created via atomic `O_CREAT | O_EXCL` flags recording worker identity, claim UUID, and monotonic generation tokens. Lease takeovers increment generation, fencing out older workers.
+  2. *Dedicated-Session PostgreSQL Advisory Locks:* Uses non-blocking session-scoped `SELECT pg_try_advisory_lock(...)` over dedicated `pg.Client` sessions held for the exact duration of the conversion. This guarantees session affinity (eliminating connection-pooling lock drift) and automatic OS/TCP lock reclamation upon worker crash.
+  3. *Mandatory Fail-Closed Semantics:* When database coordination is configured, connection failures or advisory lock contention immediately fail closed without unsafe single-instance fallback.
+  4. *Active Heartbeat Renewal & Pre-Publication Fencing:* Workers refresh active leases periodically during conversion. Prior to atomic Parquet publication, workers verify ownership; superseded workers are fenced out with staging artifacts cleaned up.
+  5. *Safe Claim Release:* Claim deletion verifies `claimId` and `generation`; stale workers cannot delete newer replacement claims.
+  6. *Durable Failure State Store:* Compaction failure counts and backoff windows are atomically persisted to `.state/compaction-failures.json`, preventing infinite crash loops on process restart.
 - **Fail-Safe Crash Recovery:** Stale claims exceeding lease TTL (default 15 minutes) are safely reclaimed with audit tracking. Orphaned staging files (`.staging-*.parquet`) are pruned during application bootstrap.
 - **Retention & Legal Hold Awareness:** Respects `ProjectRetention` configurations. When legal hold is active (`isLegalHold = true`), segments can be safely compacted into Parquet format for query efficiency while pruning is strictly forbidden; or compaction can honor `compactionDeferLegalHold` configuration.
 - **Strict Non-Destructive Invariant:** Background compaction is strictly additive; source JSONL archives, companion manifests, WAL logs, and existing Parquet artifacts are never removed or truncated.

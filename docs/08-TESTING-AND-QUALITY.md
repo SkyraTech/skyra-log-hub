@@ -80,9 +80,9 @@ During Milestone Q-04 reconciliation, test execution counts across all 12 monore
 - **Ownership Marker:** Cluster ID `26d25080-7655-4147-b05a-512ad359e14f`.
 - Integration suites execute exclusively against this disposable instance after verifying exact target ownership.
 
-### 3.3 Storage Lifecycle & Background Compaction Verification (Milestone Q-06E)
-- **Unit & Integration Suite (`apps/query-service/tests/integration/background-compaction.test.ts`):** 13 deterministic tests validating normal compaction, idempotency, concurrent claims, stale lease recovery, companion manifest rejection, staging cleanup, exponential retry backoff, legal hold preservation, hybrid query correctness, and nondestructive invariants.
-- **Live Persistence Suite (`tests/storage/live-compaction.test.mjs`):** Disposable PostgreSQL 17 + DuckDB integration verifying target guard validation, PostgreSQL discovery, advisory lock serialization (`pg_try_advisory_lock`), retention policy inspection, Parquet materialization, and zero-deletion safety.
+### 3.3 Storage Lifecycle & Background Compaction Verification (Milestones Q-06E & Q-06F)
+- **Unit & Integration Suite (`apps/query-service/tests/integration/background-compaction.test.ts`):** 18 deterministic tests validating normal compaction, idempotency, concurrent claims, stale lease recovery, companion manifest rejection, staging cleanup, exponential retry backoff, legal hold preservation, hybrid query correctness, nondestructive invariants, heartbeat lease renewal, generational fencing takeover, pre-publication fencing verification, fail-closed database coordination, and durable failure tracking across restarts.
+- **Live Persistence Suite (`tests/storage/live-compaction.test.mjs`):** Disposable PostgreSQL 17 + DuckDB integration verifying target guard validation, PostgreSQL discovery, dedicated-session advisory lock serialization (`pg_try_advisory_lock`), separate-filesystem multi-worker concurrency, heartbeat renewal over live DB session, retention policy inspection, Parquet materialization, and zero-deletion safety.
 
 ---
 

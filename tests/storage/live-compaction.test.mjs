@@ -63,7 +63,7 @@ async function ensurePrerequisiteSchema(client) {
   }
 }
 
-test('Q-06E: Safe Background Storage Compaction & Live PostgreSQL/DuckDB Integration', async (t) => {
+test('Q-06E / Q-06F: Safe Background Storage Compaction & Live PostgreSQL/DuckDB Integration', async (t) => {
   let env;
   try {
     env = process.env.ISOLATED_DATABASE_URL ? process.env : testEnvironment();
@@ -231,7 +231,8 @@ test('Q-06E: Safe Background Storage Compaction & Live PostgreSQL/DuckDB Integra
     materializeUseCase,
     recoverUseCase,
     lockCoordinator,
-    discoveryService
+    discoveryService,
+    parquetPathSafety
   );
 
   try {
@@ -243,17 +244,35 @@ test('Q-06E: Safe Background Storage Compaction & Live PostgreSQL/DuckDB Integra
     assert.equal(candidate.descriptor.sha256Checksum, sha256);
     assert.equal(candidate.isLegalHold, true, 'Legal hold setting must be read from project_retention_policies');
 
-    // 5. Test Live PostgreSQL Advisory Lock
+    // 5. Test Live PostgreSQL Advisory Lock & Dedicated Session Ownership
     const lock1 = await lockCoordinator.claimSegment(candidate.descriptor);
     assert.ok(lock1, 'Worker 1 should acquire both file claim and PostgreSQL advisory lock');
+    assert.ok(lock1.dbClient, 'Worker 1 must have dedicated pg.Client session attached');
 
-    // Worker 2 attempts same segment
-    const lockCoordinator2 = new CompactionLockCoordinatorService(parquetPathSafety, config, audit, prisma);
+    // Worker 2 attempts same segment from separate filesystem root (separate cache dir)
+    const tempCacheRoot2 = fs.mkdtempSync(path.join(os.tmpdir(), 'skyra-live-cache2-'));
+    const config2 = new QueryConfigService({
+      nodeEnv: 'test',
+      databaseUrl: env.ISOLATED_DATABASE_URL,
+      archiveRoot: tempArchiveRoot,
+      parquetCacheRoot: tempCacheRoot2,
+      parquetCacheEnabled: true,
+      compactionEnabled: true,
+      compactionLockTtlMs: 5000,
+    });
+    const parquetPathSafety2 = new ParquetPathSafetyService(config2);
+    const lockCoordinator2 = new CompactionLockCoordinatorService(parquetPathSafety2, config2, audit, prisma);
+
     const lock2 = await lockCoordinator2.claimSegment(candidate.descriptor);
-    assert.equal(lock2, null, 'Worker 2 must fail to claim while Worker 1 holds PostgreSQL advisory lock');
+    assert.equal(lock2, null, 'Worker 2 on separate local filesystem must fail to claim while Worker 1 holds PostgreSQL advisory lock');
+
+    // Test heartbeat renewal on Worker 1
+    const renewed = await lockCoordinator.renewLease(lock1, 6000);
+    assert.equal(renewed, true, 'Worker 1 heartbeat renewal must succeed over live dedicated DB session');
 
     // Release lock 1
     await lockCoordinator.releaseClaim(lock1);
+    try { fs.rmSync(tempCacheRoot2, { recursive: true, force: true }); } catch {}
 
     // 6. Execute Compaction
     const progress = await compactor.compactOnce();

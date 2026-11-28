@@ -25,6 +25,7 @@ export class MaterializeSegmentUseCase {
   public async execute(
     canonicalDescriptor: TrustedArchiveSegmentDescriptor,
     correlationId?: string,
+    options?: { verifyOwnership?: () => Promise<boolean> | boolean },
   ): Promise<MaterializationResult> {
     if (!this.config.parquetMaterializationEnabled) {
       return {
@@ -81,7 +82,7 @@ export class MaterializeSegmentUseCase {
     });
 
     try {
-      const result = await this.converter.convertSegment(canonicalDescriptor);
+      const result = await this.converter.convertSegment(canonicalDescriptor, undefined, options);
 
       if (result.success && result.parquetDescriptor) {
         this.audit.recordSecurityEvent({
